@@ -1,0 +1,55 @@
+#include "rapidxml-1.13/rapidxml.hpp"
+#include "rapidxml-1.13/rapidxml_utils.hpp"
+
+using namespace rapidxml;
+
+void str_to_val(char* str, double* val);
+
+void xmlnode_attr_to_val(xml_node<>* xnode, const char* attr_name, double* val);
+void xmlnode_attr_to_val(xml_node<>* xnode, const char* attr_name, std::string& val);
+
+double** new_2d_array(int n, int m);
+void delete_2d_array(double** array, int n);
+void save_2d_array(double** array, int n, int m, std::string fname, bool append_flag);
+
+double randf();
+
+// maybe generalize to any type later with templates
+struct arrayops{
+  int n;
+  arrayops(int n_){n = n_;}
+  arrayops(){n = 0;}
+  void set_n(int n_){n = n_;}
+  void print(double* a);
+  void assign(double* a, double* a1);
+  double* add(double* a, double* a1);
+  double* subtract(double* a, double* a1);
+  double* times(double* a, double b);
+  double* modulus(double* a, double b);
+  double norm(double* a);
+  double distance(double* a, double* a1);
+  void assign_scalar(double* a, double b);
+  double dot(double* a, double* a1);
+  double l1_norm(double* a);
+  double** new_2d_array(int m);
+  void delete_2d_array(double** array, int m);
+};
+
+
+#include <iostream>
+using namespace std;
+
+template <typename T>
+void print_array (T* a, int n){
+  for(int i=0;i<n;i++){
+    if(i){cout << " ";}
+    cout << *a++;
+  }
+  cout << endl;
+}
+
+template <typename T>
+void print_array (T* a, int n, const char* prefix){
+  cout << prefix;
+  print_array <T> (a,n);
+}
