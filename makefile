@@ -4,7 +4,8 @@ COMP_ATTRS = -O2 -Wall
 O_FILES = main.o core.o matrix.o model.o visualization.o lik.o player.o playerexperim.o pergen.o periodic.o dynrec.o ftsolver.o odestate.o cpc.o effdata.o geom.o ghost.o
 
 #LINK_ATTRS = -L /usr/local/lib -lode -ldrawstuff -lm -lstdc++ -lGL -lGLU -lglut -lX11 -pthread -Lballtreelib/ -lballtree
-LINK_ATTRS = -L /usr/local/lib -lode -ldrawstuff -lm -lstdc++ -lGL -lGLU -lglut -lX11 -pthread -Lballtreelib1/ -lballtree
+#LINK_ATTRS = -L /usr/local/lib -lode -ldrawstuff -lm -lstdc++ -lGL -lGLU -lglut -lX11 -pthread -Lballtreelib1/ -lballtree
+LINK_ATTRS = -L /usr/local/lib -lode -ldrawstuff -lm -lstdc++ -lGL -lGLU -lglut -lX11 -pthread -Lbtlib/ -lballtree
 # -I /usr/include/eigen3
 #PRECISION = dSINGLE
 
