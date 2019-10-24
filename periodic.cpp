@@ -1,11 +1,10 @@
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
+//#include "core.h"
+//#include "matrix.h"
+//#include "visualization.h"
+//#include "model.h"
 #include "lik.h"
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
-#include "pergen.h"
 #include "periodic.h"
 #include "dynrec.h"
 #include "ftsolver.h"
@@ -92,7 +91,8 @@ void periodic::record_trajectory(pergensetup* pgs, int n_t_){
   }
   delete rec;
   dt_traj = dt;
-  rcap = pgs->get_rcap();
+  //rcap = pgs->get_rcap();
+  rcap = model->get_lik()->get_rcap();
 }
 
 void periodic::print_trajectory(){

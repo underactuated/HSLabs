@@ -1,11 +1,21 @@
+#ifndef FTSOLVER_H
+#define FTSOLVER_H
+
+#include <list>
+
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+
+#include "periodic.h"
+#include "dynrec.h"
 
 using namespace Eigen;
 
 typedef SparseQR<SpMat, COLAMDOrdering<int> > SpSolver; // sparse solver
 
-struct dynrecord;
+class dynrecord;
 
-struct forcetorquesolver{
+class forcetorquesolver{
   int n; // number of dynparts
   int nf; // number of feet
   int *parentis, *footis;
@@ -16,6 +26,7 @@ struct forcetorquesolver{
   double* jzaxis; // join z axis, all dynparts
   VectorXd fts; // last force-torques solution
   list<int> jpart_ids;
+public:
   forcetorquesolver(periodic* per);
   ~forcetorquesolver();
   void print();
@@ -23,8 +34,8 @@ struct forcetorquesolver{
   void solve_forcetorques(dynrecord* dynrec_, VectorXd& x, VectorXd& y);
   void switch_torso_penalty(bool force_flag, bool torque_flag);
   void set_action_penalties(VectorXd& c);
-  double* get_jzaxis(){return jzaxis;}
-  VectorXd* get_fts(){return &fts;}
+  inline double* get_jzaxis(){return jzaxis;}
+  inline VectorXd* get_fts(){return &fts;}
   void solve_forces(dynrecord* dynrec_, VectorXd& z, VectorXd& y);
 private:
   void solve_forcetorques_particular(VectorXd& x, SpMat& B, VectorXd& f);
@@ -38,3 +49,4 @@ private:
   void set_dynrec(dynrecord* dynrec_);
 };
 
+#endif

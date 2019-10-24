@@ -1,16 +1,14 @@
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
-#include "pergen.h"
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-#include "periodic.h"
-#include "dynrec.h"
+//#include "core.h"
+//#include "matrix.h"
+//#include "visualization.h"
+//#include "model.h"
+//#include "pergen.h"
+//#include <Eigen/Dense>
+//#include <Eigen/Sparse>
+//#include "periodic.h"
+//#include "dynrec.h"
 #include "cpc.h"
 #include "effdata.h"
-
-//using namespace Eigen;
 
 cand::cand(int tpi_, double t0_, double s_, double loss_){
   tpi = tpi_; 

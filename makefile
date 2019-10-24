@@ -4,8 +4,7 @@ COMP_ATTRS = -O2 -Wall
 O_FILES = main.o core.o matrix.o model.o visualization.o lik.o player.o playerexperim.o pergen.o periodic.o dynrec.o ftsolver.o odestate.o cpc.o effdata.o geom.o ghost.o
 
 #LINK_ATTRS = -L /usr/local/lib -lode -ldrawstuff -lm -lstdc++ -lGL -lGLU -lglut -lX11 -pthread -Lballtreelib/ -lballtree
-#LINK_ATTRS = -L /usr/local/lib -lode -ldrawstuff -lm -lstdc++ -lGL -lGLU -lglut -lX11 -pthread -Lballtreelib1/ -lballtree
-LINK_ATTRS = -L /usr/local/lib -lode -ldrawstuff -lm -lstdc++ -lGL -lGLU -lglut -lX11 -pthread -Lbtlib/ -lballtree
+LINK_ATTRS = -L /usr/local/lib -lode -ldrawstuff -lm -lstdc++ -lGL -lGLU -lglut -lX11 -pthread -Lballtreelib1/ -lballtree
 # -I /usr/include/eigen3
 #PRECISION = dSINGLE
 
@@ -67,15 +66,6 @@ geom.o: geom.h geom.cpp
 ghost.o: ghost.h ghost.cpp
 	g++ -c ghost.cpp $(COMP_ATTRS)
 
-
-#all: roboarm
-
-#roboarm: $(O_FILES)
-#        g++ $(O_FILES) -o roboarm $(COMP_ATTRS) $(LINK_ATTRS)
-
-#main.o: core.h define.h simulator.h main.cpp
-##       g++ -c -DdSINGLE main.cpp $(COMP_ATTRS)
-#        g++ -c -D$(PRECISION) main.cpp $(COMP_ATTRS)
 
 clean:
 	rm *.o

@@ -1,16 +1,8 @@
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
 #include "lik.h"
 #include "pergen.h"
 #include "player.h"
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
 #include "periodic.h"
 #include "odestate.h"
-#include "cpc.h"
-#include "geom.h"
 #include "ghost.h"
 
 // quadruped spinning with foot tips fixed

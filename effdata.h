@@ -1,15 +1,19 @@
-#include <vector>
+#ifndef EFFDATA_H
+#define EFFDATA_H
+
 #include <map>
 #include <list>
 
+#include "core.h"
 
-struct balltree;
+class balltree;
 
-struct efficientdata{
+class efficientdata{
   int data_size;
   vector<double*> points;
   map<double*,int> pis;
   balltree* tree;
+public:
   efficientdata(){tree=NULL;}
   void prepare_data(list<vector<double> >& data, int d);
   void prepare_data(double** target_points, int tps_size, int d);
@@ -20,10 +24,11 @@ struct efficientdata{
 
 typedef pair<double*,double> plane; 
 
-struct balltreetester{
+class balltreetester{
   int dim;
   balltree* tree;
   arrayops ao;
+public:
   balltreetester(int dim);
   double* new_rand_point();
   double point_plane_dist(double* pnt, plane pl);
@@ -33,3 +38,4 @@ struct balltreetester{
   double dot(double* pnt1, double* pnt2);
 };
 
+#endif

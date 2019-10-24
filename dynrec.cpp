@@ -1,13 +1,13 @@
-#include <map>
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
-#include "lik.h"
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-#include "pergen.h"
-#include "periodic.h"
+//#include <map>
+//#include "core.h"
+//#include "matrix.h"
+//#include "visualization.h"
+//#include "model.h"
+//#include "lik.h"
+//#include <Eigen/Dense>
+//#include <Eigen/Sparse>
+//#include "pergen.h"
+//#include "periodic.h"
 #include "dynrec.h"
 
 
