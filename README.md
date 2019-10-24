@@ -1,0 +1,2 @@
+# HSLabs
+Legged locomotion project
