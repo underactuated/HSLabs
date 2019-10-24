@@ -1,3 +1,13 @@
+#ifndef CPC_H
+#define CPC_H
+
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+
+#include "matrix.h"
+#include "model.h"
+#include "periodic.h"
+
 using namespace Eigen;
 
 struct cand{
@@ -8,9 +18,9 @@ struct cand{
   void print();
 };
 
-struct efficientdata;
+class efficientdata;
 
-struct cpccontroller{
+class cpccontroller{
   int q_dim, chi_dim, psi_dim; // q_dim = config_dim, chi_dim = nmj = actuated dim, psi_dim = q_dim - chi_dim = unactuated dim
   MatrixXd B, Bt, B_chi, b, bbt, btil0; // Bt = B transposed
   double** target_points;
@@ -25,6 +35,7 @@ struct cpccontroller{
   efficientdata* effdata;
   vector<int> mask;
   bool low_tpdist;
+public:
   cpccontroller(kinematicmodel* model);
   ~cpccontroller();
   void set_target_points_by_per(periodic* per);
@@ -64,3 +75,4 @@ private:
 
 void fit_plane(extvec& plane, list<extvec>& points);
 
+#endif

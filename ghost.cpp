@@ -1,10 +1,10 @@
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
-#include "lik.h"
-#include "odestate.h"
-#include "geom.h"
+//#include "core.h"
+//#include "matrix.h"
+//#include "visualization.h"
+//#include "model.h"
+//#include "lik.h"
+//#include "odestate.h"
+//#include "geom.h"
 #include "ghost.h"
 
 void fit_plane(extvec& plane, list<extvec>& points);
@@ -13,7 +13,6 @@ ghostmodel::ghostmodel(visualizer* vis_, heightfield* hfield_, double dt_){
   vis = vis_;
   hfield = hfield_;
   dt = dt_;
-  rcap = .08;
   kinematicmodel* model = vis->get_model();
   config_dim = model->get_config_dim();
   nmj = model->number_of_motor_joints();
@@ -34,6 +33,7 @@ ghostmodel::ghostmodel(visualizer* vis_, heightfield* hfield_, double dt_){
   adaptive_orientation_flag = true;//false;
   lik = model->get_lik();
   glik = gmodel->get_lik();
+  rcap = lik->get_rcap();
 }
 
 ghostmodel::~ghostmodel(){

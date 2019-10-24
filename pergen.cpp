@@ -1,8 +1,8 @@
-#include <map>
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
+//#include <map>
+//#include "core.h"
+//#include "matrix.h"
+//#include "visualization.h"
+//#include "model.h"
 #include "lik.h"
 #include "pergen.h"
 
@@ -180,7 +180,6 @@ pergensetup::pergensetup(int n_){
   pergen = new periodicgenerator(n);
   set_likpergen_map(n);
   limb_poss.resize(n);
-  rcap = .08;
   rec_transform.set_unity();
   rec_transform_flag = false;
 }
@@ -234,7 +233,7 @@ void pergensetup::set_likpergen_map(int n){
   }
 }
 
-void pergensetup::set_limb_poss(int limbi, extvec& pos){
+void pergensetup::set_limb_poss(int limbi, extvec& pos, double rcap){
   int j = likpergen_map[limbi];
   //pos.set_v(2,rcap+(j%2));
   pos.set_v(2,rcap);
@@ -420,12 +419,13 @@ void pgssweeper::setup_pergen(pergensetup& pergensu, extvec* orientation, double
   liksolver* lik = model->get_lik();
   int n = pergensu.get_limb_number();
   assert(n == lik->get_number_of_limbs());
+  double rcap = lik->get_rcap();
   setup_foot_shift(pergensu);
   for(int i=0;i<n;i++){
     extvec pos;
     lik->get_limb_pos0(i,pos);
     shift_pos0(i,pos);
-    pergensu.set_limb_poss(i,pos);
+    pergensu.set_limb_poss(i,pos,rcap);
   }
   pergensu.set_pos0s();
   pergensu.set_orientation(orientation);

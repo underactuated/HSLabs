@@ -1,3 +1,6 @@
+#ifndef CORE_H
+#define CORE_H
+
 #include "rapidxml-1.13/rapidxml.hpp"
 #include "rapidxml-1.13/rapidxml_utils.hpp"
 
@@ -15,8 +18,9 @@ void save_2d_array(double** array, int n, int m, std::string fname, bool append_
 double randf();
 
 // maybe generalize to any type later with templates
-struct arrayops{
+class arrayops{
   int n;
+public:
   arrayops(int n_){n = n_;}
   arrayops(){n = 0;}
   void set_n(int n_){n = n_;}
@@ -53,3 +57,5 @@ void print_array (T* a, int n, const char* prefix){
   cout << prefix;
   print_array <T> (a,n);
 }
+
+#endif

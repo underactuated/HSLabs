@@ -1,14 +1,23 @@
+#ifndef PLAYER_H
+#define PLAYER_H
 
-struct pergensetup;
-struct periodic;
-struct configtimedertrack;
-struct cpccontroller;
-struct pgssweeper;
-struct heightfield;
-struct ghostmodel;
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+
+#include "matrix.h"
+#include "visualization.h"
+#include "model.h"
+
+class pergensetup;
+class periodic;
+class configtimedertrack;
+class cpccontroller;
+class pgssweeper;
+class heightfield;
+class ghostmodel;
 struct pgsconfigparams;
 
-struct modelplayer{
+class modelplayer{
   kinematicmodel* model;
   int step_mode;
   bool manual_viewpoint_flag, contact_force_flag, open_loop_flag, position_control_flag, dynamics_from_simulation_flag, cpc_control_flag, record_traj_flag, torso_kicks_flag, ghost_walking_flag, clip_torque_flag;
@@ -24,6 +33,7 @@ struct modelplayer{
   double traj_t_limit, torque_limit;
   heightfield* hfield;
   ghostmodel* ghost;
+public:
   modelplayer();
   ~modelplayer();
   void load_model(string fname);
@@ -40,7 +50,7 @@ struct modelplayer{
   void get_pgs_config_params(string& rec_str, pgsconfigparams& confparams);
   void play_pergensu(pergensetup* pgs);
   void set_play_dt(double dt){play_dt = dt;}
-  kinematicmodel* get_model(){return model;}
+  inline kinematicmodel* get_model(){return model;}
   void prepare_per_traj_dyn(periodic& per, pergensetup* pgs, int n_t);
   double measure_cot(pergensetup* pgs, int n_t);
   void pergensu_config_string(pergensetup* pgs, string& str);
@@ -75,7 +85,7 @@ private:
   void unset_per_controller();
   void set_position_control_torques();
   void estimate_B();
-  visualizer* get_vis(){return model->get_vis();}
+  inline visualizer* get_vis(){return model->get_vis();}
   void save_last_motor_torques(double* torques);
   void setup_cpc_controller();
   void set_cpc_torques();
@@ -95,15 +105,4 @@ private:
   void check_model_loaded();
 };
 
-/*
-struct pgsconfigparams{
-  string fname;
-  extvec* orientation;
-  double step_duration;
-  double period, step_length, step_height;
-  double curvature;
-  double lat_foot_shift, rad_foot_shift;
-  pgsconfigparams(){curvature = 0; lat_foot_shift = 0; rad_foot_shift = 0;}
-};
-*/
-
+#endif

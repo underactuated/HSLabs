@@ -1,9 +1,15 @@
+#ifndef VISUALIZATION_H
+#define VISUALIZATION_H
+
 #include <vector>
 #include <map>
 #include <list>
 #include <ode/ode.h>
 #include <drawstuff/drawstuff.h>
 #include "ode/texturepath.h"
+
+#include "core.h"
+#include "matrix.h"
 
 void rot_ztov(dMatrix3& rot, extvec& v);
 void transpose_odematrix(dMatrix3& m);
@@ -16,13 +22,13 @@ void euler_angles_from_affine(affine& A, double* angles);
 // ##### VISUALIZER #####
 // includes minimal functionality from ode and ds to visualize robot state
 
-struct kinematicmodel;
-struct modelplayer;
-struct viewpoint;
-struct odepart;
-struct trimeshmanager;
+class kinematicmodel;
+class modelplayer;
+class viewpoint;
+class odepart;
+class trimeshmanager;
 
-struct visualizer{
+class visualizer{
   dWorldID odeworld;
   dSpaceID odespace;
   dJointGroupID contact_group;
@@ -35,6 +41,7 @@ struct visualizer{
   vector<dJointID> motors;
   map<dBodyID,extvec> added_forces;
   trimeshmanager* trimeshman;
+public:
   visualizer();
   ~visualizer();
   void initialize_fn();
@@ -43,11 +50,11 @@ struct visualizer{
   void start_loop();
   void draw();
   void draw_inloop();
-  dWorldID* get_odeworld(){return &odeworld;}
-  dSpaceID* get_odespace(){return &odespace;}
-  void push_geom(dGeomID geom){geoms.push_back(geom);}
+  inline dWorldID* get_odeworld(){return &odeworld;}
+  inline dSpaceID* get_odespace(){return &odespace;}
+  inline void push_geom(dGeomID geom){geoms.push_back(geom);}
   void step();
-  void set_player(modelplayer* player_){player = player_;}
+  inline void set_player(modelplayer* player_){player = player_;}
   void set_viewpoint();
   void adjust_viewpoint();
   void set_flag(string flag_name, bool value);
@@ -62,50 +69,56 @@ struct visualizer{
   odepart* get_torso_opart();
   void add_force(dBodyID body, double* f);
   void draw_forces();
-  trimeshmanager* get_trimeshman(){return trimeshman;}
-  kinematicmodel* get_model(){return model;}
-  viewpoint* get_view(){return view;}
+  inline trimeshmanager* get_trimeshman(){return trimeshman;}
+  inline kinematicmodel* get_model(){return model;}
+  inline viewpoint* get_view(){return view;}
+  inline void set_model(kinematicmodel* model_){model = model_;}
 private:
   void trimesh_test(); // temp
 };
 
-struct modelnode;
+class modelnode;
 
-struct odepart{
+class odepart{
   affine A_geom; // in modelnode's body frame
   modelnode* mnode;
   dGeomID geom;
   string part_name;
   extvec capsule_to_pos; // used as foot position
+  double rcap; // capsule size (for capsule geoms, 0 otherwise)
+public:
+  odepart(){rcap = 0;}
   void make(xml_node<>* xnode, modelnode* mnode_, visualizer* vis);
   void capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, double* fromto);
-  dBodyID get_body(){return dGeomGetBody(geom);}
+  inline dBodyID get_body(){return dGeomGetBody(geom);}
   void get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot);
   void print(int detail_level);
   void print_ode();
-  string get_part_name(){return part_name;}
-  modelnode* get_mnode(){return mnode;}
+  inline string get_part_name(){return part_name;}
+  inline modelnode* get_mnode(){return mnode;}
   void get_com_pos(extvec& pos);
   void get_foot_pos(extvec& pos);
   void get_foot_pos(extvec& pos, bool from_body_flag);
   void make_fixed_joint(odepart* parent_part, visualizer* vis);
   void make_hinge_joint(odepart* parent_part, visualizer* vis);
   void get_frame_A_ground_from_body(affine& A_ground);
+  inline double get_rcap(){return rcap;}
 private:
   void get_ode_body_A_ground(affine& A_ground);
   void make_ccylinder(visualizer* vis, xml_node<>* geom_node, bool capped_flag);
 };
 
-struct viewpoint{
+class viewpoint{
   float xyz_ref[3], xyz_cam_rel[3], hpr[3];
   float k0, xyz0[3], xyz_rate[3], xyz_ref_rate[3];
   bool smooth_flag;
+public:
   viewpoint();
   void set(float* xyz, float* xyz_cam, float* hpr);
   void set(float* xyz, float* xyz_cam);
   void adjust(const dReal* xyz);
   void print();
-  void set_smooth(bool flag_val){smooth_flag = flag_val;}
+  inline void set_smooth(bool flag_val){smooth_flag = flag_val;}
   void shift_cam(float x, float y, float z);
 private:
   void hard_xyzref_update(const dReal* xyz);
@@ -114,3 +127,4 @@ private:
   void set_xyz(float* xyz, float* xyz_cam);
 };
 
+#endif

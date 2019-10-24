@@ -1,12 +1,16 @@
+#ifndef MATRIX_H
+#define MATRIX_H
+
 #include <iostream>
 #include <ode/ode.h>
 
 using namespace std;
 
-struct extvec;
+class extvec;
 
-struct affine{ 
+class affine{ 
   double a[16]; // matrix is stored column-wise
+public:
   void set_zeros();
   void set_unity();
   void print_all();
@@ -17,7 +21,7 @@ struct affine{
   void copy_transposed(affine& b);
   void mult(affine& b);
   void mult(affine& b, affine& c);
-  double* get_data(){return a;}
+  inline double* get_data(){return a;}
   void set_rotation(dMatrix3& rot);
   void set_rotation(affine& rot);
   void translate(extvec& t);
@@ -34,8 +38,9 @@ private:
 };
 
 
-struct extvec{
+class extvec{
   double v[4];
+public:
   extvec(){v[3] = 1;}
   extvec(double x, double y, double z);
   void set_zeros();
@@ -46,7 +51,7 @@ struct extvec{
   void copy3(extvec& u);
   void subtract(extvec& u);
   double norm();
-  double* get_data(){return v;}
+  inline double* get_data(){return v;}
   void get_components(double& x, double& y, double& z);
   void get_components(double* p);
   void cross(extvec& u, extvec& w);
@@ -57,6 +62,7 @@ struct extvec{
   void to_dvec(dVector3& u);
   void set_v(int i, double val);
   void add(extvec& u);
-  double get_v(int i){return v[i];}
+  inline double get_v(int i){return v[i];}
 };
 
+#endif

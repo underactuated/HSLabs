@@ -1,6 +1,6 @@
-#include "core.h"
+//#include "core.h"
 #include "geom.h"
-
+#include <drawstuff/drawstuff.h>
 
 trimesh::trimesh(int n_vert, int n_tri_, float rgb_[3]){
   n_tri = n_tri_;

@@ -1,3 +1,9 @@
+#ifndef ODESTATE_H
+#define ODESTATE_H
+
+#include "core.h"
+#include "model.h"
+
 struct odebody{
   dBodyID body;
   dVector3 pos, vel, ang_vel;
@@ -17,12 +23,13 @@ struct odestate{
   void print();
 };
 
-struct configtimedertrack{
+class configtimedertrack{
   int max_der, config_dim;
   double dt;
   double** ders;
   double *new_der, *old_der;
   arrayops ao;
+public:
   configtimedertrack(int max_der, int config_dim, double dt);
   configtimedertrack(configtimedertrack* tdertrack);
   ~configtimedertrack();
@@ -30,10 +37,10 @@ struct configtimedertrack{
   void compute_dern(int n);
   void print();
   void del_second_der(configtimedertrack* tdertrack, double* del);
-  double** get_ders(){return ders;}
+  inline double** get_ders(){return ders;}
 private:
   void construct(int max_der, int config_dim, double dt);
   void copy(configtimedertrack* tdertrack);
 };
 
-
+#endif

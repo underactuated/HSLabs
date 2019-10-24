@@ -1,7 +1,7 @@
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
+//#include "core.h"
+//#include "matrix.h"
+//#include "visualization.h"
+//#include "model.h"
 #include "odestate.h"
 
 

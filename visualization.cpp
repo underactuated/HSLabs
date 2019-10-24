@@ -1,5 +1,5 @@
-#include "core.h"
-#include "matrix.h"
+//#include "core.h"
+//#include "matrix.h"
 #include "visualization.h"
 #include "model.h"
 #include "geom.h"
@@ -157,7 +157,8 @@ visualizer loop_vis;
 
 void kinematicmodel::set_vis(){
   vis = &loop_vis;
-  vis->model = this;
+  //vis->model = this;
+  vis->set_model(this);
 }
 
 void vis_start(){
@@ -363,7 +364,8 @@ void visualizer::get_ode_config(double* config){
 }
 
 odepart* visualizer::get_torso_opart(){
-  return (*model->get_odeparts())[0];
+  return model->get_odepart(0);
+  //return (*model->get_odeparts())[0];
 }
 
 int draw_force_flag = 0;
@@ -456,6 +458,7 @@ void odepart::make_ccylinder(visualizer* vis, xml_node<>* geom_node, bool capped
   dGeomSetBody(geom,body);
   affine_from_posrot(A_geom,pos,rot);
   vis->push_geom(geom);
+  if(capped_flag){rcap = r;}
 }
 
 void odepart::capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, double* fromto){

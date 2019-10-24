@@ -1,8 +1,8 @@
-#include <map>
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
+//#include <map>
+//#include "core.h"
+//#include "matrix.h"
+//#include "visualization.h"
+//#include "model.h"
 #include "lik.h"
 
 
@@ -17,6 +17,7 @@ liksolver::liksolver(kinematicmodel* model){
     return;
   }
   solver_func = NULL;
+  rcap = 0;
   set_limbs(model);
 }
 
@@ -75,6 +76,7 @@ void liksolver::set_limbs(kinematicmodel* model){
     limbs.push_back(new liklimb (i,child));
     limbs.back()->set_solver_func(solver_func);
   }
+  set_rcap(model,child_inds);
 }
 
 // arranges limb (indexed by limbi) in the model (by setting joint values)
@@ -117,6 +119,17 @@ void liksolver::solver_test(int n){
   vector<liklimb*>::iterator it = limbs.begin();
   for(;it!=limbs.end();it++){(*it)->solver_test_yxx(n);}
   cout << "... success!" << endl;
+}
+
+void liksolver::set_rcap(kinematicmodel* model, vector<int>& limb_inds){
+  if(!model->if_vis()){return;}
+  vector<int>::iterator it = limb_inds.begin();
+  for(;it!=limb_inds.end();it++){
+    double rcap1 = model->get_odepart((*it)+2)->get_rcap();
+    //cout <<rcap1<<endl;
+    if((rcap > 0) && (rcap1 != rcap)){cout<<"ERROR: currently, rcaps must be same for all feet, rcap = "<<rcap<<", rcap1 = "<<rcap1<<endl;exit(1);}
+    rcap = rcap1;
+  }
 }
 
 

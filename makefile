@@ -67,14 +67,5 @@ ghost.o: ghost.h ghost.cpp
 	g++ -c ghost.cpp $(COMP_ATTRS)
 
 
-#all: roboarm
-
-#roboarm: $(O_FILES)
-#        g++ $(O_FILES) -o roboarm $(COMP_ATTRS) $(LINK_ATTRS)
-
-#main.o: core.h define.h simulator.h main.cpp
-##       g++ -c -DdSINGLE main.cpp $(COMP_ATTRS)
-#        g++ -c -D$(PRECISION) main.cpp $(COMP_ATTRS)
-
 clean:
 	rm *.o

@@ -123,7 +123,7 @@ void affine::set_a(int i, int j, double val){
   double* p = a + (j*4+i);
   *p = val;
 }
-
+ 
 double affine::get_a(int i, int j){
   return *(a + (j*4+i));
 }
@@ -165,7 +165,7 @@ void affine::invert_rigidbody(){
   mult(t,t1);
   translate(t1);
 }
-
+ 
 void affine::get_translation(extvec& t){
   double *p = t.get_data(), *p1 = a + 12;
   for(int i=0;i<3;i++){*p++ = *p1++;}
@@ -176,7 +176,7 @@ extvec::extvec(double x, double y, double z){
   v[3] = 1;
   this->set(x,y,z);
 }
-
+ 
 void extvec::set_zeros(){
   double* p = v;
   for(int i=0;i<3;i++){*p++ = 0;}
@@ -190,28 +190,28 @@ void extvec::print(){
   }
   cout << "]" << endl;
 }
-
+ 
 void extvec::set(double x, double y, double z){
   double* p = v;
   *p++ = x;
   *p++ = y;
   *p = z;
 }
-
+ 
 void extvec::set(double* a){
   double* p = v;
   for(int i=0;i<3;i++){*p++ = *a++;}
 }
-
+ 
 void extvec::copy(extvec& u){
   double *p = v, *p1 = u.v;
   for(int i=0;i<4;i++){*p++ = *p1++;}
 }
-
+ 
 void extvec::copy3(extvec& u){
   set(u.v);
 }
-
+ 
 void extvec::subtract(extvec& u){
   double *p = v, *p1 = u.v;
   for(int i=0;i<4;i++){*p++ -= *p1++;}
