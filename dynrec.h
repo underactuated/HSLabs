@@ -23,18 +23,18 @@ class dynpart{
   bool foot_flag;
 public:
   dynpart(odepart* opart_){opart = opart_;}
-  void setup(map<modelnode*,int>& mnode_id_map);
-  void print();
   inline extvec* get_com_pos(){return &com_pos;}
   inline extvec* get_joint_pos(){return &joint_pos;}
   inline extvec* get_foot_pos(){return &foot_pos;}
+  inline int get_parent_id(){return parent_id;}
+  inline double get_mass(){return mass;}
+  inline bool if_foot(){return foot_flag;}
+  void setup(map<modelnode*,int>& mnode_id_map);
+  void print();
   void recompute();
   affine* get_A_ground();
   affine* get_inertia_tensor();
-  inline int get_parent_id(){return parent_id;}
-  inline double get_mass(){return mass;}
   void setup_foot(set<modelnode*>& foot_set);
-  inline bool if_foot(){return foot_flag;}
   void get_joint_zaxis(extvec& axis);
 private:
   void set_joint_pos();
