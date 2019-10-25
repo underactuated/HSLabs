@@ -53,14 +53,14 @@ class dynrecord{
 public:
   dynrecord(int n, int nf);
   ~dynrecord();
-  void initialize(vector<dynpart*>& dynparts, double rcap);
-  void print(int id);
-  void compute_ders(int stage, dynrecord* prev_rec, dynrecord* next_rec, double dt, periodic* per);
   inline extvec* get_mom_rate(){return mom_rate;}
   inline extvec* get_ang_mom_rate(){return ang_mom_rate;}
   inline extvec* get_pos(){return pos;}
   inline extvec* get_jpos(){return jpos;}
   inline extvec* get_jzaxis(){return jzaxis;}
+  void initialize(vector<dynpart*>& dynparts, double rcap);
+  void print(int id);
+  void compute_ders(int stage, dynrecord* prev_rec, dynrecord* next_rec, double dt, periodic* per);
   void set_forcetorque_system(SpMat& B, VectorXd& f, int* parentis, double* masses);
   int get_ncontacts();
   void set_forcetorque_system_contacts(SpMat& B, int* footis);

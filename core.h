@@ -6,14 +6,14 @@
 
 using namespace rapidxml;
 
-void str_to_val(char* str, double* val);
+void str_to_val(const char* str, double* val);
 
-void xmlnode_attr_to_val(xml_node<>* xnode, const char* attr_name, double* val);
-void xmlnode_attr_to_val(xml_node<>* xnode, const char* attr_name, std::string& val);
+void xmlnode_attr_to_val(const xml_node<>* xnode, const char* attr_name, double* val);
+void xmlnode_attr_to_val(const xml_node<>* xnode, const char* attr_name, std::string& val);
 
-double** new_2d_array(int n, int m);
-void delete_2d_array(double** array, int n);
-void save_2d_array(double** array, int n, int m, std::string fname, bool append_flag);
+double** new_2d_array(const int n, const int m);
+void delete_2d_array(double** array, const int n);
+void save_2d_array(double** array, const int n, const int m, const std::string fname, const bool append_flag);
 
 double randf();
 
@@ -21,22 +21,22 @@ double randf();
 class arrayops{
   int n;
 public:
-  arrayops(int n_){n = n_;}
+  arrayops(const int n_){n = n_;}
   arrayops(){n = 0;}
-  void set_n(int n_){n = n_;}
+  void set_n(const int n_){n = n_;}
   void print(double* a);
-  void assign(double* a, double* a1);
-  double* add(double* a, double* a1);
-  double* subtract(double* a, double* a1);
-  double* times(double* a, double b);
-  double* modulus(double* a, double b);
-  double norm(double* a);
-  double distance(double* a, double* a1);
-  void assign_scalar(double* a, double b);
-  double dot(double* a, double* a1);
-  double l1_norm(double* a);
-  double** new_2d_array(int m);
-  void delete_2d_array(double** array, int m);
+  void assign(double* a, const double* a1);
+  double* add(double* a, const double* a1);
+  double* subtract(double* a, const double* a1);
+  double* times(double* a, const double b);
+  double* modulus(double* a, const double b);
+  double dot(const double* a, const double* a1);
+  double norm(const double * a);
+  double distance(const double* a, const double* a1);
+  void assign_scalar(double* a, const double b);
+  double l1_norm(const double* a);
+  double** new_2d_array(const int m);
+  void delete_2d_array(double** array, const int m);
 };
 
 
@@ -44,7 +44,7 @@ public:
 using namespace std;
 
 template <typename T>
-void print_array (T* a, int n){
+void print_array (const T* a, const int n){
   for(int i=0;i<n;i++){
     if(i){cout << " ";}
     cout << *a++;
@@ -53,7 +53,7 @@ void print_array (T* a, int n){
 }
 
 template <typename T>
-void print_array (T* a, int n, const char* prefix){
+void print_array (const T* a, const int n, const char* prefix){
   cout << prefix;
   print_array <T> (a,n);
 }

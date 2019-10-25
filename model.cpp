@@ -4,7 +4,7 @@
 #include "model.h"
 #include "lik.h"
 
-modeljoint::modeljoint(joint_type type_, affine& A){
+modeljoint::modeljoint(const joint_type type_, const affine& A){
   type = type_;
   A_parent.copy(A);
   switch(type){
@@ -64,7 +64,7 @@ void modeljoint::compute_A_ground(affine* A){
 }
 
 
-modelnode::modelnode(double* pos, affine* A){
+modelnode::modelnode(const double* pos, const affine* A){
   A_tobody.set_translation(pos);
   compute_A_ground(A);
   joint = NULL;
@@ -81,7 +81,7 @@ void modelnode::add_child(modelnode* child){
 }
 
 // computes A_ground at node construction only (before a joint is added)
-void modelnode::compute_A_ground(affine* A){
+void modelnode::compute_A_ground(const affine* A){
   A_ground.copy(*A);
   A_ground.mult(A_tobody);
 }
@@ -95,7 +95,7 @@ void modelnode::print(){
 }
 
 // makes hinge and slider (latter remains to be implemented)
-list<double*> modelnode::make_joint(joint_type type, double* pos_, double* axis){
+list<double*> modelnode::make_joint(joint_type type, const double* pos_, const double* axis){
   switch (type) {
   case hinge: {
     extvec pos, v;
@@ -127,7 +127,7 @@ list<double*> modelnode::make_joint(joint_type type, double* pos_, double* axis)
 }
 
 // makes free joint
-list<double*> modelnode::make_joint(joint_type type, double* pos_){
+list<double*> modelnode::make_joint(const joint_type type, const double* pos_){
   switch (type) {
   case free6: {
     extvec pos;
@@ -176,7 +176,7 @@ void modelnode::recompute_A_ground(affine& A){
 }
 
 
-kinematicmodel::kinematicmodel(bool vis_flag_){
+kinematicmodel::kinematicmodel(const bool vis_flag_){
   vis_flag = vis_flag_;
   if(vis_flag){set_vis();}
   mrootnode = NULL;
@@ -192,7 +192,7 @@ kinematicmodel::~kinematicmodel(){
   }
 }
 
-void kinematicmodel::load_fromxml(string fname){
+void kinematicmodel::load_fromxml(const string fname){
   xmlfname = fname;
   file<> xmlFile(fname.c_str());
   xml_document<> doc;
@@ -209,7 +209,7 @@ void kinematicmodel::load_fromxml(string fname){
   set_lik();
 }
 
-modelnode* kinematicmodel::mnode_from_xnode(xml_node<>* xnode, affine* A_parent){
+modelnode* kinematicmodel::mnode_from_xnode(xml_node<>* xnode, const affine* A_parent){
   double pos[3];
   xmlnode_attr_to_val(xnode,"pos",pos);
   modelnode* mnode = new modelnode (pos,A_parent);
@@ -225,7 +225,7 @@ modelnode* kinematicmodel::mnode_from_xnode(xml_node<>* xnode, affine* A_parent)
   return mnode;
 }
 
-void kinematicmodel::make_odepart(xml_node<>* xnode, modelnode* mnode){
+void kinematicmodel::make_odepart(const xml_node<>* xnode, modelnode* mnode){
   mnodes.push_back(mnode);
   if(!vis_flag){return;}
   odepart* part = new odepart;
@@ -233,7 +233,7 @@ void kinematicmodel::make_odepart(xml_node<>* xnode, modelnode* mnode){
   odeparts.push_back(part);
 }
 
-void kinematicmodel::make_joint(xml_node<>* xnode, modelnode* mnode){
+void kinematicmodel::make_joint(const xml_node<>* xnode, modelnode* mnode){
   xml_node<>* joint_node = xnode->first_node("joint");
   if(!joint_node){return;}
   //return; // ignore joints
@@ -282,7 +282,7 @@ void kinematicmodel::print(){
   print(0);
 }
 
-void kinematicmodel::print(int detail_level){
+void kinematicmodel::print(const int detail_level){
   cout << "--- kinematic model ---" << endl;
   cout << "loaded from " << xmlfname << endl;
   int config_dim = get_config_dim();
@@ -304,27 +304,21 @@ void kinematicmodel::print(int detail_level){
   }
 }
 
-// get model node by index (print model to see indexing)
-modelnode* kinematicmodel::get_mnode(int i){
-  //return odeparts[i]->get_mnode();
-  return mnodes[i];
-}
-
 int kinematicmodel::get_config_dim(){
   return joint_values.size();
 }
 
 // sets jvalues via torso orientation and limb positions
-void kinematicmodel::set_jvalues_with_lik(double* rec){
-  double* p = rec;
+void kinematicmodel::set_jvalues_with_lik(const double* rec){
+  const double* p = rec;
   for(int i=0;i<6;i++){*joint_values[i] = *p++;}
   recompute_modelnodes();
   lik->place_limbs(p);
 }
 
 // sets jvalues directly
-void kinematicmodel::set_jvalues(double* values){
-  double* p = values;
+void kinematicmodel::set_jvalues(const double* values){
+  const double* p = values;
   vector<double*>::iterator it = joint_values.begin();
   for(;it!=joint_values.end();it++){*(*it) = *p++;}
 }

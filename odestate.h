@@ -33,11 +33,11 @@ public:
   configtimedertrack(int max_der, int config_dim, double dt);
   configtimedertrack(configtimedertrack* tdertrack);
   ~configtimedertrack();
+  inline double** get_ders(){return ders;}
   void push_config(double* config);
   void compute_dern(int n);
   void print();
   void del_second_der(configtimedertrack* tdertrack, double* del);
-  inline double** get_ders(){return ders;}
 private:
   void construct(int max_der, int config_dim, double dt);
   void copy(configtimedertrack* tdertrack);

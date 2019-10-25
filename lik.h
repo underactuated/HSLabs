@@ -28,14 +28,14 @@ class liksolver{
 public:
   liksolver(kinematicmodel* model);
   ~liksolver();
-  void place_limb(int limbi, double x, double y, double z);
-  void place_limbs(double* rec);
-  void get_limb_pos0(int limbi, extvec& pos);
-  void print_limb_pos0s();
   inline int get_number_of_limbs(){return limbs.size();}
   inline vector<liklimb*>* get_limbs(){return &limbs;}
-  void solver_test(int n);
   inline double get_rcap(){return rcap;}
+  void place_limb(int limbi, double x, double y, double z);
+  void place_limbs(const double* rec);
+  void get_limb_pos0(int limbi, extvec& pos);
+  void print_limb_pos0s();
+  void solver_test(int n);
 private:
   void set_limbs(kinematicmodel* model);
   void set_rcap(kinematicmodel* model, vector<int>& limb_inds);
@@ -49,15 +49,15 @@ class liklimb{
   bool limb_bend;
 public:
   liklimb(int limbi_, modelnode* child_);
+  inline void set_bend(bool bend){limb_bend = bend;}
+  inline void set_solver_func(SolverFuncType* f){solver_func = f;}
   void setup_joint_values();
   void place_limb(extvec& pos_ground);
   void set_joint_values(extvec& joint_values);
   void get_pos0(extvec& pos);
-  inline void set_solver_func(SolverFuncType* f){solver_func = f;}
   modelnode* get_foot();
   void solver_test_yxx(int n);
   bool bend_from_angles(extvec& angles);
-  inline void set_bend(bool bend){limb_bend = bend;}
 private:
   void poslimb(extvec& pos_ground, extvec& pos_limb);
 };

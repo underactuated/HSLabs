@@ -15,6 +15,10 @@ class periodicgenerator{
 public:
   periodicgenerator(int n);
   ~periodicgenerator();
+  inline double get_period(){return period;}
+  inline double get_step_length(){return step_length;}
+  inline double get_step_duration(){return step_duration;}
+  inline double get_curvature(){return curvature;}
   void set_step_duration(double f); // f is in [0,1]
   void set_scales(double period, double step_length, double step_height);
   double stepx(double t);
@@ -25,15 +29,11 @@ public:
   void change_pos0(int limbi, extvec& delpos0);
   void print(){print(0);}
   void print(int detail_level);
-  inline double get_period(){return period;}
-  inline double get_step_length(){return step_length;}
   void get_TLh(double TLh[3]);
-  inline double get_step_duration(){return step_duration;}
   void set_curvature(double curvature);
   void compute_max_radius();
   void turn_position(extvec& pos0, extvec& delpos, extvec& pos);
   void get_turn_orientation(double dx, extvec* orientation);
-  inline double get_curvature(){return curvature;}
 };
 
 struct pgsconfigparams;
@@ -51,19 +51,20 @@ class pergensetup{
 public:
   pergensetup(int n);
   ~pergensetup();
+  inline periodicgenerator* get_pergen(){return pergen;}
+  inline int get_limb_number(){return n;}
+  inline int get_config_dim(){return 6+3*n;}
+  inline double get_period(){return get_pergen()->get_period();}
+  inline pair<int,double> get_foot_shift(){return foot_shift;}
   void set_TLh(double T, double L, double h);
   void set_TLh(double TLh[3]){set_TLh(TLh[0],TLh[1],TLh[2]);}
   void set_rec(double* rec, double t);
   void set_likpergen_map(int n);
-  inline periodicgenerator* get_pergen(){return pergen;}
-  inline int get_limb_number(){return n;}
   void set_limb_poss(int limbi, extvec& pos, double rcap);
   void set_pos0s();
   void set_orientation(extvec* orientation);
-  inline int get_config_dim(){return 6+3*n;}
   void get_config_params(extvec& pos, extvec& angles, double& step_duration, double TLh[3]);
   void get_config_params(pgsconfigparams* pcp);
-  inline double get_period(){return get_pergen()->get_period();}
   void set_rec_rotation(extvec& rec_eas);
   void set_rec_transform(extvec& rec_transl, extvec& rec_eas);
   void copy_rec_transform(pergensetup* pgs);
@@ -71,7 +72,6 @@ public:
   void print(int detail_level);
   void set_curvature(double curvature);
   void set_foot_shift(pair<int,double> foot_shift_){foot_shift = foot_shift_;}
-  inline pair<int,double> get_foot_shift(){return foot_shift;}
 private:
   void transform_rec(double* rec);
   void rec_to_orientation(double* rec, extvec* orientation);
@@ -92,10 +92,10 @@ class pgssweeper{
 public:
   pgssweeper(pergensetup* pgs, kinematicmodel* model);
   ~pgssweeper();
-  void sweep(string param_name, double val0, double val1, int n_val);
-  bool next();
   inline pergensetup* get_pgs(){return pgs;}
   inline double get_val(){return val;}
+  void sweep(string param_name, double val0, double val1, int n_val);
+  bool next();
   void setup_pergen(pergensetup& pergensu, extvec* orientation, double step_duration);
   void full_setup_pergen(pergensetup& pergensu, pgsconfigparams* pcp);
 private:

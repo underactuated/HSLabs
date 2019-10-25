@@ -86,10 +86,10 @@ void liksolver::place_limb(int limbi, double x, double y, double z){
   limbs[limbi]->place_limb(pos_ground);
 }
 
-void liksolver::place_limbs(double* rec){
+void liksolver::place_limbs(const double* rec){
   if(index == -1){cout << "WARNING: LIK undefined" << endl; return;}
 
-  double* p = rec;
+  const double* p = rec;
   int imax = limbs.size();
   for(int i=0;i<imax;i++){
     extvec pos_ground;

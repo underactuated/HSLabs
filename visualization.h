@@ -44,35 +44,35 @@ class visualizer{
 public:
   visualizer();
   ~visualizer();
+  inline dWorldID* get_odeworld(){return &odeworld;}
+  inline dSpaceID* get_odespace(){return &odespace;}
+  inline void push_geom(dGeomID geom){geoms.push_back(geom);}
+  inline void set_player(modelplayer* player_){player = player_;}
+  inline trimeshmanager* get_trimeshman(){return trimeshman;}
+  inline kinematicmodel* get_model(){return model;}
+  inline viewpoint* get_view(){return view;}
+  inline void set_model(kinematicmodel* model_){model = model_;}
   void initialize_fn();
   void setup_odeworld();
   void unset_odeworld();
   void start_loop();
   void draw();
   void draw_inloop();
-  inline dWorldID* get_odeworld(){return &odeworld;}
-  inline dSpaceID* get_odespace(){return &odespace;}
-  inline void push_geom(dGeomID geom){geoms.push_back(geom);}
   void step();
-  inline void set_player(modelplayer* player_){player = player_;}
   void set_viewpoint();
   void adjust_viewpoint();
-  void set_flag(string flag_name, bool value);
-  void simulate_odeworld(double dt_ode);
+  void set_flag(const string flag_name, const bool value);
+  void simulate_odeworld(const double dt_ode);
   dJointID create_contact(dContact* contact);
-  void set_speedup(int f);
+  void set_speedup(const int f);
   void add_motor(dJointID hinge);
-  void set_ode_motor_torques(double* motor_torques);
+  void set_ode_motor_torques(const double* motor_torques);
   void get_ode_motor_angles(double* as);
   void get_ode_motor_adas(double* as, double* das);
   void get_ode_config(double* config);
   odepart* get_torso_opart();
-  void add_force(dBodyID body, double* f);
+  void add_force(dBodyID body, const double* f);
   void draw_forces();
-  inline trimeshmanager* get_trimeshman(){return trimeshman;}
-  inline kinematicmodel* get_model(){return model;}
-  inline viewpoint* get_view(){return view;}
-  inline void set_model(kinematicmodel* model_){model = model_;}
 private:
   void trimesh_test(); // temp
 };
@@ -88,24 +88,24 @@ class odepart{
   double rcap; // capsule size (for capsule geoms, 0 otherwise)
 public:
   odepart(){rcap = 0;}
-  void make(xml_node<>* xnode, modelnode* mnode_, visualizer* vis);
-  void capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, double* fromto);
   inline dBodyID get_body(){return dGeomGetBody(geom);}
-  void get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot);
-  void print(int detail_level);
-  void print_ode();
   inline string get_part_name(){return part_name;}
   inline modelnode* get_mnode(){return mnode;}
+  inline double get_rcap(){return rcap;}
+  void make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis);
+  void capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, const double* fromto);
+  void get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot);
+  void print(const int detail_level);
+  void print_ode();
   void get_com_pos(extvec& pos);
   void get_foot_pos(extvec& pos);
-  void get_foot_pos(extvec& pos, bool from_body_flag);
+  void get_foot_pos(extvec& pos, const bool from_body_flag);
   void make_fixed_joint(odepart* parent_part, visualizer* vis);
   void make_hinge_joint(odepart* parent_part, visualizer* vis);
   void get_frame_A_ground_from_body(affine& A_ground);
-  inline double get_rcap(){return rcap;}
 private:
   void get_ode_body_A_ground(affine& A_ground);
-  void make_ccylinder(visualizer* vis, xml_node<>* geom_node, bool capped_flag);
+  void make_ccylinder(visualizer* vis, const xml_node<>* geom_node, const bool capped_flag);
 };
 
 class viewpoint{
@@ -114,17 +114,17 @@ class viewpoint{
   bool smooth_flag;
 public:
   viewpoint();
-  void set(float* xyz, float* xyz_cam, float* hpr);
-  void set(float* xyz, float* xyz_cam);
+  inline void set_smooth(const bool flag_val){smooth_flag = flag_val;}
+  void set(const float* xyz, const float* xyz_cam, const float* hpr);
+  void set(const float* xyz, const float* xyz_cam);
   void adjust(const dReal* xyz);
   void print();
-  inline void set_smooth(bool flag_val){smooth_flag = flag_val;}
-  void shift_cam(float x, float y, float z);
+  void shift_cam(const float x, const float y, const float z);
 private:
   void hard_xyzref_update(const dReal* xyz);
   void smooth_xyzref_update(const dReal* xyz);
   void hpr_from_cam_rel();
-  void set_xyz(float* xyz, float* xyz_cam);
+  void set_xyz(const float* xyz, const float* xyz_cam);
 };
 
 #endif

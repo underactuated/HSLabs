@@ -36,6 +36,7 @@ class modelplayer{
 public:
   modelplayer();
   ~modelplayer();
+  inline kinematicmodel* get_model(){return model;}
   void load_model(string fname);
   void step();
   void test(int testi);
@@ -50,7 +51,6 @@ public:
   void get_pgs_config_params(string& rec_str, pgsconfigparams& confparams);
   void play_pergensu(pergensetup* pgs);
   void set_play_dt(double dt){play_dt = dt;}
-  inline kinematicmodel* get_model(){return model;}
   void prepare_per_traj_dyn(periodic& per, pergensetup* pgs, int n_t);
   double measure_cot(pergensetup* pgs, int n_t);
   void pergensu_config_string(pergensetup* pgs, string& str);
@@ -62,7 +62,7 @@ public:
   void position_control_test(pergensetup* pgs, double t0);
   void cpc_test(pergensetup* pgs, double t0);
   void record_pos_control_traj(pergensetup* pgs, double t0, double traj_duration);
-void load_draw_model(string fname); // prob tmp
+  void load_draw_model(string fname); // prob tmp
   void record_per_traj(pergensetup* pgs);
   void record_per_traj_sweep(pergensetup* pgs, string param_name, double val0, double val1, int n_val);
   void uneven_ground_test();
@@ -70,6 +70,7 @@ void load_draw_model(string fname); // prob tmp
   void test_lik_solvers();
   void shift_view(double x, double y, double z);
 private:
+  inline visualizer* get_vis(){return model->get_vis();}
   void test0();
   void test1();
   void test2();
@@ -85,7 +86,6 @@ private:
   void unset_per_controller();
   void set_position_control_torques();
   void estimate_B();
-  inline visualizer* get_vis(){return model->get_vis();}
   void save_last_motor_torques(double* torques);
   void setup_cpc_controller();
   void set_cpc_torques();

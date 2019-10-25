@@ -29,13 +29,13 @@ class forcetorquesolver{
 public:
   forcetorquesolver(periodic* per);
   ~forcetorquesolver();
+  inline double* get_jzaxis(){return jzaxis;}
+  inline VectorXd* get_fts(){return &fts;}
   void print();
   void solve_forcetorques(dynrecord* dynrec_);
   void solve_forcetorques(dynrecord* dynrec_, VectorXd& x, VectorXd& y);
   void switch_torso_penalty(bool force_flag, bool torque_flag);
   void set_action_penalties(VectorXd& c);
-  inline double* get_jzaxis(){return jzaxis;}
-  inline VectorXd* get_fts(){return &fts;}
   void solve_forces(dynrecord* dynrec_, VectorXd& z, VectorXd& y);
 private:
   void solve_forcetorques_particular(VectorXd& x, SpMat& B, VectorXd& f);

@@ -16,7 +16,7 @@ void affine::set_unity(){
   }
 }
 
-void affine::set_translation(double x, double y, double z){
+void affine::set_translation(const double x, const double y, const double z){
   set_unity();
   double *p = a + 12;
   *p++ = x;
@@ -24,11 +24,11 @@ void affine::set_translation(double x, double y, double z){
   *p++ = z;  
 }
 
-void affine::set_translation(double* v){
+void affine::set_translation(const double* v){
   return set_translation(*v,*(v+1),*(v+2));
 }
 
-void affine::print_rows(int n){
+void affine::print_rows(const int n){
   affine b;
   b.copy_transposed(*this);
   double *p = b.a;
@@ -52,13 +52,15 @@ void affine::print(){
 }
 
 // copies from b
-void affine::copy(affine& b){
-  double *p = a, *p1 = b.a;
+void affine::copy(const affine& b){
+  double *p = a;
+  const double *p1 = b.a;
   for(int i=0;i<16;i++){*p++ = *p1++;}
 }
 
-void affine::copy_transposed(affine& b){
-  double *p = a, *p1 = b.a;
+void affine::copy_transposed(const affine& b){
+  double *p = a;
+  const double *p1 = b.a;
   for(int i=0;i<4;i++){
     p1 = b.a + i;
     for(int j=0;j<4;j++){
@@ -68,15 +70,17 @@ void affine::copy_transposed(affine& b){
   }
 }
 
-void affine::mult(affine& b){
+void affine::mult(const affine& b){
   affine c;
   c.copy_transposed(*this);
-  double *p = a, *pb = b.a, *pc;
+  double *p = a, *pc;
+  const double *pb = b.a;
   for(int i=0;i<4;i++){
     pc = c.a;
     for(int j=0;j<4;j++){
       double s = 0;
-      double *p1 = pc, *p2 = pb;
+      double *p1 = pc;
+      const double *p2 = pb;
       for(int k=0;k<4;k++){
 	s += (*p1++)*(*p2++);
       }
@@ -87,21 +91,22 @@ void affine::mult(affine& b){
   }
 }
 
-void affine::mult(affine& b, affine& c){
+void affine::mult(const affine& b, affine& c){
   c.copy(*this);
   c.mult(b);
 }
 
-void affine::set_rotation(dMatrix3& rot){
+void affine::set_rotation(const dMatrix3& rot){
   double* p = a;
-  dReal* p1 = rot;
+  const dReal* p1 = rot;
   for(int i=0;i<12;i++){*p++ = *p1++;}
   for(int i=0;i<3;i++){*p++ = 0;}
   *p = 1;
 }
 
-void affine::set_rotation(affine& rot){
-  double *p = a, *p1 = rot.a;
+void affine::set_rotation(const affine& rot){
+  double *p = a;
+  const double *p1 = rot.a;
   for(int i=0;i<12;i++){*p++ = *p1++;}
   for(int i=0;i<3;i++){*p++ = 0;}
   *p = 1;
@@ -119,12 +124,12 @@ void affine::transpose(){
 }
 
 // i and j are counted from 0
-void affine::set_a(int i, int j, double val){
+void affine::set_a(const int i, const int j, const double val){
   double* p = a + (j*4+i);
   *p = val;
 }
  
-double affine::get_a(int i, int j){
+double affine::get_a(const int i, const int j){
   return *(a + (j*4+i));
 }
 
@@ -142,8 +147,9 @@ void affine::mult(extvec& v, extvec& u){
   }
 }
 
-void affine::subtract(affine& b){
-  double *p = a, *p1 = b.a;
+void affine::subtract(const affine& b){
+  double *p = a;
+  const double *p1 = b.a;
   for(int i=0;i<15;i++){*p++ -= *p1++;}
 }
 
@@ -172,7 +178,7 @@ void affine::get_translation(extvec& t){
 }
 
 
-extvec::extvec(double x, double y, double z){
+extvec::extvec(const double x, const double y, const double z){
   v[3] = 1;
   this->set(x,y,z);
 }
@@ -191,29 +197,31 @@ void extvec::print(){
   cout << "]" << endl;
 }
  
-void extvec::set(double x, double y, double z){
+void extvec::set(const double x, const double y, const double z){
   double* p = v;
   *p++ = x;
   *p++ = y;
   *p = z;
 }
  
-void extvec::set(double* a){
+void extvec::set(const double* a){
   double* p = v;
   for(int i=0;i<3;i++){*p++ = *a++;}
 }
  
-void extvec::copy(extvec& u){
-  double *p = v, *p1 = u.v;
+void extvec::copy(const extvec& u){
+  double *p = v;
+  const double *p1 = u.v;
   for(int i=0;i<4;i++){*p++ = *p1++;}
 }
  
-void extvec::copy3(extvec& u){
+void extvec::copy3(const extvec& u){
   set(u.v);
 }
  
-void extvec::subtract(extvec& u){
-  double *p = v, *p1 = u.v;
+void extvec::subtract(const extvec& u){
+  double *p = v;
+  const double *p1 = u.v;
   for(int i=0;i<4;i++){*p++ -= *p1++;}
 }
 
@@ -248,7 +256,7 @@ void extvec::cross(extvec& u){
   copy3(w);
 }
 
-void extvec::times(double f){
+void extvec::times(const double f){
   double *p = v;
   for(int i=0;i<3;i++){*p++ *= f;}
 }
@@ -259,8 +267,9 @@ void extvec::normalize(){
   for(int i=0;i<3;i++){*p++ /= len;}
 }
 
-double extvec::dot(extvec& u){
-  double *p = v, *p1 = u.get_data(), s = 0;
+double extvec::dot(const extvec& u){
+  double *p = v, s = 0;
+  const double *p1 = u.v;
   for(int i=0;i<3;i++){s += (*p++)*(*p1++);}
   return s;
 }
@@ -271,11 +280,8 @@ void extvec::to_dvec(dVector3& u){
   for(int i=0;i<3;i++){*p++ = *p1++;}
 }
 
-void extvec::set_v(int i, double val){
-  v[i] = val;
-}
-
-void extvec::add(extvec& u){
-  double *p = v, *p1 = u.v;
+void extvec::add(const extvec& u){
+  double *p = v;
+  const double *p1 = u.v;
   for(int i=0;i<3;i++){*p++ += *p1++;}
 }

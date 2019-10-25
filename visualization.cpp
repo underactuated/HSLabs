@@ -260,7 +260,7 @@ void visualizer::adjust_viewpoint(){
   view->adjust(pos);
 }
 
-void visualizer::set_flag(string flag_name, bool value){
+void visualizer::set_flag(const string flag_name, const bool value){
   if (flag_name == "manual_viewpoint") {
     manual_viewpoint_flag = value;
   } else if (flag_name == "texture") {
@@ -307,20 +307,20 @@ dJointID visualizer::create_contact(dContact* contact){
   return dJointCreateContact (odeworld, contact_group, contact);
 }
 
-void visualizer::simulate_odeworld(double dt_ode){
+void visualizer::simulate_odeworld(const double dt_ode){
   dSpaceCollide(odespace,0,&nearCallback);
   dWorldQuickStep (odeworld, dt_ode);
   dJointGroupEmpty(contact_group);
 }
 
-void visualizer::set_speedup(int f){speedup = f;}
+void visualizer::set_speedup(const int f){speedup = f;}
 
 void visualizer::add_motor(dJointID hinge){
   motors.push_back(hinge);
 }
 
-void visualizer::set_ode_motor_torques(double* motor_torques){
-  double *p = motor_torques;
+void visualizer::set_ode_motor_torques(const double* motor_torques){
+  const double *p = motor_torques;
   vector<dJointID>::iterator it = motors.begin();
   for(;it!=motors.end();it++){
     dJointAddHingeTorque(*it,*p++);
@@ -369,7 +369,7 @@ odepart* visualizer::get_torso_opart(){
 }
 
 int draw_force_flag = 0;
-void visualizer::add_force(dBodyID body, double* f){
+void visualizer::add_force(dBodyID body, const double* f){
   dBodyAddForce(body,f[0],f[1],f[2]);
   extvec force (f[0],f[1],f[2]);
   added_forces[body] = force;
@@ -412,7 +412,7 @@ void visualizer::trimesh_test(){
 }
 
 
-void odepart::make(xml_node<>* xnode, modelnode* mnode_, visualizer* vis){
+void odepart::make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis){
   mnode = mnode_;
   //part_name = xnode->first_attribute("name")->value();
   xmlnode_attr_to_val(xnode,"name",part_name);
@@ -443,7 +443,7 @@ void odepart::make(xml_node<>* xnode, modelnode* mnode_, visualizer* vis){
   }
 }
 
-void odepart::make_ccylinder(visualizer* vis, xml_node<>* geom_node, bool capped_flag){
+void odepart::make_ccylinder(visualizer* vis, const xml_node<>* geom_node, const bool capped_flag){
   dWorldID world = *vis->get_odeworld();
   dSpaceID space = *vis->get_odespace();
   double r, fromto[6];
@@ -461,7 +461,7 @@ void odepart::make_ccylinder(visualizer* vis, xml_node<>* geom_node, bool capped
   if(capped_flag){rcap = r;}
 }
 
-void odepart::capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, double* fromto){
+void odepart::capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, const double* fromto){
   for(int i=0;i<3;i++){pos[i]=(fromto[i]+fromto[i+3])/2.;}
   extvec r1, r2;
   r1.set(fromto);
@@ -484,7 +484,7 @@ void odepart::get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot){
   transpose_odematrix(rot);
 }
 
-void odepart::print(int detail_level){
+void odepart::print(const int detail_level){
   cout << "--- ode part ---" << endl;
   cout << "part name: " << part_name << endl;
   cout << "A_geom:" << endl;
@@ -518,7 +518,7 @@ void odepart::get_foot_pos(extvec& pos){
   get_foot_pos(pos, false);
 }
 
-void odepart::get_foot_pos(extvec& pos, bool from_body_flag){
+void odepart::get_foot_pos(extvec& pos, const bool from_body_flag){
   if (from_body_flag) {
     affine A;
     get_frame_A_ground_from_body(A);
@@ -599,12 +599,12 @@ viewpoint::viewpoint(){
   smooth_flag = false;
 }
 
-void viewpoint::set(float* xyz, float* xyz_cam, float* hpr_){
+void viewpoint::set(const float* xyz, const float* xyz_cam, const float* hpr_){
   set_xyz(xyz, xyz_cam);
   for(int i=0;i<3;i++){hpr[i] = hpr_[i];}
 }
 
-void viewpoint::set(float* xyz, float* xyz_cam){
+void viewpoint::set(const float* xyz, const float* xyz_cam){
   set_xyz(xyz, xyz_cam);
   hpr_from_cam_rel();
 }
@@ -651,14 +651,14 @@ void viewpoint::hpr_from_cam_rel(){
   *p1 = 0;
 }
 
-void viewpoint::set_xyz(float* xyz, float* xyz_cam){
+void viewpoint::set_xyz(const float* xyz, const float* xyz_cam){
   for(int i=0;i<3;i++){
     xyz_ref[i] = xyz[i];
     xyz_cam_rel[i] += xyz_cam[i];
   }
 }
 
-void viewpoint::shift_cam(float x, float y, float z){
+void viewpoint::shift_cam(const float x, const float y, const float z){
   float del_xyz_cam[] = {x, y, z};
   for(int i=0;i<3;i++){
     xyz_cam_rel[i] += del_xyz_cam[i];

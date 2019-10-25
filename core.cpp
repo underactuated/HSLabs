@@ -5,7 +5,7 @@
 
 using namespace std;
 
-void str_to_val(char* str, double* val){
+void str_to_val(const char* str, double* val){
   stringstream ss;
   ss << str;
   while(ss >> *val++){};
@@ -15,21 +15,21 @@ void str_to_val(char* str, double* val){
   return str_to_val(xnode->first_attribute(attr_name)->value(),val);
   }*/
 
-void xmlnode_attr_to_val(xml_node<>* xnode, const char* attr_name, double* val){
+void xmlnode_attr_to_val(const xml_node<>* xnode, const char* attr_name, double* val){
   xml_attribute<>* attr = xnode->first_attribute(attr_name);
   if(attr){
     str_to_val(xnode->first_attribute(attr_name)->value(),val);
   } else {cout << "WARNING: no attribute " << attr_name << endl;}
 }
 
-void xmlnode_attr_to_val(xml_node<>* xnode, const char* attr_name, string& val){
+void xmlnode_attr_to_val(const xml_node<>* xnode, const char* attr_name, string& val){
   xml_attribute<>* attr = xnode->first_attribute(attr_name);
   if(attr){
     val = attr->value();
   } else {cout << "WARNING: no attribute " << attr_name << endl;}
 }
 
-double** new_2d_array(int n, int m){
+double** new_2d_array(const int n, const int m){
   double** array = new double* [n];
   double** p = array;
   for(int i=0;i<n;i++){
@@ -38,7 +38,7 @@ double** new_2d_array(int n, int m){
   return array;
 }
 
-void delete_2d_array(double** array, int n){
+void delete_2d_array(double** array, const int n){
   double** p = array;
   if(p == NULL){return;}
   for(int i=0;i<n;i++){delete [] *p++;}
@@ -46,7 +46,7 @@ void delete_2d_array(double** array, int n){
   array = NULL;
 }
 
-void save_2d_array(double** array, int n, int m, string fname, bool append_flag){
+void save_2d_array(double** array, const int n, const int m, const string fname, const bool append_flag){
   ofstream file;
   if (append_flag) {file.open(fname.c_str(),ios_base::app);}
   else {file.open(fname.c_str());}
@@ -74,29 +74,29 @@ void arrayops::print(double* a){
   cout << endl;
 }
 
-void arrayops::assign(double* a, double* a1){
+void arrayops::assign(double* a, const double* a1){
   for(int i=0;i<n;i++){*a++ = *a1++;}
 }
 
-double* arrayops::add(double* a, double* a1){
+double* arrayops::add(double* a, const double* a1){
   double* p = a;
   for(int i=0;i<n;i++){*a++ += *a1++;}
   return p;
 }
 
-double* arrayops::subtract(double* a, double* a1){
+double* arrayops::subtract(double* a, const double* a1){
   double* p = a;
   for(int i=0;i<n;i++){*a++ -= *a1++;}
   return p;
 }
 
-double* arrayops::times(double* a, double b){
+double* arrayops::times(double* a, const double b){
   double* p = a;
   for(int i=0;i<n;i++){*a++ *= b;}
   return p;
 }
 
-double* arrayops::modulus(double* a, double b){
+double* arrayops::modulus(double* a, const double b){
   double* p = a;
   double bh = b/2;
   for(int i=0;i<n;i++){
@@ -107,20 +107,20 @@ double* arrayops::modulus(double* a, double b){
   return p;
 }
 
-double arrayops::dot(double* a, double* a1){
+double arrayops::dot(const double* a, const double* a1){
   double s = 0;
-  double *p = a, *p1 = a1;
+  const double*p = a, *p1 = a1;
   for(int i=0;i<n;i++){
     s += (*p++)*(*p1++);
   }
   return s;
 }
 
-double arrayops::norm(double* a){
+double arrayops::norm(const double * a){
   return sqrt(dot(a,a));
 }
 
-double arrayops::distance(double* a, double* a1){
+double arrayops::distance(const double* a, const double* a1){
   double* d = new double [n];
   assign(d,a);
   subtract(d,a1);
@@ -129,20 +129,20 @@ double arrayops::distance(double* a, double* a1){
   return l;
 }
 
-void arrayops::assign_scalar(double* a, double b){
+void arrayops::assign_scalar(double* a, const double b){
   for(int i=0;i<n;i++){*a++ = b;}
 }
 
-double arrayops::l1_norm(double* a){
+double arrayops::l1_norm(const double* a){
   double s = 0;
   for(int i=0;i<n;i++){s += fabs(*a++);}
   return s;
 }
 
-double** arrayops::new_2d_array(int m){
+double** arrayops::new_2d_array(const int m){
   return ::new_2d_array(m, n);
 }
 
-void arrayops::delete_2d_array(double** array, int m){
+void arrayops::delete_2d_array(double** array, const int m){
   ::delete_2d_array(array, m);
 }
