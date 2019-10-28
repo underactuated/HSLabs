@@ -16,7 +16,7 @@ void affine::set_unity(){
   }
 }
 
-void affine::set_translation(const double x, const double y, const double z){
+void affine::set_translation(double x, double y, double z){
   set_unity();
   double *p = a + 12;
   *p++ = x;
@@ -28,7 +28,7 @@ void affine::set_translation(const double* v){
   return set_translation(*v,*(v+1),*(v+2));
 }
 
-void affine::print_rows(const int n){
+void affine::print_rows(int n) const {
   affine b;
   b.copy_transposed(*this);
   double *p = b.a;
@@ -42,12 +42,12 @@ void affine::print_rows(const int n){
 }
 
 // print all rows for debugging
-void affine::print_all(){
+void affine::print_all() const {
   print_rows(4);
 }
 
 // prints rotation and translation (first 3 rows)
-void affine::print(){
+void affine::print() const {
   print_rows(3);
 }
 
@@ -91,7 +91,7 @@ void affine::mult(const affine& b){
   }
 }
 
-void affine::mult(const affine& b, affine& c){
+void affine::mult(const affine& b, affine& c) const {
   c.copy(*this);
   c.mult(b);
 }
@@ -112,8 +112,9 @@ void affine::set_rotation(const affine& rot){
   *p = 1;
 }
 
-void affine::translate(extvec& t){
-  double *p = a+12, *p1 = t.get_data();
+void affine::translate(const extvec& t){
+  double *p = a+12;
+  const double *p1 = t.get_data();
   for(int i=0;i<3;i++){*p++ += *p1++;}
 }
 
@@ -124,20 +125,22 @@ void affine::transpose(){
 }
 
 // i and j are counted from 0
-void affine::set_a(const int i, const int j, const double val){
+void affine::set_a(int i, int j, double val){
   double* p = a + (j*4+i);
   *p = val;
 }
  
-double affine::get_a(const int i, const int j){
+double affine::get_a(int i, int j){
   return *(a + (j*4+i));
 }
 
-void affine::mult(extvec& v, extvec& u){
-  double *p, *p1, *p2 = u.get_data();
+void affine::mult(const extvec& v, extvec& u) const {
+  //double *p, *p2 = u.get_data();
+  double *p2 = u.get_data();
   for(int i=0;i<4;i++){
-    p = a+i;
-    p1 = v.get_data();
+    //p = a+i;
+    const double *p = a+i;
+    const double *p1 = v.get_data();
     double s = 0;
     for(int j=0;j<4;j++){
       s += (*p)*(*p1++);
@@ -154,8 +157,9 @@ void affine::subtract(const affine& b){
 }
 
 // Frobenius norm
-double affine::norm(){
-  double *p = a, s = 0;
+double affine::norm() const {
+  const double *p = a;
+  double s = 0;
   for(int i=0;i<15;i++){s += (*p)*(*p); p++;}
   return sqrt(s);
 }
@@ -172,13 +176,14 @@ void affine::invert_rigidbody(){
   translate(t1);
 }
  
-void affine::get_translation(extvec& t){
-  double *p = t.get_data(), *p1 = a + 12;
+void affine::get_translation(extvec& t) const {
+  double *p = t.get_data();
+  const double *p1 = a + 12;
   for(int i=0;i<3;i++){*p++ = *p1++;}
 }
 
 
-extvec::extvec(const double x, const double y, const double z){
+extvec::extvec(double x, double y, double z){
   v[3] = 1;
   this->set(x,y,z);
 }
@@ -188,8 +193,8 @@ void extvec::set_zeros(){
   for(int i=0;i<3;i++){*p++ = 0;}
 }
 
-void extvec::print(){
-  double* p = v;
+void extvec::print() const {
+  const double* p = v;
   for(int i=0;i<3;i++){
     (i == 0)? cout << "[" : cout << " ";
     cout << *p++;
@@ -197,7 +202,7 @@ void extvec::print(){
   cout << "]" << endl;
 }
  
-void extvec::set(const double x, const double y, const double z){
+void extvec::set(double x, double y, double z){
   double* p = v;
   *p++ = x;
   *p++ = y;
@@ -225,38 +230,39 @@ void extvec::subtract(const extvec& u){
   for(int i=0;i<4;i++){*p++ -= *p1++;}
 }
 
-double extvec::norm(){
-  double *p = v, s = 0;
+double extvec::norm() const {
+  const double *p = v;
+  double s = 0;
   for(int i=0;i<3;i++){s += (*p)*(*p); p++;}
   return sqrt(s);
 }
 
-void extvec::get_components(double& x, double& y, double& z){
-  double *p = v;
+void extvec::get_components(double& x, double& y, double& z) const {
+  const double *p = v;
   x = *p++;
   y = *p++;
   z = *p;
 }
 
-void extvec::get_components(double* p){
-  double *p0 = v;
+void extvec::get_components(double* p) const {
+  const double *p0 = v;
   for(int i=0;i<3;i++){*p++ = *p0++;}
 }
 
-void extvec::cross(extvec& u, extvec& w){
+void extvec::cross(const extvec& u, extvec& w) const {
   double x1, y1, z1, x2, y2, z2;
   get_components(x1,y1,z1);
   u.get_components(x2,y2,z2);
   w.set(y1*z2-z1*y2,z1*x2-x1*z2,x1*y2-y1*x2);
 }
 
-void extvec::cross(extvec& u){
+void extvec::cross(const extvec& u){
   extvec w;
   cross(u,w);
   copy3(w);
 }
 
-void extvec::times(const double f){
+void extvec::times(double f){
   double *p = v;
   for(int i=0;i<3;i++){*p++ *= f;}
 }
@@ -267,16 +273,16 @@ void extvec::normalize(){
   for(int i=0;i<3;i++){*p++ /= len;}
 }
 
-double extvec::dot(const extvec& u){
-  double *p = v, s = 0;
-  const double *p1 = u.v;
+double extvec::dot(const extvec& u) const {
+  const double *p = v, *p1 = u.v;
+  double s = 0;
   for(int i=0;i<3;i++){s += (*p++)*(*p1++);}
   return s;
 }
 
-void extvec::to_dvec(dVector3& u){
+void extvec::to_dvec(dVector3& u) const {
   dReal *p = u; 
-  double *p1 = v;
+  const double *p1 = v;
   for(int i=0;i<3;i++){*p++ = *p1++;}
 }
 

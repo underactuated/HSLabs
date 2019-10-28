@@ -16,7 +16,7 @@ class modeljoint{
   double* values;
   int val_size;
 public:
-  modeljoint(const joint_type type_, const affine& A);
+  modeljoint(joint_type type_, const affine& A);
   ~modeljoint();
   inline double* get_values(){return values;}
   inline affine* get_A_parent(){return &A_parent;}
@@ -24,7 +24,7 @@ public:
   inline joint_type get_type(){return type;}
   list<double*> get_values_list();
   void transformation(affine& A);
-  void compute_A_ground(affine* A);
+  void compute_A_ground(const affine* A);
 };
 
 
@@ -44,9 +44,9 @@ public:
   inline modelnode* get_parent(){return parent;}
   void add_child(modelnode* child);
   void print();
-  list<double*> make_joint(const joint_type type, const double* pos, const double* axis);
-  list<double*> make_joint(const joint_type type, const double* pos_);
-  void recompute_A_ground(affine& A);
+  list<double*> make_joint(joint_type type, const double* pos, const double* axis);
+  list<double*> make_joint(joint_type type, const double* pos_);
+  void recompute_A_ground(const affine& A);
 private:
   void compute_A_ground(const affine* A);
 };
@@ -63,20 +63,21 @@ class kinematicmodel{
   bool vis_flag;
   vector<modelnode*> mnodes;
 public:
-  kinematicmodel(const bool vis_flag);
+  kinematicmodel(bool vis_flag);
   ~kinematicmodel();
-  inline modelnode* get_mnode(const int i){return mnodes[i];} // gets model node by index (print model to see indexing)
-  inline string get_xmlfname(){return xmlfname;}
+  inline modelnode* get_mnode(int i){return mnodes[i];} // gets model node by index (print model to see indexing)
+  inline string get_xmlfname() const {return xmlfname;}
   inline vector<double*>* get_joint_values(){return &joint_values;}
   inline liksolver* get_lik(){return lik;}
   inline visualizer* get_vis(){return vis;}
   inline vector<odepart*>* get_odeparts(){return &odeparts;}
-  inline int number_of_motor_joints(){return joint_values.size()-6;}
+//inline const vector<odepart*>* get_odeparts() const {return &odeparts;}
+  inline int number_of_motor_joints() const {return joint_values.size()-6;}
   inline bool if_loaded(){return !(xmlfname == "");}
-  inline odepart* get_odepart(const int i){return odeparts[i];}
+  inline odepart* get_odepart(int i){return odeparts[i];}
   inline bool if_vis(){return vis_flag;}
   void set_vis();
-  void load_fromxml(const string fname);
+  void load_fromxml(string fname);
   modelnode* mnode_from_xnode(xml_node<>* xnode, const affine* A_parent);
   void make_odepart(const xml_node<>* xnode, modelnode* mnode);
   void make_joint(const xml_node<>* xnode, modelnode* mnode);
@@ -84,13 +85,13 @@ public:
   void draw();
   void recompute_modelnodes();
   void print();
-  void print(const int datail_level);
-  int get_config_dim();
+  void print(int datail_level);
+  int get_config_dim() const;
   void set_jvalues_with_lik(const double* rec);
   void set_jvalues(const double* values);
   void get_jvalues(double* values);
   void set_ode_joints();
-  void orient_torso(extvec* orientation);
+  void orient_torso(const extvec* orientation);
   void get_foot_mnodes(set<modelnode*>& foot_set);
 private:
   void set_lik();

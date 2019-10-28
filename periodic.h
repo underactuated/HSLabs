@@ -25,15 +25,15 @@ class periodic{
 public:
   periodic(kinematicmodel* model);
   ~periodic();
-  inline dynpart* get_dynpart(int i){return dynparts[i];}
-  inline double* get_masses(){return masses;}
+  inline dynpart* get_dynpart(int i) const {return dynparts[i];}
+  inline double* get_masses() const {return masses;}
   inline int get_number_of_dynparts(){return dynparts.size();}
   inline int* get_parentis(){return parentis;}
   inline int* get_footis(){return footis;}
   inline int get_nfeet(){return nfeet;}
   inline int get_nt(){return n_t;}
   inline void get_contforce_stat(double* stat){stat[0] = min_cfz; stat[1] = max_mu;}
-  inline double* get_computed_torques(int i){return computed_torques[i % n_t];}
+  inline double* get_computed_torques(int i) const {return computed_torques[i % n_t];}
   void print();
   void record_trajectory(pergensetup* pgs, int n_t);
   void print_trajectory();
@@ -66,7 +66,7 @@ private:
   void set_footset(set<modelnode*>& foot_set);
   void new_joint_vel_traj();
   void delete_joint_vel_traj();
-  void analyze_contforces(double* contforces);
+  void analyze_contforces(const double* contforces);
   void new_computed_torques();
   void delete_computed_torques();
 };

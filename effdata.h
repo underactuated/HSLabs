@@ -15,7 +15,7 @@ class efficientdata{
   balltree* tree;
 public:
   efficientdata(){tree=NULL;}
-  void prepare_data(list<vector<double> >& data, int d);
+  void prepare_data(const list<vector<double> >& data, int d);
   void prepare_data(double** target_points, int tps_size, int d);
   int get_dim();
   void get_gammat0s(double* a, double b, double c, map<int,double>& gammaa, map<int,double>& t0a);
@@ -31,11 +31,11 @@ class balltreetester{
 public:
   balltreetester(int dim);
   double* new_rand_point();
-  double point_plane_dist(double* pnt, plane pl);
+  double point_plane_dist(const double* pnt, plane pl);
   void test();
   void print_point(double* pnt);
-  double norm(double* pnt);
-  double dot(double* pnt1, double* pnt2);
+  double norm(const double* pnt);
+  double dot(const double* pnt1, const double* pnt2);
 };
 
 #endif

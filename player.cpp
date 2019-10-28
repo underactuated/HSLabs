@@ -117,7 +117,7 @@ void modelplayer::set_flag(string flag_name, bool value){
 // set_jangles_directly ?????
 
 // rec contains torso orientation and foot positions
-void modelplayer::set_jangles_with_lik(double* rec){
+void modelplayer::set_jangles_with_lik(const double* rec){
   model->set_jvalues_with_lik(rec);
 }
 
@@ -125,18 +125,18 @@ void modelplayer::print_limb_pos0s(){
   model->get_lik()->print_limb_pos0s();
 }
 
-void modelplayer::orient_torso(extvec* orientation){
+void modelplayer::orient_torso(const extvec* orientation){
   model->orient_torso(orientation);
 }
 
-void modelplayer::setup_pergen(pergensetup& pergensu, extvec* orientation, double step_duration){
+void modelplayer::setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration){
   //if(!model->if_loaded()){cout<<"ERROR: model not loaded"<<endl;exit(1);}
   check_model_loaded();
   pgssweeper sweeper (NULL,model);
   sweeper.setup_pergen(pergensu, orientation, step_duration);
 }
 
-void modelplayer::full_setup_pergen(pergensetup& pergensu, pgsconfigparams pcp){
+void modelplayer::full_setup_pergen(pergensetup& pergensu, const pgsconfigparams& pcp){
   check_model_loaded();
   pgssweeper sweeper (NULL,model);
   sweeper.full_setup_pergen(pergensu, &pcp);
@@ -146,10 +146,7 @@ pergensetup* modelplayer::make_pergensu(string config_fname, int setup_id){
   string confrec;
   get_rec_str(confrec,config_fname,setup_id);
   //cout << confrec << endl;
-  //get_pgs_config_params(confrec,fname,orientation,step_duration,period,step_length,step_height);
   pgsconfigparams pcp;
-  //extvec orientation[2];
-  //pcp.orientation = orientation;
   get_pgs_config_params(confrec,pcp);
   string model_fname;
   model_fname = model->get_xmlfname();
@@ -162,41 +159,12 @@ pergensetup* modelplayer::make_pergensu(string config_fname, int setup_id){
   }
   int n = model->get_lik()->get_number_of_limbs();
   pergensetup* pergensu = new pergensetup (n);
-  /*pergensu->set_foot_shifts(pcp.lat_foot_shift, pcp.rad_foot_shift);
-  setup_pergen(*pergensu,orientation,pcp.step_duration);
-  pergensu->set_TLh(pcp.period,pcp.step_length,pcp.step_height);
-  pergensu->set_curvature(pcp.curvature);*/
   full_setup_pergen(*pergensu, pcp);
   return pergensu;
 }
 
-/*pergensetup* modelplayer::make_pergensu(string config_fname, int setup_id){
-  string confrec;
-  get_rec_str(confrec,config_fname,setup_id);
-  //cout << confrec << endl;
-  string fname, model_fname;
-  extvec orientation[2];
-  double step_duration, period, step_length, step_height;
-  get_pgs_config_params(confrec,fname,orientation,step_duration,period,step_length,step_height);
-  //pgsconfigparams pcp;
-  //get_pgs_config_params(confrec,pcp);
-  model_fname = model->get_xmlfname();
-  if (model_fname == "") {
-    load_model(fname);
-  } else {
-    if (model_fname != fname) {
-      cout<<"ERROR: model not from "<<fname<<endl;exit(1);
-    }
-  }
-  int n = model->get_lik()->get_number_of_limbs();
-  pergensetup* pergensu = new pergensetup (n);
-  setup_pergen(*pergensu,orientation,step_duration);
-  pergensu->set_TLh(period,step_length,step_height);
-  return pergensu;
-}*/
-
 // reads params from pgs configuration string
-void modelplayer::get_pgs_config_params(string& rec_str, pgsconfigparams& pcp){
+void modelplayer::get_pgs_config_params(const string& rec_str, pgsconfigparams& pcp){
   stringstream ss;
   ss << rec_str;
   extvec torso_pos, torso_angles;
@@ -458,7 +426,7 @@ void modelplayer::linear_feedback_control(double* torques, double** x0, double**
   delete [] a1;
 }
 
-void modelplayer::save_last_motor_torques(double* torques){
+void modelplayer::save_last_motor_torques(const double* torques){
   arrayops ao (nmj);
   ao.assign(last_motor_torques,torques);
 }

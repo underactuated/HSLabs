@@ -34,7 +34,7 @@ public:
   void recompute();
   affine* get_A_ground();
   affine* get_inertia_tensor();
-  void setup_foot(set<modelnode*>& foot_set);
+  void setup_foot(const set<modelnode*>& foot_set);
   void get_joint_zaxis(extvec& axis);
 private:
   void set_joint_pos();
@@ -60,18 +60,18 @@ public:
   inline extvec* get_jzaxis(){return jzaxis;}
   void initialize(vector<dynpart*>& dynparts, double rcap);
   void print(int id);
-  void compute_ders(int stage, dynrecord* prev_rec, dynrecord* next_rec, double dt, periodic* per);
-  void set_forcetorque_system(SpMat& B, VectorXd& f, int* parentis, double* masses);
+  void compute_ders(int stage, const dynrecord* prev_rec, const dynrecord* next_rec, double dt, periodic* per);
+  void set_forcetorque_system(SpMat& B, VectorXd& f, const int* parentis, const double* masses);
   int get_ncontacts();
-  void set_forcetorque_system_contacts(SpMat& B, int* footis);
-  void set_forcetorque_system_contacts(SpMat& B, int* footis, bool contact_feet_flag);
+  void set_forcetorque_system_contacts(SpMat& B, const int* footis);
+  void set_forcetorque_system_contacts(SpMat& B, const int* footis, bool contact_feet_flag);
 private:
-  void compute_ders(extvec *p_der, extvec *p_func_prev, extvec *p_func_next, double dt);
+  void compute_ders(extvec *p_der, const extvec *p_func_prev, const extvec *p_func_next, double dt);
   void compute_ang_mom(periodic* per);
-  void compute_mom(double* masses);
+  void compute_mom(const double* masses);
   void ftsys_forces(int i, int pi, SpMat& B, VectorXd& f);
   void ftsys_torques(int i, int pi, SpMat& B, VectorXd& f);
-  void ftsys_gravity(int i, VectorXd& f, double* ms);
+  void ftsys_gravity(int i, VectorXd& f, const double* ms);
   void ftsys_contact_forces(int i, int ci, SpMat& B);
   void ftsys_contact_torques(int fi, int i, int ci, SpMat& B);
 };

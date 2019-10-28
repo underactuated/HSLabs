@@ -7,8 +7,10 @@
 // computes rot that takes z to v; 
 // rot is correct from the affine type perspective, 
 // but needs to be transposed for the ode body rotation
-void rot_ztov(dMatrix3& rot, extvec& v){
-  extvec z (0,0,1), a;
+void rot_ztov(dMatrix3& rot, const extvec& v){
+  //extvec z (0,0,1), a;
+  const extvec z (0,0,1);
+  extvec a;
   v.cross(z,a);
   double anorm = a.norm();
   if(anorm<1e-10){a.set(0,1,0);}
@@ -36,8 +38,8 @@ void transpose_odematrix(dMatrix3& m){
   }
 }
 
-void posrot_from_affine(dVector3& pos, dMatrix3& rot, affine& A){
-  double* a = A.get_data();
+void posrot_from_affine(dVector3& pos, dMatrix3& rot, const affine& A){
+  const double* a = A.get_data();
   dReal *p = pos, *r = rot;
   for(int i=0;i<12;i++){*r++ = *a++;}
   for(int i=0;i<3;i++){*p++ = *a++;}
@@ -51,11 +53,11 @@ void affine_from_posrot(affine& A, const dVector3& pos, const dMatrix3& rot){
   *a = 1;
 }
 
-void affine_from_orientation(affine& A, extvec* orientation){
+void affine_from_orientation(affine& A, const extvec* orientation){
   dVector3 pos;
   orientation[0].to_dvec(pos);
   dMatrix3 rot;
-  double* p = orientation[1].get_data();
+  const double* p = orientation[1].get_data();
   dRFromEulerAngles(rot,*p,*(p+1),*(p+2));
   affine_from_posrot(A,pos,rot);
 }
@@ -69,10 +71,10 @@ void mod_twopi(double& a){
 }
 
 // verify that euler angles are computed correctly
-void euler_angles_from_affine(affine& A, double* angles){
+void euler_angles_from_affine(const affine& A, double* angles){
   double r11, r21, r31, r32, r33;
   //double r12, r13;
-  double *p = A.get_data();
+  const double *p = A.get_data();
   r11 = *p++; r21 = *p++; r31 = *p++; p++;
   p += 2; r32 = *p++; p++;
   p += 2; r33 = *p;
@@ -83,21 +85,20 @@ void euler_angles_from_affine(affine& A, double* angles){
   ps1 = atan2(r32/ct1,r33/ct1);
   ph1 = atan2(r21/ct1,r11/ct1);
   //cout <<"ps1="<<ps1<<" th1="<<th1<<" ph1="<<ph1<<endl;
-  p = angles;
-  *p++ = ps1;
-  *p++ = th1;
-  *p = ph1;
+  double *p1 = angles;
+  *p1++ = ps1;
+  *p1++ = th1;
+  *p1 = ph1;
 
   if(fabs(ct1)<1e-5){cout<<"WARNING: small cos(theta)"<<endl;}
   return;
-
-  /*double ps2, th2, ph2;
-  th2 = M_PI - th1;
-  double ct2 = cos(th2);
-  ps2 = atan2(r32/ct2,r33/ct2);
-  ph2 = atan2(r21/ct2,r11/ct2);
-  //cout <<"ps2="<<ps2<<" th2="<<th2<<" ph2="<<ph2<<endl;*/
 }
+
+/*void evec_to_dvec(const extvec& evec, dVector3& dvec){
+  dReal *p = dvec; 
+  const double *p1 = evec.get_data();
+  for(int i=0;i<3;i++){*p++ = *p1++;}
+  }*/
 
 void print_dn(const dReal* a, int n){
   cout << "[";
@@ -260,7 +261,7 @@ void visualizer::adjust_viewpoint(){
   view->adjust(pos);
 }
 
-void visualizer::set_flag(const string flag_name, const bool value){
+void visualizer::set_flag(string flag_name, bool value){
   if (flag_name == "manual_viewpoint") {
     manual_viewpoint_flag = value;
   } else if (flag_name == "texture") {
@@ -307,13 +308,13 @@ dJointID visualizer::create_contact(dContact* contact){
   return dJointCreateContact (odeworld, contact_group, contact);
 }
 
-void visualizer::simulate_odeworld(const double dt_ode){
+void visualizer::simulate_odeworld(double dt_ode){
   dSpaceCollide(odespace,0,&nearCallback);
   dWorldQuickStep (odeworld, dt_ode);
   dJointGroupEmpty(contact_group);
 }
 
-void visualizer::set_speedup(const int f){speedup = f;}
+void visualizer::set_speedup(int f){speedup = f;}
 
 void visualizer::add_motor(dJointID hinge){
   motors.push_back(hinge);
@@ -443,7 +444,7 @@ void odepart::make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis){
   }
 }
 
-void odepart::make_ccylinder(visualizer* vis, const xml_node<>* geom_node, const bool capped_flag){
+void odepart::make_ccylinder(visualizer* vis, const xml_node<>* geom_node, bool capped_flag){
   dWorldID world = *vis->get_odeworld();
   dSpaceID space = *vis->get_odespace();
   double r, fromto[6];
@@ -484,7 +485,7 @@ void odepart::get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot){
   transpose_odematrix(rot);
 }
 
-void odepart::print(const int detail_level){
+void odepart::print(int detail_level){
   cout << "--- ode part ---" << endl;
   cout << "part name: " << part_name << endl;
   cout << "A_geom:" << endl;
@@ -518,7 +519,7 @@ void odepart::get_foot_pos(extvec& pos){
   get_foot_pos(pos, false);
 }
 
-void odepart::get_foot_pos(extvec& pos, const bool from_body_flag){
+void odepart::get_foot_pos(extvec& pos, bool from_body_flag){
   if (from_body_flag) {
     affine A;
     get_frame_A_ground_from_body(A);
@@ -658,7 +659,7 @@ void viewpoint::set_xyz(const float* xyz, const float* xyz_cam){
   }
 }
 
-void viewpoint::shift_cam(const float x, const float y, const float z){
+void viewpoint::shift_cam(float x, float y, float z){
   float del_xyz_cam[] = {x, y, z};
   for(int i=0;i<3;i++){
     xyz_cam_rel[i] += del_xyz_cam[i];

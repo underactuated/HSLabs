@@ -12,29 +12,30 @@ class affine{
   double a[16]; // matrix is stored column-wise
 public:
   inline double* get_data(){return a;}
+  inline const double* get_data() const {return a;}
   void set_zeros();
   void set_unity();
-  void print_all();
-  void print();
-  void set_translation(const double x, const double y, const double z);
+  void print_all() const;
+  void print() const;
+  void set_translation(double x, double y, double z);
   void set_translation(const double* v);
   void copy(const affine& b);
   void copy_transposed(const affine& b);
   void mult(const affine& b);
-  void mult(const affine& b, affine& c);
+  void mult(const affine& b, affine& c) const;
   void set_rotation(const dMatrix3& rot);
   void set_rotation(const affine& rot);
-  void translate(extvec& t);
+  void translate(const extvec& t);
   void transpose();
-  void set_a(const int i, const int j, const double val);
-  double get_a(const int i, const int j);
-  void mult(extvec& v, extvec& u);
+  void set_a(int i, int j, double val);
+  double get_a(int i, int j);
+  void mult(const extvec& v, extvec& u) const;
   void subtract(const affine& b);
-  double norm();
+  double norm() const;
   void invert_rigidbody();
-  void get_translation(extvec& t);
+  void get_translation(extvec& t) const;
 private:
-  void print_rows(const int n);
+  void print_rows(int n) const;
 };
 
 
@@ -42,26 +43,27 @@ class extvec{
   double v[4];
 public:
   extvec(){v[3] = 1;}
-  extvec(const double x, const double y, const double z);
-  inline void set_v(const int i, const double val){v[i] = val;}
-  inline double* get_data(){return v;}
-  inline double get_v(const int i){return v[i];}
+  extvec(double x, double y, double z);
+  inline void set_v(int i, double val){v[i] = val;}
+  inline double* get_data() {return v;}
+  inline const double* get_data() const {return v;}
+  inline double get_v(int i) const {return v[i];}
   void set_zeros();
-  void print();
-  void set(const double x, const double y, const double z);
+  void print() const;
+  void set(double x, double y, double z);
   void set(const double* a);
   void copy(const extvec& u);
   void copy3(const extvec& u);
   void subtract(const extvec& u);
-  double norm();
-  void get_components(double& x, double& y, double& z);
-  void get_components(double* p);
-  void cross(extvec& u, extvec& w);
-  void cross(extvec& u);
-  void times(const double f);
+  double norm() const;
+  void get_components (double& x, double& y, double& z) const;
+  void get_components (double* p) const;
+  void cross(const extvec& u, extvec& w) const;
+  void cross(const extvec& u);
+  void times(double f);
   void normalize();
-  double dot(const extvec& u);
-  void to_dvec(dVector3& u);
+  double dot(const extvec& u) const;
+  void to_dvec(dVector3& u) const;
   void add(const extvec& u);
 };
 

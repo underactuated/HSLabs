@@ -22,7 +22,7 @@ void cand::print(){
 }
 
 
-cpccontroller::cpccontroller(kinematicmodel* model){
+cpccontroller::cpccontroller(const kinematicmodel* model){
   q_dim = model->get_config_dim();
   chi_dim = model->number_of_motor_joints();
   psi_dim = q_dim - chi_dim;
@@ -100,7 +100,7 @@ void cpccontroller::print_target_points(){
   }
 }
 
-void cpccontroller::set_current_state(double* config, double* dconfig){
+void cpccontroller::set_current_state(const double* config, const double* dconfig){
   arrayops ao (q_dim);
   ao.assign(current_state,config);
   ao.assign(current_state+q_dim,dconfig);
@@ -148,13 +148,13 @@ void cpccontroller::state_to_chidchi(double* state, VectorXd& chi, VectorXd& dch
   dchi = Map<VectorXd> (state+q_dim+psi_dim,chi_dim);
 }
 
-void cpccontroller::compute_prox_loss_over_tps(list<int>& tpis, map<double,cand>& loss_cands){
+void cpccontroller::compute_prox_loss_over_tps(const list<int>& tpis, map<double,cand>& loss_cands){
   VectorXd qd, dqd, q0, dq0;
   state_to_qdq(current_state,q0,dq0);
   MatrixXd bt = b.transpose();
   //VectorXd btildt = (bbt*dq0).transpose();// experim
 
-  list<int>::iterator it = tpis.begin();
+  list<int>::const_iterator it = tpis.begin();
   for(;it!=tpis.end();it++){
     int tpi = (*it);
     state_to_qdq(target_points[tpi],qd,dqd);
@@ -271,13 +271,13 @@ void cpccontroller::candidates(list<cand>& cands){
   }
 }
 
-void cpccontroller::controls(double* torques, double k, cand& can){
+void cpccontroller::controls(double* torques, double k, const cand& can){
   VectorXd tau;
   controls(tau,k,can);
   VectorXd::Map(torques,tau.size()) = tau;
 }
 
-void cpccontroller::controls(VectorXd& tau, double k, cand& can){
+void cpccontroller::controls(VectorXd& tau, double k, const cand& can){
   int tpi = can.tpi;
   double t0 = can.t0, s = can.s;
 
@@ -293,7 +293,7 @@ void cpccontroller::controls(VectorXd& tau, double k, cand& can){
 }
 
 // same as controls, but has del_tau arg
-void cpccontroller::controls1(VectorXd& tau, VectorXd& del_tau, double k, cand& can){
+void cpccontroller::controls1(VectorXd& tau, VectorXd& del_tau, double k, const cand& can){
   int tpi = can.tpi;
   double t0 = can.t0, s = can.s;
 
@@ -311,10 +311,10 @@ void cpccontroller::get_tau(int tpi, VectorXd& tau){
   tau = Map<VectorXd> (target_points[tpi]+2*q_dim,chi_dim);
 }
 
-int cpccontroller::cost(double k, list<cand>& cands, MatrixXd& cand_taus){
+int cpccontroller::cost(double k, const list<cand>& cands, MatrixXd& cand_taus){
   //cout<<"cost ---------------------"<<endl;
   //cout<<"k="<<k<<endl;
-  list<cand>::iterator it = cands.begin();
+  list<cand>::const_iterator it = cands.begin();
   double norm_min = 1e10;
   int i=0, i_min=-1;
   for(;it!=cands.end();it++){
@@ -329,16 +329,16 @@ int cpccontroller::cost(double k, list<cand>& cands, MatrixXd& cand_taus){
   return i_min;
 }
 
-double vec_mean(vector<double>& vec){
+double vec_mean(const vector<double>& vec){
   double s = 0;
-  vector<double>::iterator it = vec.begin();
+  vector<double>::const_iterator it = vec.begin();
   for(;it!=vec.end();it++){s += (*it);}
   return s/vec.size();
 }
 
-int cpccontroller::cost2(double k, list<cand>& cands, MatrixXd& cand_taus){
+int cpccontroller::cost2(double k, const list<cand>& cands, MatrixXd& cand_taus){
   vector<double> norms (n_cand), losss (n_cand);
-  list<cand>::iterator it = cands.begin();
+  list<cand>::const_iterator it = cands.begin();
   int i = 0;
   for(;it!=cands.end();it++){
     losss[i] = (*it).loss;
@@ -362,9 +362,9 @@ int cpccontroller::cost2(double k, list<cand>& cands, MatrixXd& cand_taus){
 }
 
 // uses del_tau
-int cpccontroller::cost1(double k, list<cand>& cands, MatrixXd& cand_taus){
+int cpccontroller::cost1(double k, const list<cand>& cands, MatrixXd& cand_taus){
   //cout<<"cost ---------------------"<<endl;
-  list<cand>::iterator it = cands.begin();
+  list<cand>::const_iterator it = cands.begin();
   double norm_min = 1e10;
   int i=0, i_min=-1;
   for(;it!=cands.end();it++){
@@ -474,7 +474,7 @@ void cpccontroller::tpis_effdata(list<int>& tpis, int n){
 }
 
 void cpccontroller::apply_mask(double* state){
-  vector<int>::iterator it = mask.begin();
+  vector<int>::const_iterator it = mask.begin();
   for(;it!=mask.end();it++){
     int i = (*it);
     state[i] = 0;

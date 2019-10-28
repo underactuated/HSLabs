@@ -23,7 +23,7 @@ class forcetorquesolver{
   list<pair<int,int> > penal_mask0, penal_mask1;
   int mask_l0, mask_l1;
   dynrecord* dynrec;
-  double* jzaxis; // join z axis, all dynparts
+  double* jzaxis; // joint z axis, all dynparts
   VectorXd fts; // last force-torques solution
   list<int> jpart_ids;
 public:
@@ -40,12 +40,12 @@ public:
 private:
   void solve_forcetorques_particular(VectorXd& x, SpMat& B, VectorXd& f);
   void solve_forcetorques_null_space(SpMat& B, MatrixXd& N);
-  void solve_contact_forces(VectorXd& x, VectorXd& y, MatrixXd& N);
-  void extract_N_contact(MatrixXd& N, MatrixXd& N_cont);
+  void solve_contact_forces(VectorXd& x, VectorXd& y, const MatrixXd& N);
+  void extract_N_contact(const MatrixXd& N, MatrixXd& N_cont);
   void set_penal_mask1();
   void set_jzaxis();
   void set_B_and_f_for_zero_cfs(SpMat& B, VectorXd& f);
-  void add_torque_constraints_to_B(SpMat& B, VectorXd& f, VectorXd& z);
+  void add_torque_constraints_to_B(SpMat& B, VectorXd& f, const VectorXd& z);
   void set_dynrec(dynrecord* dynrec_);
 };
 

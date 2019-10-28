@@ -121,9 +121,9 @@ void liksolver::solver_test(int n){
   cout << "... success!" << endl;
 }
 
-void liksolver::set_rcap(kinematicmodel* model, vector<int>& limb_inds){
+void liksolver::set_rcap(kinematicmodel* model, const vector<int>& limb_inds){
   if(!model->if_vis()){return;}
-  vector<int>::iterator it = limb_inds.begin();
+  vector<int>::const_iterator it = limb_inds.begin();
   for(;it!=limb_inds.end();it++){
     double rcap1 = model->get_odepart((*it)+2)->get_rcap();
     //cout <<rcap1<<endl;
@@ -135,7 +135,7 @@ void liksolver::set_rcap(kinematicmodel* model, vector<int>& limb_inds){
 
 // solves 3-link leg with hinge axis y-x-x
 // to change leg's bend (inward/outward) flip sign of beta and gamma 
-bool limb_solver_yxx(int limbi, extvec& pos_limb, extvec& joint_angles, double* ls, int ysign, bool bend){
+bool limb_solver_yxx(int limbi, const extvec& pos_limb, extvec& joint_angles, const double* ls, int ysign, bool bend){
   double l0=ls[0], l1=ls[1], l2=ls[2];
 
   int s0 = ysign;
@@ -169,7 +169,7 @@ bool limb_solver_yxx(int limbi, extvec& pos_limb, extvec& joint_angles, double* 
 
 // solves 3-link leg with hinge axis z-x-x
 // to change leg's bend (inward/outward) flip sign of beta and gamma 
-bool limb_solver_zxx(int limbi, extvec& pos_limb, extvec& joint_angles, double* ls, int ysign, bool bend){
+bool limb_solver_zxx(int limbi, const extvec& pos_limb, extvec& joint_angles, const double* ls, int ysign, bool bend){
   double l0=ls[0], l1=ls[1], l2=ls[2];
 
   int s0 = ysign;
@@ -225,14 +225,12 @@ double limb_ls1[] = {.1, .4, .4};
 
 // quadruped lik solver
 bool limb_solver0(int limbi, extvec& pos_limb, extvec& joint_angles, bool bend){
-  //double ls[] = {.05, .4, .4};
   int ysign = (limbi<2)? 1 : -1;
   return limb_solver_yxx(limbi,pos_limb,joint_angles,limb_ls,ysign,bend);
 }
 
 // hexapod lik solver
 bool limb_solver1(int limbi, extvec& pos_limb, extvec& joint_angles, bool bend){
-  //double ls[] = {.05, .4, .4};
   int ysign = (limbi % 2 == 0)? 1 : -1;
   return limb_solver_yxx(limbi,pos_limb,joint_angles,limb_ls,ysign,bend);
 }
@@ -244,7 +242,7 @@ bool limb_solver2(int limbi, extvec& pos_limb, extvec& joint_angles, bool bend){
 }
 
 // solves for 3-link leg with hinge axis y-x-x 
-bool bend_solver_yxx(int limbi, extvec& pos, extvec& angles, double* ls, int ysign, bool pos_flag){
+bool bend_solver_yxx(int limbi, extvec& pos, const extvec& angles, const double* ls, int ysign, bool pos_flag){
   int s0 = ysign;
   double alpha0, alpha1, alpha2;
   angles.get_components(alpha0,alpha1,alpha2);
@@ -272,14 +270,12 @@ bool bend_solver_yxx(int limbi, extvec& pos, extvec& angles, double* ls, int ysi
 
 // quad solver
 bool bend_solver0(int limbi, extvec& pos, extvec& angles, bool pos_flag){
-  //double ls[] = {.05, .4, .4};
   int ysign = (limbi<2)? 1 : -1;
   return bend_solver_yxx(limbi,pos,angles,limb_ls,ysign,pos_flag);
 }
 
 // hex solver
 bool bend_solver1(int limbi, extvec& pos, extvec& angles, bool pos_flag){
-  //double ls[] = {.05, .4, .4};
   int ysign = (limbi % 2 == 0)? 1 : -1;
   return bend_solver_yxx(limbi,pos,angles,limb_ls,ysign,pos_flag);
 }
@@ -312,7 +308,7 @@ void liklimb::setup_joint_values(){
 
 // solves for joint values given foot position
 // if successful, sets values in the model
-void liklimb::place_limb(extvec& pos_ground){
+void liklimb::place_limb(const extvec& pos_ground){
   extvec pos_limb;
   poslimb(pos_ground,pos_limb);
 
@@ -337,7 +333,7 @@ void liklimb::place_limb(extvec& pos_ground){
 }
 
 // computes foot position in the hip's joint frame
-void liklimb::poslimb(extvec& pos_ground, extvec& pos_limb){
+void liklimb::poslimb(const extvec& pos_ground, extvec& pos_limb){
   modeljoint* joint = child->get_joint();
   joint->compute_A_ground(parent->get_A_ground());
   affine A;
@@ -347,8 +343,8 @@ void liklimb::poslimb(extvec& pos_ground, extvec& pos_limb){
 }
 
 // sets joint values in the model
-void liklimb::set_joint_values(extvec& joint_values){
-  double* p = joint_values.get_data();
+void liklimb::set_joint_values(const extvec& joint_values){
+  const double* p = joint_values.get_data();
   double** p1 = values;
   for (int i=0;i<3;i++) {**p1++ = *p++;}
 }

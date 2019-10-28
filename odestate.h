@@ -31,7 +31,7 @@ class configtimedertrack{
   arrayops ao;
 public:
   configtimedertrack(int max_der, int config_dim, double dt);
-  configtimedertrack(configtimedertrack* tdertrack);
+  configtimedertrack(const configtimedertrack* tdertrack);
   ~configtimedertrack();
   inline double** get_ders(){return ders;}
   void push_config(double* config);
@@ -40,7 +40,7 @@ public:
   void del_second_der(configtimedertrack* tdertrack, double* del);
 private:
   void construct(int max_der, int config_dim, double dt);
-  void copy(configtimedertrack* tdertrack);
+  void copy(const configtimedertrack* tdertrack);
 };
 
 #endif

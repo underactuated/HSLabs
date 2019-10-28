@@ -4,7 +4,7 @@
 #include "model.h"
 #include "lik.h"
 
-modeljoint::modeljoint(const joint_type type_, const affine& A){
+modeljoint::modeljoint(joint_type type_, const affine& A){
   type = type_;
   A_parent.copy(A);
   switch(type){
@@ -59,7 +59,7 @@ void modeljoint::transformation(affine& A){
   }
 }
 
-void modeljoint::compute_A_ground(affine* A){
+void modeljoint::compute_A_ground(const affine* A){
   A->mult(A_parent,A_ground);
 }
 
@@ -127,7 +127,7 @@ list<double*> modelnode::make_joint(joint_type type, const double* pos_, const d
 }
 
 // makes free joint
-list<double*> modelnode::make_joint(const joint_type type, const double* pos_){
+list<double*> modelnode::make_joint(joint_type type, const double* pos_){
   switch (type) {
   case free6: {
     extvec pos;
@@ -157,7 +157,7 @@ list<double*> modelnode::make_joint(const joint_type type, const double* pos_){
 // let B = mnode1.A_ground, C = mnode2.A_ground, D = joint.A_parent
 // E = joint.transformation, F = mnode2.A_tobody
 // then C = B * D * E * F
-void modelnode::recompute_A_ground(affine& A){
+void modelnode::recompute_A_ground(const affine& A){
   if(joint){
     joint->compute_A_ground(&A);
     A_ground.copy(*joint->get_A_ground());
@@ -176,7 +176,7 @@ void modelnode::recompute_A_ground(affine& A){
 }
 
 
-kinematicmodel::kinematicmodel(const bool vis_flag_){
+kinematicmodel::kinematicmodel(bool vis_flag_){
   vis_flag = vis_flag_;
   if(vis_flag){set_vis();}
   mrootnode = NULL;
@@ -192,7 +192,7 @@ kinematicmodel::~kinematicmodel(){
   }
 }
 
-void kinematicmodel::load_fromxml(const string fname){
+void kinematicmodel::load_fromxml(string fname){
   xmlfname = fname;
   file<> xmlFile(fname.c_str());
   xml_document<> doc;
@@ -282,7 +282,7 @@ void kinematicmodel::print(){
   print(0);
 }
 
-void kinematicmodel::print(const int detail_level){
+void kinematicmodel::print(int detail_level){
   cout << "--- kinematic model ---" << endl;
   cout << "loaded from " << xmlfname << endl;
   int config_dim = get_config_dim();
@@ -304,7 +304,7 @@ void kinematicmodel::print(const int detail_level){
   }
 }
 
-int kinematicmodel::get_config_dim(){
+int kinematicmodel::get_config_dim() const {
   return joint_values.size();
 }
 
@@ -356,9 +356,9 @@ void kinematicmodel::set_ode_joints(){
   }
 }
 
-void kinematicmodel::orient_torso(extvec* orientation){
+void kinematicmodel::orient_torso(const extvec* orientation){
   for(int i=0;i<2;i++){
-    double* p = orientation[i].get_data();
+    const double* p = orientation[i].get_data();
     for(int j=0;j<3;j++){*joint_values[j+i*3] = *p++;}
   }
   recompute_modelnodes();

@@ -47,25 +47,25 @@ void periodicgenerator::set_step_duration(double f){
 }
 
 // sets T, L and h (period, step_length and step_height)
-void periodicgenerator::set_scales(double period_, double step_length_, double step_height_){
+void periodicgenerator::set_scales(double period_, double step_length_, double step_height_) {
   period = period_;
   step_length = step_length_;
   step_height = step_height_;
 }
 
 // t here is step fraction, so it is in [0,1]
-double periodicgenerator::stepx(double t){
+double periodicgenerator::stepx(double t) const {
   return (1-cos(M_PI*t))/2;
 }
 
 // see stepx comment
-double periodicgenerator::stepz(double t){
+double periodicgenerator::stepz(double t) const {
   double a = sin(M_PI*t);
   return a*a;
 }
 
 // fraction of step duration
-double periodicgenerator::step_frac(int limbi, double t){
+double periodicgenerator::step_frac(int limbi, double t) const {
   double t_lift = ts[limbi]; // liftoff moment
   if (t < t_lift) {return 0;} 
   else if (t < t_lift + t_step) {return (t-t_lift)/t_step;} 
@@ -105,7 +105,7 @@ void periodicgenerator::print(int detail_level){
   }
 }
 
-void periodicgenerator::change_pos0(int limbi, extvec& delpos0){
+void periodicgenerator::change_pos0(int limbi, const extvec& delpos0){
   limb_pos0s[limbi].add(delpos0);
 }
 
@@ -115,7 +115,7 @@ void periodicgenerator::get_TLh(double TLh[3]){
   TLh[2] = step_height;
 }
 
-void periodicgenerator::set_pos0s(vector<extvec>& limb_pos0s_){
+void periodicgenerator::set_pos0s(const vector<extvec>& limb_pos0s_){
   limb_pos0s = limb_pos0s_;
   compute_max_radius();
 }
@@ -137,7 +137,7 @@ void periodicgenerator::compute_max_radius(){
   }
 }
 
-void periodicgenerator::turn_position(extvec& pos0, extvec& delpos, extvec& pos){
+void periodicgenerator::turn_position(const extvec& pos0, const extvec& delpos, extvec& pos){
   double dx, dy, dz;
   delpos.get_components(dx,dy,dz);
 
@@ -244,7 +244,7 @@ void pergensetup::set_pos0s(){
   pergen->set_pos0s(limb_poss);
 }
 
-void pergensetup::set_orientation(extvec* orientation){
+void pergensetup::set_orientation(const extvec* orientation){
   torso_pos0.copy(orientation[0]);
   euler_angles.copy(orientation[1]);
 }
@@ -265,14 +265,14 @@ void pergensetup::get_config_params(pgsconfigparams* pcp){
   pcp->foot_shift = foot_shift;
 }
 
-void pergensetup::set_rec_rotation(extvec& rec_eas){
+void pergensetup::set_rec_rotation(const extvec& rec_eas){
   extvec rec_transl;
   rec_transform.get_translation(rec_transl);
   set_rec_transform(rec_transl, rec_eas);
 }
 
-void pergensetup::set_rec_transform(extvec& rec_transl, extvec& rec_eas){
-  extvec rec_orientation [] = {rec_transl, rec_eas};
+void pergensetup::set_rec_transform(const extvec& rec_transl, const extvec& rec_eas){
+  const extvec rec_orientation [] = {rec_transl, rec_eas};
   affine_from_orientation(rec_transform,rec_orientation);
   rec_transform_flag = true;
 }
@@ -291,7 +291,7 @@ void pergensetup::transform_rec(double* rec){
   }
 }
 
-void pergensetup::copy_rec_transform(pergensetup* pgs){
+void pergensetup::copy_rec_transform(const pergensetup* pgs){
   rec_transform_flag = pgs->rec_transform_flag;
   rec_transform.copy(pgs->rec_transform);
 }
@@ -316,12 +316,12 @@ void pergensetup::set_curvature(double curvature){
   pergen->set_curvature(curvature);
 }
 
-void pergensetup::rec_to_orientation(double* rec, extvec* orientation){
+void pergensetup::rec_to_orientation(const double* rec, extvec* orientation){
   orientation[0].set(rec);
   orientation[1].set(rec+3);
 }
 
-void pergensetup::orientation_to_rec(extvec* orientation, double* rec){
+void pergensetup::orientation_to_rec(const extvec* orientation, double* rec){
   orientation[0].get_components(rec);
   orientation[1].get_components(rec+3);
 }
@@ -375,25 +375,6 @@ void pgssweeper::sweep(string param_name, double val0_, double val1, int n_val_)
   cout << "sweeping over " << param_name << ":" << endl;
 }
 
-/*bool pgssweeper::next(){return next1();
-  if(vali > n_val){vali=0; return false;}
-  val = val0 + vali*delval;
-  vali++;
-
-  if(pgs){delete pgs; pgs = NULL;}
-  pgs0->get_config_params(pos,angles,step_duration,TLh);
-  int n = pgs0->get_limb_number();
-  if(parami == 0){step_duration = val;}
-  else if (parami > 0 && parami < 4){TLh[parami-1] = val;}
-  pgs = new pergensetup (n);
-  extvec orientation[] = {pos, angles};
-  setup_pergen(*pgs,orientation,step_duration);
-  pgs->set_TLh(TLh);
-  pgs->copy_rec_transform(pgs0);
-
-  return true;
-  }*/
-
 bool pgssweeper::next(){
   if(vali > n_val){vali=0; return false;}
   val = val0 + vali*delval;
@@ -412,7 +393,7 @@ bool pgssweeper::next(){
   return true;
 }
 
-void pgssweeper::setup_pergen(pergensetup& pergensu, extvec* orientation, double step_duration_){
+void pgssweeper::setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration_){
   model->orient_torso(orientation);
   periodicgenerator* pergen = pergensu.get_pergen();
   pergen->set_step_duration(step_duration_);
@@ -431,7 +412,7 @@ void pgssweeper::setup_pergen(pergensetup& pergensu, extvec* orientation, double
   pergensu.set_orientation(orientation);
 }
 
-void pgssweeper::full_setup_pergen(pergensetup& pergensu, pgsconfigparams* pcp0){
+void pgssweeper::full_setup_pergen(pergensetup& pergensu, const pgsconfigparams* pcp0){
   pergensu.set_foot_shift(pcp0->foot_shift);
   setup_pergen(pergensu, pcp0->orientation, pcp0->step_duration);
   pergensu.set_TLh(pcp0->TLh);

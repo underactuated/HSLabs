@@ -43,7 +43,7 @@ ghostmodel::~ghostmodel(){
 }
 
 // clones a model without ode representation in visualizer
-kinematicmodel* ghostmodel::nonvis_clone(kinematicmodel* model){
+kinematicmodel* ghostmodel::nonvis_clone(const kinematicmodel* model){
   kinematicmodel* clone = new kinematicmodel (false);
   clone->load_fromxml(model->get_xmlfname());
   clone->recompute_modelnodes();
@@ -130,9 +130,9 @@ void ghostmodel::set_lik_rec(){
 
 // orients surface (specified by surf_normal)
 // is only used externaly, for testing
-void ghostmodel::set_surf_rot(extvec& eas){
-  extvec transl (0,0,0);
-  extvec orient[] = {transl, eas};
+void ghostmodel::set_surf_rot(const extvec& eas){
+  const extvec transl (0,0,0);
+  const extvec orient[] = {transl, eas};
   affine_from_orientation(surf_rot, orient);
   //surf_rot.print();
   extvec n (0,0,1);

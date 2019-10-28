@@ -38,7 +38,7 @@ public:
   void solver_test(int n);
 private:
   void set_limbs(kinematicmodel* model);
-  void set_rcap(kinematicmodel* model, vector<int>& limb_inds);
+  void set_rcap(kinematicmodel* model, const vector<int>& limb_inds);
 };
 
 class liklimb{
@@ -52,14 +52,14 @@ public:
   inline void set_bend(bool bend){limb_bend = bend;}
   inline void set_solver_func(SolverFuncType* f){solver_func = f;}
   void setup_joint_values();
-  void place_limb(extvec& pos_ground);
-  void set_joint_values(extvec& joint_values);
+  void place_limb(const extvec& pos_ground);
+  void set_joint_values(const extvec& joint_values);
   void get_pos0(extvec& pos);
   modelnode* get_foot();
   void solver_test_yxx(int n);
   bool bend_from_angles(extvec& angles);
 private:
-  void poslimb(extvec& pos_ground, extvec& pos_limb);
+  void poslimb(const extvec& pos_ground, extvec& pos_limb);
 };
 
 #endif

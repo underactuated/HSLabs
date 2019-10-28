@@ -36,7 +36,7 @@ void forcetorquesolver::solve_forcetorques(dynrecord* dynrec){
   cout << x.head(15) << endl;
 }
 
-void  check_contact_forces(VectorXd& x0, MatrixXd& N, VectorXd& c, double f, VectorXd& y1, list<pair<int,int> >& mask){
+void  check_contact_forces(const VectorXd& x0, const MatrixXd& N, const VectorXd& c, double f, const VectorXd& y1, list<pair<int,int> >& mask){
 
   VectorXd d = c;
   d = d.array().square();
@@ -46,8 +46,6 @@ void  check_contact_forces(VectorXd& x0, MatrixXd& N, VectorXd& c, double f, Vec
     int i0 = (*it).first, imax = (*it).second;
     for(int i=i0;i<imax;i++){d(i) *= f;}
   }
-
-  //for(int i=k;i<d.size();i++){d(i) *= f;}
 
   //cout<<d.transpose()<<endl;exit(1);
   DiagonalMatrix<double, Dynamic> D (d);
@@ -173,7 +171,7 @@ void subvector_by_mask(VectorXd& subv, VectorXd& v, list<pair<int,int> >& mask, 
   }
 }
 
-void forcetorquesolver::solve_contact_forces(VectorXd& x, VectorXd& y, MatrixXd& N){
+void forcetorquesolver::solve_contact_forces(VectorXd& x, VectorXd& y, const MatrixXd& N){
   VectorXd c;
   set_action_penalties(c);
 
@@ -255,7 +253,7 @@ void forcetorquesolver::switch_torso_penalty(bool force_flag, bool torque_flag){
   set_penal_mask1();
 }
 
-void forcetorquesolver::extract_N_contact(MatrixXd& N, MatrixXd& N_cont){
+void forcetorquesolver::extract_N_contact(const MatrixXd& N, MatrixXd& N_cont){
   N_cont.resize(nf*3,N.cols());
   int k = 0;
   for(int i=0;i<nf;i++){
@@ -333,7 +331,7 @@ void forcetorquesolver::solve_forces(dynrecord* dynrec_, VectorXd& z, VectorXd& 
   y = x.tail(3*nf);
 }
 
-void forcetorquesolver::add_torque_constraints_to_B(SpMat& B, VectorXd& f, VectorXd& z){
+void forcetorquesolver::add_torque_constraints_to_B(SpMat& B, VectorXd& f, const VectorXd& z){
   int nj = z.size();
   int m = B.rows();
   B.conservativeResize(m+nj,B.cols());

@@ -11,13 +11,14 @@
 #include "core.h"
 #include "matrix.h"
 
-void rot_ztov(dMatrix3& rot, extvec& v);
+void rot_ztov(dMatrix3& rot, const extvec& v);
 void transpose_odematrix(dMatrix3& m);
-void posrot_from_affine(dVector3& pos, dMatrix3& rot, affine& A);
+void posrot_from_affine(dVector3& pos, dMatrix3& rot, const affine& A);
 void affine_from_posrot(affine& A, const dVector3& pos, const dMatrix3& rot);
-void affine_from_orientation(affine& A, extvec* orientation);
+void affine_from_orientation(affine& A, const extvec* orientation);
 void mod_twopi(double& a);
-void euler_angles_from_affine(affine& A, double* angles);
+void euler_angles_from_affine(const affine& A, double* angles);
+void evec_to_dvec(const extvec& evec, dVector3& dvec);
 
 // ##### VISUALIZER #####
 // includes minimal functionality from ode and ds to visualize robot state
@@ -61,10 +62,10 @@ public:
   void step();
   void set_viewpoint();
   void adjust_viewpoint();
-  void set_flag(const string flag_name, const bool value);
-  void simulate_odeworld(const double dt_ode);
+  void set_flag(string flag_name, bool value);
+  void simulate_odeworld(double dt_ode);
   dJointID create_contact(dContact* contact);
-  void set_speedup(const int f);
+  void set_speedup(int f);
   void add_motor(dJointID hinge);
   void set_ode_motor_torques(const double* motor_torques);
   void get_ode_motor_angles(double* as);
@@ -95,17 +96,17 @@ public:
   void make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis);
   void capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, const double* fromto);
   void get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot);
-  void print(const int detail_level);
+  void print(int detail_level);
   void print_ode();
   void get_com_pos(extvec& pos);
   void get_foot_pos(extvec& pos);
-  void get_foot_pos(extvec& pos, const bool from_body_flag);
+  void get_foot_pos(extvec& pos, bool from_body_flag);
   void make_fixed_joint(odepart* parent_part, visualizer* vis);
   void make_hinge_joint(odepart* parent_part, visualizer* vis);
   void get_frame_A_ground_from_body(affine& A_ground);
 private:
   void get_ode_body_A_ground(affine& A_ground);
-  void make_ccylinder(visualizer* vis, const xml_node<>* geom_node, const bool capped_flag);
+  void make_ccylinder(visualizer* vis, const xml_node<>* geom_node, bool capped_flag);
 };
 
 class viewpoint{
@@ -114,12 +115,12 @@ class viewpoint{
   bool smooth_flag;
 public:
   viewpoint();
-  inline void set_smooth(const bool flag_val){smooth_flag = flag_val;}
+  inline void set_smooth(bool flag_val){smooth_flag = flag_val;}
   void set(const float* xyz, const float* xyz_cam, const float* hpr);
   void set(const float* xyz, const float* xyz_cam);
   void adjust(const dReal* xyz);
   void print();
-  void shift_cam(const float x, const float y, const float z);
+  void shift_cam(float x, float y, float z);
 private:
   void hard_xyzref_update(const dReal* xyz);
   void smooth_xyzref_update(const dReal* xyz);

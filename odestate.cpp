@@ -75,8 +75,8 @@ configtimedertrack::configtimedertrack(int max_der_, int config_dim_, double dt_
   construct(max_der_,config_dim_,dt_);
 }
 
-configtimedertrack::configtimedertrack(configtimedertrack* tdertrack){
-  configtimedertrack* tdt = tdertrack;
+configtimedertrack::configtimedertrack(const configtimedertrack* tdertrack){
+  const configtimedertrack* tdt = tdertrack;
   construct(tdt->max_der,tdt->config_dim,tdt->dt);
   copy(tdt);
 }
@@ -121,8 +121,8 @@ void configtimedertrack::print(){
   }
 }
 
-void configtimedertrack::copy(configtimedertrack* tdertrack){
-  configtimedertrack* tdt = tdertrack;
+void configtimedertrack::copy(const configtimedertrack* tdertrack){
+  const configtimedertrack* tdt = tdertrack;
   for(int i=0;i<max_der;i++){ao.assign(ders[i],tdt->ders[i]);}
   ao.assign(new_der,tdt->new_der);
   ao.assign(old_der,tdt->old_der);

@@ -12,7 +12,7 @@ struct trimesh{
   dTriIndex* indices;
   int n_tri;
   float rgb[3];
-  trimesh(int n_vert, int n_tri, float rgb[3]);
+  trimesh(int n_vert, int n_tri, const float rgb[3]);
   trimesh(){}
   ~trimesh();
   inline float* get_color(){return rgb;}

@@ -29,10 +29,10 @@ class ghostmodel{
 public:
   ghostmodel(visualizer* vis, heightfield* hfield, double dt);
   ~ghostmodel();
-  kinematicmodel* nonvis_clone(kinematicmodel* model);
+  kinematicmodel* nonvis_clone(const kinematicmodel* model);
   void get_motor_adas(double* as, double* das);
   void set_torso_feet_oparts(kinematicmodel* model);
-  void set_surf_rot(extvec& eas);
+  void set_surf_rot(const extvec& eas);
   void rotate_surf();
 private:
   void shift_limb_poss();

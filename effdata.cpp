@@ -3,16 +3,16 @@
 #include "effdata.h"
 #include "balltreelib1/balltree.h"
 
-void efficientdata::prepare_data(list<vector<double> >& data, int d){
+void efficientdata::prepare_data(const list<vector<double> >& data, int d){
   data_size=0;
-  list<vector<double> >::iterator it = data.begin();
+  list<vector<double> >::const_iterator it = data.begin();
   for(;it!=data.end();it++){
     if((int)points.size()<=data_size){
       points.push_back(new double [2*d]);
       pis[points.back()]=data_size;
     }
     double* p = points[data_size];
-    vector<double>::iterator it1 = (*it).begin();
+    vector<double>::const_iterator it1 = (*it).begin();
     for(int i=0;i<2*d;i++){*p++ = (*it1++);}
     data_size++;
   }
@@ -128,16 +128,16 @@ void balltreetester::print_point(double* pnt){
   print_array<double>(pnt,dim);
 }
 
-double balltreetester::point_plane_dist(double* pnt, plane pl){
+double balltreetester::point_plane_dist(const double* pnt, plane pl){
   double* a = pl.first;
   double b = pl.second;
   return fabs(dot(pnt,a)+b)/norm(a);
 }
 
-double balltreetester::norm(double* pnt){
+double balltreetester::norm(const double* pnt){
   return ao.norm(pnt);
 }
 
-double balltreetester::dot(double* pnt1, double* pnt2){
+double balltreetester::dot(const double* pnt1, const double* pnt2){
   return ao.dot(pnt1,pnt2);
 }

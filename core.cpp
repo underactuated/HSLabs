@@ -29,7 +29,7 @@ void xmlnode_attr_to_val(const xml_node<>* xnode, const char* attr_name, string&
   } else {cout << "WARNING: no attribute " << attr_name << endl;}
 }
 
-double** new_2d_array(const int n, const int m){
+double** new_2d_array(int n, int m){
   double** array = new double* [n];
   double** p = array;
   for(int i=0;i<n;i++){
@@ -38,7 +38,7 @@ double** new_2d_array(const int n, const int m){
   return array;
 }
 
-void delete_2d_array(double** array, const int n){
+void delete_2d_array(double** array, int n){
   double** p = array;
   if(p == NULL){return;}
   for(int i=0;i<n;i++){delete [] *p++;}
@@ -46,7 +46,7 @@ void delete_2d_array(double** array, const int n){
   array = NULL;
 }
 
-void save_2d_array(double** array, const int n, const int m, const string fname, const bool append_flag){
+void save_2d_array(double** array, int n, int m, string fname, bool append_flag){
   ofstream file;
   if (append_flag) {file.open(fname.c_str(),ios_base::app);}
   else {file.open(fname.c_str());}
@@ -90,13 +90,13 @@ double* arrayops::subtract(double* a, const double* a1){
   return p;
 }
 
-double* arrayops::times(double* a, const double b){
+double* arrayops::times(double* a, double b){
   double* p = a;
   for(int i=0;i<n;i++){*a++ *= b;}
   return p;
 }
 
-double* arrayops::modulus(double* a, const double b){
+double* arrayops::modulus(double* a, double b){
   double* p = a;
   double bh = b/2;
   for(int i=0;i<n;i++){
@@ -129,7 +129,7 @@ double arrayops::distance(const double* a, const double* a1){
   return l;
 }
 
-void arrayops::assign_scalar(double* a, const double b){
+void arrayops::assign_scalar(double* a, double b){
   for(int i=0;i<n;i++){*a++ = b;}
 }
 
@@ -139,10 +139,10 @@ double arrayops::l1_norm(const double* a){
   return s;
 }
 
-double** arrayops::new_2d_array(const int m){
+double** arrayops::new_2d_array(int m){
   return ::new_2d_array(m, n);
 }
 
-void arrayops::delete_2d_array(double** array, const int m){
+void arrayops::delete_2d_array(double** array, int m){
   ::delete_2d_array(array, m);
 }
