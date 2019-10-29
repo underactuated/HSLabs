@@ -1,3 +1,8 @@
+/////////////////////////////////////////////////
+// Declaration of augmented matrices and vectors
+// (affine and extvec class correspondingly)
+// needed for computing basic chain kinematics.
+/////////////////////////////////////////////////
 #ifndef MATRIX_H
 #define MATRIX_H
 
@@ -8,6 +13,16 @@ using namespace std;
 
 class extvec;
 
+// Class affine represents a 4 x 4 matrix A = [rot,transl;03^T,1]
+// (where ^T means transposition, and 03 = [0;0;0])
+// cooresponding to a coordinate transformation between two frames
+// F and F', where F' can be viewed as the result of rotation
+// followed by translation of F by rot and transl respectively.
+// Such transformation is called a rigid body transformation. 
+// Then (extended) coordinates r and r' (in F and F' rescpectively)
+// of some point are related vis r = A * r'. Composition of
+// several rigid body transformations A1, A2 ..., is computed
+// via matrix multiplication A1 * A2 * ...
 class affine{ 
   double a[16]; // matrix is stored column-wise
 public:
@@ -38,7 +53,10 @@ private:
   void print_rows(int n) const;
 };
 
-
+// Class extvec represents a 4-dimensional vector [r;1] 
+// corresponding to a 3-dimensional vector r. It is augmented 
+// (or extended, hence extvec = extended vector) with 1 as 
+// the fourth component.
 class extvec{
   double v[4];
 public:

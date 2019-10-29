@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////
+// Declaration of some useful functions
+// and a class for array manipulation
+/////////////////////////////////////////////////
 #ifndef CORE_H
 #define CORE_H
 
@@ -17,9 +21,11 @@ void save_2d_array(double** array, int n, int m, std::string fname, bool append_
 
 double randf();
 
-// maybe generalize to any type later with templates
+// arrayops ( = array operations) object simplifis certain array 
+// operations on arrays of given length n, such as vector arifmetic.
+// TODO: maybe generalize to any type with templates?
 class arrayops{
-  int n;
+  int n;  // array size
 public:
   arrayops(int n_){n = n_;}
   arrayops(){n = 0;}
