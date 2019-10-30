@@ -1,11 +1,10 @@
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
+//#include "core.h"
+//#include "matrix.h"
+//#include "visualization.h"
+//#include "model.h"
 #include "lik.h"
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
-#include "pergen.h"
 #include "periodic.h"
 #include "dynrec.h"
 #include "ftsolver.h"
@@ -92,7 +91,8 @@ void periodic::record_trajectory(pergensetup* pgs, int n_t_){
   }
   delete rec;
   dt_traj = dt;
-  rcap = pgs->get_rcap();
+  //rcap = pgs->get_rcap();
+  rcap = model->get_lik()->get_rcap();
 }
 
 void periodic::print_trajectory(){
@@ -112,8 +112,7 @@ void periodic::print_trajectory(int i, int m){
 }
 
 void periodic::print_trajectory(int i){
-  i %= traj_size;
-  double* p = traj[i];
+  double* p = traj[i % traj_size];
   for(int j=0;j<config_dim;j++){
     if(j){cout << " ";}
     cout << *p++;
@@ -331,8 +330,8 @@ void periodic::get_motor_torques(double* motor_torques){
   }
 }
 
-void periodic::analyze_contforces(double* contforces){
-  double *p = contforces;
+void periodic::analyze_contforces(const double* contforces){
+  const double *p = contforces;
   for(int i=0;i<nfeet;i++){
     double cfx, cfy, cfz;
     cfx = *p++; cfy = *p++; cfz = *p++;

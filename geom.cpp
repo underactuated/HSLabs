@@ -1,8 +1,8 @@
-#include "core.h"
+//#include "core.h"
 #include "geom.h"
+#include <drawstuff/drawstuff.h>
 
-
-trimesh::trimesh(int n_vert, int n_tri_, float rgb_[3]){
+trimesh::trimesh(int n_vert, int n_tri_, const float rgb_[3]){
   n_tri = n_tri_;
   //vertices = new dReal [3*n_vert];
   vertices = new dReal [4*n_vert];

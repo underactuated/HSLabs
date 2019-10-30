@@ -1,5 +1,14 @@
+#ifndef GHOST_H
+#define GHOST_H
 
-struct ghostmodel{
+#include "matrix.h"
+#include "visualization.h"
+#include "model.h"
+#include "lik.h"
+#include "odestate.h"
+#include "geom.h"
+
+class ghostmodel{
   visualizer* vis;
   heightfield* hfield;
   int config_dim, nmj, nfeet;
@@ -15,15 +24,15 @@ struct ghostmodel{
   extvec surf_normal, plane_zf;
   affine surf_rot;
   bool horizontal_flag, adaptive_orientation_flag;
-  //arrayops ao;
   double** acd; // array of config_dim-sized elements
   liksolver *lik, *glik; // (g)model LIK
+public:
   ghostmodel(visualizer* vis, heightfield* hfield, double dt);
   ~ghostmodel();
-  kinematicmodel* nonvis_clone(kinematicmodel* model);
+  kinematicmodel* nonvis_clone(const kinematicmodel* model);
   void get_motor_adas(double* as, double* das);
   void set_torso_feet_oparts(kinematicmodel* model);
-  void set_surf_rot(extvec& eas);
+  void set_surf_rot(const extvec& eas);
   void rotate_surf();
 private:
   void shift_limb_poss();
@@ -36,3 +45,4 @@ private:
   void set_gmodel_limb_bends();
 };
 
+#endif

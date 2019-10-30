@@ -1,10 +1,10 @@
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
-#include "lik.h"
-#include "odestate.h"
-#include "geom.h"
+//#include "core.h"
+//#include "matrix.h"
+//#include "visualization.h"
+//#include "model.h"
+//#include "lik.h"
+//#include "odestate.h"
+//#include "geom.h"
 #include "ghost.h"
 
 void fit_plane(extvec& plane, list<extvec>& points);
@@ -13,7 +13,6 @@ ghostmodel::ghostmodel(visualizer* vis_, heightfield* hfield_, double dt_){
   vis = vis_;
   hfield = hfield_;
   dt = dt_;
-  rcap = .08;
   kinematicmodel* model = vis->get_model();
   config_dim = model->get_config_dim();
   nmj = model->number_of_motor_joints();
@@ -34,6 +33,7 @@ ghostmodel::ghostmodel(visualizer* vis_, heightfield* hfield_, double dt_){
   adaptive_orientation_flag = true;//false;
   lik = model->get_lik();
   glik = gmodel->get_lik();
+  rcap = lik->get_rcap();
 }
 
 ghostmodel::~ghostmodel(){
@@ -43,7 +43,7 @@ ghostmodel::~ghostmodel(){
 }
 
 // clones a model without ode representation in visualizer
-kinematicmodel* ghostmodel::nonvis_clone(kinematicmodel* model){
+kinematicmodel* ghostmodel::nonvis_clone(const kinematicmodel* model){
   kinematicmodel* clone = new kinematicmodel (false);
   clone->load_fromxml(model->get_xmlfname());
   clone->recompute_modelnodes();
@@ -130,9 +130,9 @@ void ghostmodel::set_lik_rec(){
 
 // orients surface (specified by surf_normal)
 // is only used externaly, for testing
-void ghostmodel::set_surf_rot(extvec& eas){
-  extvec transl (0,0,0);
-  extvec orient[] = {transl, eas};
+void ghostmodel::set_surf_rot(const extvec& eas){
+  const extvec transl (0,0,0);
+  const extvec orient[] = {transl, eas};
   affine_from_orientation(surf_rot, orient);
   //surf_rot.print();
   extvec n (0,0,1);

@@ -5,30 +5,27 @@
 
 using namespace std;
 
-void str_to_val(char* str, double* val){
+void str_to_val(const char* str, double* val){
   stringstream ss;
   ss << str;
   while(ss >> *val++){};
 }
 
-/*void xmlnode_attr_to_val(xml_node<>* xnode, const char* attr_name, double* val){
-  return str_to_val(xnode->first_attribute(attr_name)->value(),val);
-  }*/
-
-void xmlnode_attr_to_val(xml_node<>* xnode, const char* attr_name, double* val){
+void xmlnode_attr_to_val(const xml_node<>* xnode, const char* attr_name, double* val){
   xml_attribute<>* attr = xnode->first_attribute(attr_name);
   if(attr){
     str_to_val(xnode->first_attribute(attr_name)->value(),val);
   } else {cout << "WARNING: no attribute " << attr_name << endl;}
 }
 
-void xmlnode_attr_to_val(xml_node<>* xnode, const char* attr_name, string& val){
+void xmlnode_attr_to_val(const xml_node<>* xnode, const char* attr_name, string& val){
   xml_attribute<>* attr = xnode->first_attribute(attr_name);
   if(attr){
     val = attr->value();
   } else {cout << "WARNING: no attribute " << attr_name << endl;}
 }
 
+// allocates  2d (two-dimensional, n x m) array
 double** new_2d_array(int n, int m){
   double** array = new double* [n];
   double** p = array;
@@ -46,6 +43,7 @@ void delete_2d_array(double** array, int n){
   array = NULL;
 }
 
+// saves 2d array to file fname, appending if append_flag
 void save_2d_array(double** array, int n, int m, string fname, bool append_flag){
   ofstream file;
   if (append_flag) {file.open(fname.c_str(),ios_base::app);}
@@ -62,7 +60,7 @@ void save_2d_array(double** array, int n, int m, string fname, bool append_flag)
   file.close();
 }
 
-
+// uniform sampling from [0,1]
 double randf(){return double(rand())/RAND_MAX;}
 
 
@@ -74,53 +72,62 @@ void arrayops::print(double* a){
   cout << endl;
 }
 
-void arrayops::assign(double* a, double* a1){
+// a = a1
+void arrayops::assign(double* a, const double* a1){
   for(int i=0;i<n;i++){*a++ = *a1++;}
 }
 
-double* arrayops::add(double* a, double* a1){
+// a += a1
+double* arrayops::add(double* a, const double* a1){
   double* p = a;
   for(int i=0;i<n;i++){*a++ += *a1++;}
   return p;
 }
 
-double* arrayops::subtract(double* a, double* a1){
+// a -= a1
+double* arrayops::subtract(double* a, const double* a1){
   double* p = a;
   for(int i=0;i<n;i++){*a++ -= *a1++;}
   return p;
 }
 
+// a *= b, where b is scalar
 double* arrayops::times(double* a, double b){
   double* p = a;
   for(int i=0;i<n;i++){*a++ *= b;}
   return p;
 }
 
+// modulus is used for arguments of periodic functions (with period b)
+// to bring a to (-b/2,b/2]. It is assumed that a is in (-3*b/2,3*b/2].
 double* arrayops::modulus(double* a, double b){
   double* p = a;
   double bh = b/2;
   for(int i=0;i<n;i++){
     if (*a > bh) {*a -= b;}
-    else if (*a < -bh) {*a += b;}
+    else if (*a <= -bh) {*a += b;}
     a++;
   }
   return p;
 }
 
-double arrayops::dot(double* a, double* a1){
+// dot-product of a and a1
+double arrayops::dot(const double* a, const double* a1){
   double s = 0;
-  double *p = a, *p1 = a1;
+  const double*p = a, *p1 = a1;
   for(int i=0;i<n;i++){
     s += (*p++)*(*p1++);
   }
   return s;
 }
 
-double arrayops::norm(double* a){
+// l2 norm
+double arrayops::norm(const double * a){
   return sqrt(dot(a,a));
 }
 
-double arrayops::distance(double* a, double* a1){
+// norm(a-a1)
+double arrayops::distance(const double* a, const double* a1){
   double* d = new double [n];
   assign(d,a);
   subtract(d,a1);
@@ -129,11 +136,12 @@ double arrayops::distance(double* a, double* a1){
   return l;
 }
 
+// a = b, where b is scalar
 void arrayops::assign_scalar(double* a, double b){
   for(int i=0;i<n;i++){*a++ = b;}
 }
 
-double arrayops::l1_norm(double* a){
+double arrayops::l1_norm(const double* a){
   double s = 0;
   for(int i=0;i<n;i++){s += fabs(*a++);}
   return s;

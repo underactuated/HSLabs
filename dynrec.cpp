@@ -1,13 +1,13 @@
-#include <map>
-#include "core.h"
-#include "matrix.h"
-#include "visualization.h"
-#include "model.h"
-#include "lik.h"
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-#include "pergen.h"
-#include "periodic.h"
+//#include <map>
+//#include "core.h"
+//#include "matrix.h"
+//#include "visualization.h"
+//#include "model.h"
+//#include "lik.h"
+//#include <Eigen/Dense>
+//#include <Eigen/Sparse>
+//#include "pergen.h"
+//#include "periodic.h"
 #include "dynrec.h"
 
 
@@ -72,7 +72,7 @@ void dynpart::set_inertial_params(){
   //cout<<mass<<endl;A_inertia.print();
 }
 
-void dynpart::setup_foot(set<modelnode*>& foot_set){
+void dynpart::setup_foot(const set<modelnode*>& foot_set){
   if(foot_set.count(mnode)){
     foot_flag = true;
     set_foot_pos();
@@ -169,7 +169,7 @@ void dynrecord::print(int id){
   cout << "rot: " << endl; rot[id].print();
 }
 
-void dynrecord::compute_ders(int stage, dynrecord* prev_rec, dynrecord* next_rec, double dt, periodic* per){
+void dynrecord::compute_ders(int stage, const dynrecord* prev_rec, const dynrecord* next_rec, double dt, periodic* per){
   switch (stage) {
   case 0: {
     compute_ders(vel,prev_rec->pos,next_rec->pos,dt);
@@ -185,7 +185,7 @@ void dynrecord::compute_ders(int stage, dynrecord* prev_rec, dynrecord* next_rec
   }
 }
 
-void dynrecord::compute_ders(extvec *p_der, extvec *p_func_prev, extvec *p_func_next, double dt){
+void dynrecord::compute_ders(extvec *p_der, const extvec *p_func_prev, const extvec *p_func_next, double dt){
   for(int i=0;i<n;i++){
     p_der->copy(*p_func_next);
     p_der->subtract(*p_func_prev);
@@ -209,7 +209,7 @@ void dynrecord::compute_ang_mom(periodic* per){
   }
 }
 
-void dynrecord::compute_mom(double* masses){
+void dynrecord::compute_mom(const double* masses){
   for(int i=0;i<n;i++){
     double mass = masses[i];
     mom[i].copy(vel[i]);
@@ -217,7 +217,7 @@ void dynrecord::compute_mom(double* masses){
   }
 }
 
-void dynrecord::set_forcetorque_system(SpMat& B, VectorXd& f, int* parentis, double* masses){
+void dynrecord::set_forcetorque_system(SpMat& B, VectorXd& f, const int* parentis, const double* masses){
   for(int i=0;i<n;i++){
     int pi = parentis[i];
     ftsys_forces(i,pi,B,f);
@@ -271,7 +271,7 @@ void dynrecord::ftsys_torques(int i, int pi, SpMat& B, VectorXd& f){
   ang_mom_rate[i].get_components(f(k0),f(k0+1),f(k0+2));  
 }
 
-void dynrecord::ftsys_gravity(int i, VectorXd& f, double* ms){
+void dynrecord::ftsys_gravity(int i, VectorXd& f, const double* ms){
   const double g = 1;
   //const double g = 10;
   f(3*i+2) += ms[i]*g;
@@ -284,11 +284,11 @@ int dynrecord::get_ncontacts(){
   return s;
 }
 
-void dynrecord::set_forcetorque_system_contacts(SpMat& B, int* footis){
+void dynrecord::set_forcetorque_system_contacts(SpMat& B, const int* footis){
   set_forcetorque_system_contacts(B,footis,true);
 }
 
-void dynrecord::set_forcetorque_system_contacts(SpMat& B, int* footis, bool contact_feet_flag){
+void dynrecord::set_forcetorque_system_contacts(SpMat& B, const int* footis, bool contact_feet_flag){
   int ci = 0;
   for(int fi=0;fi<nf;fi++){
     if(contact_feet_flag){

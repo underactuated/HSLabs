@@ -1,26 +1,31 @@
+#ifndef GEOM_H
+#define GEOM_H
+
 #include <list>
 #include <map>
 #include <ode/ode.h>
-#include <drawstuff/drawstuff.h>
+
+#include "core.h"
 
 struct trimesh{
   dReal* vertices;
   dTriIndex* indices;
   int n_tri;
   float rgb[3];
-  trimesh(int n_vert, int n_tri, float rgb[3]);
+  trimesh(int n_vert, int n_tri, const float rgb[3]);
   trimesh(){}
   ~trimesh();
-  float* get_color(){return rgb;}
+  inline float* get_color(){return rgb;}
 };
 
-struct trimeshmanager{
+class trimeshmanager{
   dSpaceID space;
   list<dReal> vertex_buffer;
   list<int> triangle_buffer;
   int vert_buff_size, tri_buff_size;
   float rgb[3];
   map<dGeomID,trimesh*> geom_trimesh;
+public:
   trimeshmanager(dSpaceID space);
   void push_vertex(dReal x, dReal y, dReal z);
   void push_triangle(int vi0, int vi1, int vi2);
@@ -35,11 +40,12 @@ private:
   void clear_buffs();
 };
 
-struct heightfield{
+class heightfield{
   int nx, ny;	// size of field in l units
   double l;	// length of (square) cell side
   double *heights, *heightcs;	// y-wise ordering
   double x0, y0;
+public:
   heightfield(int nx, int ny, double l);
   ~heightfield();
   void random_field(double lb, double ub, bool add_flag);
@@ -58,3 +64,4 @@ private:
   void ixyq_to_z01c(int ix, int iy, int iq, double* z01c);
 };
 
+#endif

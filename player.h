@@ -1,14 +1,23 @@
+#ifndef PLAYER_H
+#define PLAYER_H
 
-struct pergensetup;
-struct periodic;
-struct configtimedertrack;
-struct cpccontroller;
-struct pgssweeper;
-struct heightfield;
-struct ghostmodel;
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+
+#include "matrix.h"
+#include "visualization.h"
+#include "model.h"
+
+class pergensetup;
+class periodic;
+class configtimedertrack;
+class cpccontroller;
+class pgssweeper;
+class heightfield;
+class ghostmodel;
 struct pgsconfigparams;
 
-struct modelplayer{
+class modelplayer{
   kinematicmodel* model;
   int step_mode;
   bool manual_viewpoint_flag, contact_force_flag, open_loop_flag, position_control_flag, dynamics_from_simulation_flag, cpc_control_flag, record_traj_flag, torso_kicks_flag, ghost_walking_flag, clip_torque_flag;
@@ -24,23 +33,24 @@ struct modelplayer{
   double traj_t_limit, torque_limit;
   heightfield* hfield;
   ghostmodel* ghost;
+public:
   modelplayer();
   ~modelplayer();
+  inline kinematicmodel* get_model(){return model;}
+  inline void set_play_dt(double dt){play_dt = dt;}
   void load_model(string fname);
   void step();
   void test(int testi);
   void set_flag(string flag_name, bool value);
-  void set_jangles_with_lik(double* rec);
+  void set_jangles_with_lik(const double* rec);
   void print_limb_pos0s();
-  void orient_torso(extvec* orientation);
-  void setup_pergen(pergensetup& pergensu, extvec* orientation, double step_duration);
+  void orient_torso(const extvec* orientation);
+  void setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration);
   pergensetup* make_pergensu(string config_fname, int setup_id);
-  void full_setup_pergen(pergensetup& pergensu, pgsconfigparams pcp);
+  void full_setup_pergen(pergensetup& pergensu, const pgsconfigparams& pcp);
   //void get_pgs_config_params(string& rec_str, string& fname, extvec* orientation, double& step_duration, double& period, double& step_length, double& step_height);
-  void get_pgs_config_params(string& rec_str, pgsconfigparams& confparams);
+  void get_pgs_config_params(const string& rec_str, pgsconfigparams& confparams);
   void play_pergensu(pergensetup* pgs);
-  void set_play_dt(double dt){play_dt = dt;}
-  kinematicmodel* get_model(){return model;}
   void prepare_per_traj_dyn(periodic& per, pergensetup* pgs, int n_t);
   double measure_cot(pergensetup* pgs, int n_t);
   void pergensu_config_string(pergensetup* pgs, string& str);
@@ -52,7 +62,7 @@ struct modelplayer{
   void position_control_test(pergensetup* pgs, double t0);
   void cpc_test(pergensetup* pgs, double t0);
   void record_pos_control_traj(pergensetup* pgs, double t0, double traj_duration);
-void load_draw_model(string fname); // prob tmp
+  void load_draw_model(string fname); // prob tmp
   void record_per_traj(pergensetup* pgs);
   void record_per_traj_sweep(pergensetup* pgs, string param_name, double val0, double val1, int n_val);
   void uneven_ground_test();
@@ -60,6 +70,7 @@ void load_draw_model(string fname); // prob tmp
   void test_lik_solvers();
   void shift_view(double x, double y, double z);
 private:
+  inline visualizer* get_vis() const {return model->get_vis();}
   void test0();
   void test1();
   void test2();
@@ -75,8 +86,7 @@ private:
   void unset_per_controller();
   void set_position_control_torques();
   void estimate_B();
-  visualizer* get_vis(){return model->get_vis();}
-  void save_last_motor_torques(double* torques);
+  void save_last_motor_torques(const double* torques);
   void setup_cpc_controller();
   void set_cpc_torques();
   void add_traj_record();
@@ -95,15 +105,4 @@ private:
   void check_model_loaded();
 };
 
-/*
-struct pgsconfigparams{
-  string fname;
-  extvec* orientation;
-  double step_duration;
-  double period, step_length, step_height;
-  double curvature;
-  double lat_foot_shift, rad_foot_shift;
-  pgsconfigparams(){curvature = 0; lat_foot_shift = 0; rad_foot_shift = 0;}
-};
-*/
-
+#endif
