@@ -19,7 +19,7 @@ void rot_ztov(dMatrix3& rot, const extvec& v){
   double *p = a.get_data();
   dRFromAxisAndAngle(rot,*p,*(p+1),*(p+2),angle);
 
-  // correctness check; leave for now, comment out later
+  // correctness check; TODO: leave for now, comment out later
   affine A; A.set_rotation(rot); extvec b,c; c.copy(v); c.normalize(); A.mult(z,b); c.subtract(b); if(c.norm()>1e-3){cout<<"A:"<<endl;A.print();cout<<"b:"<<endl;b.print();cout<<"v:"<<endl;v.print();cout<<"angle:"<<angle<<endl;cout<<"error: "<<b.norm()<<endl;exit(1);}
 }
 
@@ -38,6 +38,10 @@ void transpose_odematrix(dMatrix3& m){
   }
 }
 
+// initializes translation pos and rotation rot 
+// from an affine transformation A. Note: what we 
+// call an affine transformation in this project,
+// is really a rigid body transformation. 
 void posrot_from_affine(dVector3& pos, dMatrix3& rot, const affine& A){
   const double* a = A.get_data();
   dReal *p = pos, *r = rot;
@@ -45,6 +49,7 @@ void posrot_from_affine(dVector3& pos, dMatrix3& rot, const affine& A){
   for(int i=0;i<3;i++){*p++ = *a++;}
 }
 
+// reverse of posrot_from_affine
 void affine_from_posrot(affine& A, const dVector3& pos, const dMatrix3& rot){
   double* a = A.get_data();
   const dReal *p = pos, *r = rot;
@@ -62,6 +67,8 @@ void affine_from_orientation(affine& A, const extvec* orientation){
   affine_from_posrot(A,pos,rot);
 }
 
+// analog of arrayops::modulus(a,2*M_PI)
+// that works for any a
 void mod_twopi(double& a){
   if (a < -M_PI) {
     while (a < -M_PI) {a += 2*M_PI;}
@@ -70,10 +77,8 @@ void mod_twopi(double& a){
   }
 }
 
-// verify that euler angles are computed correctly
 void euler_angles_from_affine(const affine& A, double* angles){
   double r11, r21, r31, r32, r33;
-  //double r12, r13;
   const double *p = A.get_data();
   r11 = *p++; r21 = *p++; r31 = *p++; p++;
   p += 2; r32 = *p++; p++;
@@ -94,12 +99,7 @@ void euler_angles_from_affine(const affine& A, double* angles){
   return;
 }
 
-/*void evec_to_dvec(const extvec& evec, dVector3& dvec){
-  dReal *p = dvec; 
-  const double *p1 = evec.get_data();
-  for(int i=0;i<3;i++){*p++ = *p1++;}
-  }*/
-
+// for print_dmat and print_dvec
 void print_dn(const dReal* a, int n){
   cout << "[";
   for(int i=0;i<4*n;i++){
@@ -123,14 +123,17 @@ visualizer::visualizer(){
   set_flag("manual_viewpoint",true);
   set_flag("texture",false);
   trimeshman = new trimeshmanager (odespace);
-  //trimesh_test(); // temporary !!!!!!!!!!!1
+  //trimesh_test(); // temporary !!!
+  speedup = 1;
 }
 
 visualizer::~visualizer(){
   unset_odeworld();
   delete view;
+  delete trimeshman;
 }
 
+// note the gravity constant g = 1
 void visualizer::setup_odeworld(){
   dInitODE ();
   odeworld = dWorldCreate();
@@ -154,22 +157,27 @@ void visualizer::unset_odeworld(){
   dCloseODE();
 }
 
-visualizer loop_vis;
+// loop_vis is used by various free functions defined in this file
+// that are used by ODE and drawstuff callback functions, e.g.
+// vis_start(), vis_loop(), nearCallback().
+// See also visualizer::initialize_fn
+visualizer loop_vis; 
 
+// sets loop_vis as model's visualizer
 void kinematicmodel::set_vis(){
   vis = &loop_vis;
-  //vis->model = this;
   vis->set_model(this);
 }
 
+// used by fn
 void vis_start(){
-  //cout<<"starting visualizer"<<endl;
   loop_vis.set_viewpoint();
 }
 
-int speedup = 1;
+// used by fn
 void vis_loop(int){
   //cin.ignore();
+  int speedup = loop_vis.get_speedup();
   loop_vis.draw_inloop();
   for(int i=0;i<speedup;i++){loop_vis.step();}
   loop_vis.adjust_viewpoint();
@@ -183,6 +191,8 @@ void vis_loop(int){
   loop_vis.adjust_viewpoint();
 }
 */
+
+// initializes drawstuff (ds) callback function fn
 void visualizer::initialize_fn(){
   // setup pointers to drawstuff callback functions
   fn.version = DS_VERSION;
@@ -193,6 +203,8 @@ void visualizer::initialize_fn(){
   fn.path_to_textures = DRAWSTUFF_TEXTURE_PATH;
 }
 
+// starts ds simulation loop, with possible no-texture 
+// and/or no-shadow flags; specifies ds window size
 void visualizer::start_loop(){
   char *argv1[3]; argv1[1] = new char[80];
   if(!texture_flag){strcpy(argv1[1],"-notex");}
@@ -207,9 +219,11 @@ void visualizer::draw(){
   start_loop();
 }
 
+// draws all geoms in every iteration of ds loop.
+// Current implementation includes:
+// sphere, box, capsule, cylinder, trimesh
 void visualizer::draw_inloop(){
   int size = geoms.size();
-  //cout<<size<<" geoms"<<endl;
   for(int i=0;i<size;i++){
     dGeomID geom = geoms[i];
     int geom_class = dGeomGetClass(geom);
@@ -217,24 +231,24 @@ void visualizer::draw_inloop(){
     dReal radius, length;
 
     switch (geom_class){
-    case 0: {
+    case dSphereClass: {
       dReal rad = dGeomSphereGetRadius(geom);
       dsDrawSphere(dGeomGetPosition(geom),dGeomGetRotation(geom),rad);
     } break;
-    case 1:
+    case dBoxClass:
       dVector3 lengths;
       dGeomBoxGetLengths(geom,lengths);
       dsDrawBox(dGeomGetPosition(geom),dGeomGetRotation(geom),lengths);
       break;
-    case 2:
+    case dCapsuleClass:
       dGeomCapsuleGetParams(geom,&radius,&length);
       dsDrawCapsule(dGeomGetPosition(geom), dGeomGetRotation(geom), length, radius);
       break;
-    case 3:
+    case dCylinderClass:
       dGeomCylinderGetParams(geom,&radius,&length);
       dsDrawCylinder(dGeomGetPosition(geom), dGeomGetRotation(geom), length, radius);
       break;
-    case 8:
+    case dTriMeshClass:
       trimeshman->draw(geom);
       break;
     default:
@@ -245,6 +259,7 @@ void visualizer::draw_inloop(){
   draw_forces();
 }
 
+// sets initial camera's viewpoint
 void visualizer::set_viewpoint(){
   if(manual_viewpoint_flag){return;}
   float xyz[] = {0,0,0};
@@ -255,6 +270,7 @@ void visualizer::set_viewpoint(){
   view->set(xyz,xyz_cam);
 }
 
+// adjusts camera's viewpoint on every ds loop iteration
 void visualizer::adjust_viewpoint(){
   if(manual_viewpoint_flag){return;}
   const dReal* pos = dGeomGetPosition(geoms[0]);
@@ -262,17 +278,19 @@ void visualizer::adjust_viewpoint(){
 }
 
 void visualizer::set_flag(string flag_name, bool value){
-  if (flag_name == "manual_viewpoint") {
+  if (flag_name == "manual_viewpoint") {  // for manual adjustment of camera
     manual_viewpoint_flag = value;
-  } else if (flag_name == "texture") {
+  } else if (flag_name == "texture") {  // for showing sky and ground texture
     texture_flag = value;
   } else if (flag_name == "smooth_view") {
+    // if smooth_view is not set, camera is locked on torso com
     view->set_smooth(value);
   } else {
     cout << "ERROR: unknown flag " << flag_name << endl; exit(1);
   }
 }
 
+// a callback function for computing geom collisions
 void nearCallback(void *data, dGeomID o1, dGeomID o2) {
   int cl[] = {dGeomGetClass(o1), dGeomGetClass(o2)};
   bool ignore_flag = true;
@@ -304,18 +322,25 @@ void nearCallback(void *data, dGeomID o1, dGeomID o2) {
   }
 }
 
+// creates ODE contact on collision
 dJointID visualizer::create_contact(dContact* contact){
   return dJointCreateContact (odeworld, contact_group, contact);
 }
 
+// simulation step of length dt_ode
 void visualizer::simulate_odeworld(double dt_ode){
   dSpaceCollide(odespace,0,&nearCallback);
   dWorldQuickStep (odeworld, dt_ode);
   dJointGroupEmpty(contact_group);
 }
 
-void visualizer::set_speedup(int f){speedup = f;}
+// sets a speedup factor relative to nominal ds visualization rate
+void visualizer::set_speedup(int f){
+  speedup = f;
+  view->set_speedup(speedup);
+}
 
+// stores a motorized joint
 void visualizer::add_motor(dJointID hinge){
   motors.push_back(hinge);
 }
@@ -328,6 +353,7 @@ void visualizer::set_ode_motor_torques(const double* motor_torques){
   }
 }
 
+// gets motorized joint coordinates (angles)
 void visualizer::get_ode_motor_angles(double* as){
   vector<dJointID>::iterator it = motors.begin();
   for(;it!=motors.end();it++){
@@ -335,6 +361,7 @@ void visualizer::get_ode_motor_angles(double* as){
   }
 }
 
+// gets motor's angles and angle rates (as and das respectively)
 void visualizer::get_ode_motor_adas(double* as, double* das){
   vector<dJointID>::iterator it = motors.begin();
   for(;it!=motors.end();it++){
@@ -344,6 +371,8 @@ void visualizer::get_ode_motor_adas(double* as, double* das){
   }
 }
 
+// computes model's configuration config from 
+// torso ode part's location and motor angles
 void visualizer::get_ode_config(double* config){
   //odepart* torso_opart = (*model->get_odeparts())[0];
   odepart* torso_opart = get_torso_opart();
@@ -364,19 +393,24 @@ void visualizer::get_ode_config(double* config){
   get_ode_motor_angles(config+6);
 }
 
+// opart = ode part
 odepart* visualizer::get_torso_opart(){
   return model->get_odepart(0);
   //return (*model->get_odeparts())[0];
 }
 
 int draw_force_flag = 0;
+// ads a perturbing force to ode body 
+// and stores it for ds visualization
 void visualizer::add_force(dBodyID body, const double* f){
   dBodyAddForce(body,f[0],f[1],f[2]);
   extvec force (f[0],f[1],f[2]);
   added_forces[body] = force;
-  draw_force_flag = 5;
+  draw_force_flag = 5; // number of ds frames that visualization persists
 }
 
+// draws perturbing forces
+// TODO: replace sphere with cone for arrow tip
 void visualizer::draw_forces(){
   switch(draw_force_flag){
   case 0: return; break;
@@ -399,7 +433,7 @@ void visualizer::draw_forces(){
   }
 }
 
-void visualizer::trimesh_test(){
+/*void visualizer::trimesh_test(){
   for(int i=0;i<4;i++){
     dReal vert[3];
     for(int j=0;j<3;j++){vert[j] = rand()%10;}
@@ -410,7 +444,7 @@ void visualizer::trimesh_test(){
   trimeshman->push_triangle(0,1,3);
   dGeomID geom = trimeshman->new_trimesh();
   push_geom(geom);
-}
+  }*/
 
 
 void odepart::make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis){
@@ -598,6 +632,7 @@ viewpoint::viewpoint(){
     xyz_ref_rate[i] = 0;    
   }
   smooth_flag = false;
+  speedup = 1;
 }
 
 void viewpoint::set(const float* xyz, const float* xyz_cam, const float* hpr_){

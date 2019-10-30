@@ -1,3 +1,9 @@
+/////////////////////////////////////////////////
+// visualization.h: declaration of functions and 
+// classes used for state visualization, kinematic-
+// model Open Dynamics Engine (ODE) representation
+// and ODE simulations.
+/////////////////////////////////////////////////
 #ifndef VISUALIZATION_H
 #define VISUALIZATION_H
 
@@ -20,28 +26,30 @@ void mod_twopi(double& a);
 void euler_angles_from_affine(const affine& A, double* angles);
 void evec_to_dvec(const extvec& evec, dVector3& dvec);
 
-// ##### VISUALIZER #####
-// includes minimal functionality from ode and ds to visualize robot state
-
 class kinematicmodel;
 class modelplayer;
 class viewpoint;
 class odepart;
 class trimeshmanager;
 
+// Class visualizer provides interface to state visualization,
+// ODE simulations and visualization. It stores various ODE
+// constructs and ODE representation of model parts, such as
+// geoms and motorized (powered) joints.
 class visualizer{
   dWorldID odeworld;
   dSpaceID odespace;
   dJointGroupID contact_group;
   vector<dGeomID> geoms;
-  dsFunctions fn;
+  dsFunctions fn; // drawstuff function specifying simulation loop
   kinematicmodel* model;
   modelplayer* player;
   viewpoint* view;
   bool manual_viewpoint_flag, texture_flag;
-  vector<dJointID> motors;
-  map<dBodyID,extvec> added_forces;
+  vector<dJointID> motors; // motorized joints
+  map<dBodyID,extvec> added_forces; // for visualizing perturbing forces
   trimeshmanager* trimeshman;
+  int speedup; // visualization speedup factor
 public:
   visualizer();
   ~visualizer();
@@ -53,6 +61,7 @@ public:
   inline kinematicmodel* get_model(){return model;}
   inline viewpoint* get_view(){return view;}
   inline void set_model(kinematicmodel* model_){model = model_;}
+  inline int get_speedup(){return speedup;}
   void initialize_fn();
   void setup_odeworld();
   void unset_odeworld();
@@ -73,18 +82,20 @@ public:
   void get_ode_config(double* config);
   odepart* get_torso_opart();
   void add_force(dBodyID body, const double* f);
-  void draw_forces();
 private:
-  void trimesh_test(); // temp
+  void draw_forces();
+  //void trimesh_test(); // temp
 };
 
 class modelnode;
 
+// Class odepart is a counterpart of a model node, providing access
+// to modelnode's ODE representation and its state information
 class odepart{
   affine A_geom; // in modelnode's body frame
   modelnode* mnode;
   dGeomID geom;
-  string part_name;
+  string part_name; // corresponding body-name from xml file
   extvec capsule_to_pos; // used as foot position
   double rcap; // capsule size (for capsule geoms, 0 otherwise)
 public:
@@ -109,13 +120,17 @@ private:
   void make_ccylinder(visualizer* vis, const xml_node<>* geom_node, bool capped_flag);
 };
 
+// Class viewpoint positions camera and tracks a moving robot
+// by following the torso position (using a PD controller)
 class viewpoint{
   float xyz_ref[3], xyz_cam_rel[3], hpr[3];
   float k0, xyz0[3], xyz_rate[3], xyz_ref_rate[3];
-  bool smooth_flag;
+  bool smooth_flag; // enables PD controller
+  int speedup;
 public:
   viewpoint();
   inline void set_smooth(bool flag_val){smooth_flag = flag_val;}
+  inline void set_speedup(int speedup_){speedup = speedup_;}
   void set(const float* xyz, const float* xyz_cam, const float* hpr);
   void set(const float* xyz, const float* xyz_cam);
   void adjust(const dReal* xyz);
