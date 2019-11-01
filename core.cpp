@@ -25,7 +25,7 @@ void xmlnode_attr_to_val(const xml_node<>* xnode, const char* attr_name, string&
   } else {cout << "WARNING: no attribute " << attr_name << endl;}
 }
 
-// allocates  2d (two-dimensional, n x m) array
+// Allocates  2d (two-dimensional, n x m) array.
 double** new_2d_array(int n, int m){
   double** array = new double* [n];
   double** p = array;
@@ -43,7 +43,7 @@ void delete_2d_array(double** array, int n){
   array = NULL;
 }
 
-// saves 2d array to file fname, appending if append_flag
+// Saves 2d array to file fname, appending if append_flag.
 void save_2d_array(double** array, int n, int m, string fname, bool append_flag){
   ofstream file;
   if (append_flag) {file.open(fname.c_str(),ios_base::app);}
@@ -63,6 +63,25 @@ void save_2d_array(double** array, int n, int m, string fname, bool append_flag)
 // uniform sampling from [0,1]
 double randf(){return double(rand())/RAND_MAX;}
 
+
+arrayops::arrayops(int n_){
+  tmp = NULL;
+  set_n(n_);
+}
+
+arrayops::arrayops(){
+  tmp = NULL;
+  n = 0;
+}
+
+arrayops::~arrayops(){
+  if(tmp){delete [] tmp;}
+}
+
+void arrayops::set_n(int n_){
+  n = n_;
+  if(tmp){delete [] tmp; tmp = NULL;}
+}
 
 void arrayops::print(double* a){
   for(int i=0;i<n;i++){
@@ -128,11 +147,10 @@ double arrayops::norm(const double * a){
 
 // norm(a-a1)
 double arrayops::distance(const double* a, const double* a1){
-  double* d = new double [n];
-  assign(d,a);
-  subtract(d,a1);
-  double l = norm(d);
-  delete [] d;
+  if(tmp == NULL){tmp = new double [n];}
+  assign(tmp,a);
+  subtract(tmp,a1);
+  double l = norm(tmp);
   return l;
 }
 

@@ -26,10 +26,12 @@ double randf();
 // TODO: maybe generalize to any type with templates?
 class arrayops{
   int n;  // array size
+  double* tmp; // extra array
 public:
-  arrayops(int n_){n = n_;}
-  arrayops(){n = 0;}
-  void set_n(int n_){n = n_;}
+  arrayops(int n);
+  arrayops();
+  ~arrayops();
+  void set_n(int n_);
   void print(double* a);
   void assign(double* a, const double* a1);
   double* add(double* a, const double* a1);
@@ -50,7 +52,7 @@ public:
 using namespace std;
 
 template <typename T>
-void print_array (T* a, int n){
+void print_array (const T* a, int n){
   for(int i=0;i<n;i++){
     if(i){cout << " ";}
     cout << *a++;
@@ -59,7 +61,7 @@ void print_array (T* a, int n){
 }
 
 template <typename T>
-void print_array (T* a, int n, const char* prefix){
+void print_array (const T* a, int n, const char* prefix){
   cout << prefix;
   print_array <T> (a,n);
 }

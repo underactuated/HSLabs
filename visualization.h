@@ -123,8 +123,10 @@ private:
 // Class viewpoint positions camera and tracks a moving robot
 // by following the torso position (using a PD controller)
 class viewpoint{
-  float xyz_ref[3], xyz_cam_rel[3], hpr[3];
-  float k0, xyz0[3], xyz_rate[3], xyz_ref_rate[3];
+  float xyz_cam_rel[3], hpr[3]; // camera params
+  float xyz_ref[3], xyz_ref_rate[3]; // reference point params
+  float xyz0[3], xyz_rate[3]; // torso com params
+  double k0;
   bool smooth_flag; // enables PD controller
   int speedup;
 public:

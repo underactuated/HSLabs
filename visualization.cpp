@@ -4,9 +4,12 @@
 #include "model.h"
 #include "geom.h"
 
-// computes rot that takes z to v; 
+//TODO: support for more geom classes
+
+// Computes rot that takes z to v; 
 // rot is correct from the affine type perspective, 
-// but needs to be transposed for the ode body rotation
+// but needs to be transposed for the ode-body rotation.
+// ode-body = ODE body
 void rot_ztov(dMatrix3& rot, const extvec& v){
   //extvec z (0,0,1), a;
   const extvec z (0,0,1);
@@ -38,7 +41,7 @@ void transpose_odematrix(dMatrix3& m){
   }
 }
 
-// initializes translation pos and rotation rot 
+// Initializes translation pos and rotation rot 
 // from an affine transformation A. Note: what we 
 // call an affine transformation in this project,
 // is really a rigid body transformation. 
@@ -163,7 +166,7 @@ void visualizer::unset_odeworld(){
 // See also visualizer::initialize_fn
 visualizer loop_vis; 
 
-// sets loop_vis as model's visualizer
+// Sets loop_vis as model's visualizer.
 void kinematicmodel::set_vis(){
   vis = &loop_vis;
   vis->set_model(this);
@@ -192,7 +195,7 @@ void vis_loop(int){
 }
 */
 
-// initializes drawstuff (ds) callback function fn
+// Initializes drawstuff (ds) callback function fn.
 void visualizer::initialize_fn(){
   // setup pointers to drawstuff callback functions
   fn.version = DS_VERSION;
@@ -203,8 +206,8 @@ void visualizer::initialize_fn(){
   fn.path_to_textures = DRAWSTUFF_TEXTURE_PATH;
 }
 
-// starts ds simulation loop, with possible no-texture 
-// and/or no-shadow flags; specifies ds window size
+// Starts ds simulation loop, with possible no-texture 
+// and/or no-shadow flags; specifies ds window size.
 void visualizer::start_loop(){
   char *argv1[3]; argv1[1] = new char[80];
   if(!texture_flag){strcpy(argv1[1],"-notex");}
@@ -219,7 +222,7 @@ void visualizer::draw(){
   start_loop();
 }
 
-// draws all geoms in every iteration of ds loop.
+// Draws all geoms in every iteration of ds loop.
 // Current implementation includes:
 // sphere, box, capsule, cylinder, trimesh
 void visualizer::draw_inloop(){
@@ -259,7 +262,7 @@ void visualizer::draw_inloop(){
   draw_forces();
 }
 
-// sets initial camera's viewpoint
+// Sets initial camera's viewpoint.
 void visualizer::set_viewpoint(){
   if(manual_viewpoint_flag){return;}
   float xyz[] = {0,0,0};
@@ -270,7 +273,7 @@ void visualizer::set_viewpoint(){
   view->set(xyz,xyz_cam);
 }
 
-// adjusts camera's viewpoint on every ds loop iteration
+// Adjusts camera's viewpoint on every ds loop iteration.
 void visualizer::adjust_viewpoint(){
   if(manual_viewpoint_flag){return;}
   const dReal* pos = dGeomGetPosition(geoms[0]);
@@ -322,7 +325,7 @@ void nearCallback(void *data, dGeomID o1, dGeomID o2) {
   }
 }
 
-// creates ODE contact on collision
+// Creates ODE contact on collision.
 dJointID visualizer::create_contact(dContact* contact){
   return dJointCreateContact (odeworld, contact_group, contact);
 }
@@ -334,13 +337,13 @@ void visualizer::simulate_odeworld(double dt_ode){
   dJointGroupEmpty(contact_group);
 }
 
-// sets a speedup factor relative to nominal ds visualization rate
+// Sets a speedup factor relative to nominal ds visualization rate.
 void visualizer::set_speedup(int f){
   speedup = f;
   view->set_speedup(speedup);
 }
 
-// stores a motorized joint
+// Stores a motorized joint.
 void visualizer::add_motor(dJointID hinge){
   motors.push_back(hinge);
 }
@@ -353,7 +356,7 @@ void visualizer::set_ode_motor_torques(const double* motor_torques){
   }
 }
 
-// gets motorized joint coordinates (angles)
+// Gets motorized joint coordinates (angles).
 void visualizer::get_ode_motor_angles(double* as){
   vector<dJointID>::iterator it = motors.begin();
   for(;it!=motors.end();it++){
@@ -361,7 +364,7 @@ void visualizer::get_ode_motor_angles(double* as){
   }
 }
 
-// gets motor's angles and angle rates (as and das respectively)
+// Gets motor's angles and angle rates (as and das respectively).
 void visualizer::get_ode_motor_adas(double* as, double* das){
   vector<dJointID>::iterator it = motors.begin();
   for(;it!=motors.end();it++){
@@ -371,8 +374,8 @@ void visualizer::get_ode_motor_adas(double* as, double* das){
   }
 }
 
-// computes model's configuration config from 
-// torso ode part's location and motor angles
+// Computes model's configuration config from 
+// torso ode part's location and motor angles.
 void visualizer::get_ode_config(double* config){
   //odepart* torso_opart = (*model->get_odeparts())[0];
   odepart* torso_opart = get_torso_opart();
@@ -400,8 +403,8 @@ odepart* visualizer::get_torso_opart(){
 }
 
 int draw_force_flag = 0;
-// ads a perturbing force to ode body 
-// and stores it for ds visualization
+// Adds a perturbing force to ode-body 
+// and stores it for ds visualization.
 void visualizer::add_force(dBodyID body, const double* f){
   dBodyAddForce(body,f[0],f[1],f[2]);
   extvec force (f[0],f[1],f[2]);
@@ -409,7 +412,7 @@ void visualizer::add_force(dBodyID body, const double* f){
   draw_force_flag = 5; // number of ds frames that visualization persists
 }
 
-// draws perturbing forces
+// Draws perturbing forces.
 // TODO: replace sphere with cone for arrow tip
 void visualizer::draw_forces(){
   switch(draw_force_flag){
@@ -447,6 +450,10 @@ void visualizer::draw_forces(){
   }*/
 
 
+// Creates an ODE part (body and geom) corresponding to 
+// xml_node/modelnode (xnode and mnode, respectively).
+// Geom is stored in visualizer vis.
+// Currently supported geoms: sphere, capsule, cylinder
 void odepart::make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis){
   mnode = mnode_;
   //part_name = xnode->first_attribute("name")->value();
@@ -460,7 +467,6 @@ void odepart::make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis){
   //cout<< type << endl;
   dBodyID body;
   if(type == "sphere"){
-    //cout<<"making sphere"<<endl;
     double r, pos[3];
     xmlnode_attr_to_val(geom_node,"size",&r);
     xmlnode_attr_to_val(geom_node,"pos",pos);
@@ -478,6 +484,9 @@ void odepart::make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis){
   }
 }
 
+// Makes capsule or cylinder.
+// If capped_flag, makes capsule.
+// Used by make().
 void odepart::make_ccylinder(visualizer* vis, const xml_node<>* geom_node, bool capped_flag){
   dWorldID world = *vis->get_odeworld();
   dSpaceID space = *vis->get_odespace();
@@ -496,6 +505,8 @@ void odepart::make_ccylinder(visualizer* vis, const xml_node<>* geom_node, bool 
   if(capped_flag){rcap = r;}
 }
 
+// Computes capsule's length, position and rotation (in body frame)
+// from fromto parameters given in xml file.
 void odepart::capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, const double* fromto){
   for(int i=0;i<3;i++){pos[i]=(fromto[i]+fromto[i+3])/2.;}
   extvec r1, r2;
@@ -507,8 +518,8 @@ void odepart::capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3
   capsule_to_pos.set(fromto+3);
 }
 
-// computes ode body position and rotation from mnode body-frame
-// note rot transposition to meet ODE convention
+// Computes ode-body position and rotation from mnode body-frame.
+// Note rot transposition to meet ODE convention.
 void odepart::get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot){
   affine* A_frame = mnode->get_A_ground();
   affine A_body_ground;
@@ -528,6 +539,7 @@ void odepart::print(int detail_level){
   if(detail_level > 1){print_ode();}
 }
 
+// Prints ode-body position and velocity.
 void odepart::print_ode(){
   dBodyID body = dGeomGetBody(geom);
   const dReal* pos = dBodyGetPosition(body);
@@ -538,6 +550,7 @@ void odepart::print_ode(){
   print_dvec(vel);
 }
 
+// Computes com from model node.
 void odepart::get_com_pos(extvec& pos){
   extvec pos_body;
   A_geom.get_translation(pos_body);
@@ -549,10 +562,13 @@ void odepart::get_com_pos(extvec& pos){
 }
 */
 
+// Computes foot position from model node.
 void odepart::get_foot_pos(extvec& pos){
   get_foot_pos(pos, false);
 }
 
+// Computes foot position from ode-body if from_body_flag,
+// otherwise from model node.
 void odepart::get_foot_pos(extvec& pos, bool from_body_flag){
   if (from_body_flag) {
     affine A;
@@ -563,6 +579,8 @@ void odepart::get_foot_pos(extvec& pos, bool from_body_flag){
   } 
 }
 
+// Makes a fixed ODE joint (when no joint is specified 
+// in xml file for a given body).
 void odepart::make_fixed_joint(odepart* parent_part, visualizer* vis){
   dWorldID world = *vis->get_odeworld();
   dBodyID body = get_body();
@@ -572,6 +590,8 @@ void odepart::make_fixed_joint(odepart* parent_part, visualizer* vis){
   dJointSetFixed(joint);
 }
 
+// Makes a hinge ODE joint, stores it visualizer.
+// For now any hinge is assumed motorized.
 void odepart::make_hinge_joint(odepart* parent_part, visualizer* vis){
   dWorldID world = *vis->get_odeworld();
   dBodyID body = get_body();
@@ -595,7 +615,8 @@ void odepart::make_hinge_joint(odepart* parent_part, visualizer* vis){
   vis->add_motor(hinge);
 }
 
-// note rot transposition to meet ODE convention
+// Computes ode-body/geom transformation A_ground relative to ground frame.
+// Note rot transposition to meet ODE convention.
 void odepart::get_ode_body_A_ground(affine& A_ground){
   dVector3 pos;
   dMatrix3 rot;
@@ -609,7 +630,8 @@ void odepart::get_ode_body_A_ground(affine& A_ground){
   affine_from_posrot(A_ground,pos,rot);
 }
 
-// computes A_ground of body-frame from ode body
+// Computes A_ground of body-frame from ode-body.
+// TODO: distinction between body and ode-body (hence between body-frame, and ode-body-frame) needs to be clarified.
 void odepart::get_frame_A_ground_from_body(affine& A_ground){
   affine ode_A_ground;
   get_ode_body_A_ground(ode_A_ground);
@@ -624,6 +646,13 @@ void odepart::get_frame_A_ground_from_body(affine& A_ground){
 }
 
 
+// Camera position is either adjusted manually if manual_viewpoint_flag
+// (then viewpoint plays no role), or it is adjusted automatically
+// on every ds loop iteration. If smooth_flag the automatic adjustment
+// is smooth, otherwise it is hard. In smooth adjustment the camera
+// is positioned relative to reference point, that smoothly tracks
+// torso com (via a DP control). In hard adjustment reference point
+// coinsides with torso com.
 viewpoint::viewpoint(){
   k0 = .0002;
   for(int i=0;i<3;i++){
@@ -635,16 +664,23 @@ viewpoint::viewpoint(){
   speedup = 1;
 }
 
+// Sets initial reference point xyz and camera position relative
+// to reference point xyz_cam, and camera orientation
+// hpr = heading, pitch, roll. 
 void viewpoint::set(const float* xyz, const float* xyz_cam, const float* hpr_){
   set_xyz(xyz, xyz_cam);
   for(int i=0;i<3;i++){hpr[i] = hpr_[i];}
 }
 
+// Sets initial reference point xyz and camera position relative
+// to reference point xyz_cam, camera orientation is computed
+// so it faces reference point.
 void viewpoint::set(const float* xyz, const float* xyz_cam){
   set_xyz(xyz, xyz_cam);
   hpr_from_cam_rel();
 }
 
+// Adjusts camera position, taking com position as argument.
 void viewpoint::adjust(const dReal* xyz){
   if (smooth_flag) {smooth_xyzref_update(xyz);}
   else {hard_xyzref_update(xyz);}
@@ -655,12 +691,13 @@ void viewpoint::adjust(const dReal* xyz){
   dsSetViewpoint(xyz_cam,hpr);
 }
 
+// Updates xyz_ref.
 void viewpoint::hard_xyzref_update(const dReal* xyz){
   for(int i=0;i<3;i++){xyz_ref[i] = xyz[i];}
 }
 
 void viewpoint::smooth_xyzref_update(const dReal* xyz){
-  float k = k0*speedup;
+  double k = k0*speedup;
   for(int i=0;i<3;i++){
     xyz_ref[i] += xyz_ref_rate[i];
     xyz_ref_rate[i] -= k*(xyz_ref[i]-xyz[i])+2*sqrt(k)*(xyz_ref_rate[i]-xyz_rate[i]);
@@ -676,6 +713,7 @@ void viewpoint::print(){
   print_array(hpr,3,"hpr: ");
 }
 
+// Computes camera orientation from its relative position.
 void viewpoint::hpr_from_cam_rel(){
   float *p = xyz_cam_rel, *p1 = hpr;
   float x, y, z;
@@ -687,6 +725,7 @@ void viewpoint::hpr_from_cam_rel(){
   *p1 = 0;
 }
 
+// Sets initial reference point and relative camera position.
 void viewpoint::set_xyz(const float* xyz, const float* xyz_cam){
   for(int i=0;i<3;i++){
     xyz_ref[i] = xyz[i];
@@ -694,6 +733,7 @@ void viewpoint::set_xyz(const float* xyz, const float* xyz_cam){
   }
 }
 
+// Shifts relative camera position.
 void viewpoint::shift_cam(float x, float y, float z){
   float del_xyz_cam[] = {x, y, z};
   for(int i=0;i<3;i++){

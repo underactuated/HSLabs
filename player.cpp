@@ -358,7 +358,7 @@ void modelplayer::init_play_config(pergensetup* pgs){
 
 void modelplayer::position_control_test(pergensetup* pgs, double t0){
   set_flag("position_control",true);
-  setup_per_controller(pgs,t0);
+  setup_per_controller(pgs,t0);//exit(1);
   model->draw();
   unset_per_controller();
   set_flag("position_control",false);

@@ -2,13 +2,13 @@
 #include "matrix.h"
 
 
-// sets a (this matrix) to zero
+// Sets a (this matrix) to zero.
 void affine::set_zeros(){
   double *p = a;
   for(int i=0;i<16;i++){*p++ = 0;}
 }
 
-// sets a to 4 x 4 identity matrix I4
+// Sets a to 4 x 4 identity matrix I4.
 void affine::set_unity(){
   set_zeros();
   double *p = a;
@@ -18,7 +18,7 @@ void affine::set_unity(){
   }
 }
 
-// sets a to [[I3;0],[x;y;z;1]]
+// Sets a to [[I3;0],[x;y;z;1]].
 void affine::set_translation(double x, double y, double z){
   set_unity();
   double *p = a + 12;
@@ -31,7 +31,7 @@ void affine::set_translation(const double* v){
   return set_translation(*v,*(v+1),*(v+2));
 }
 
-// prints first n rows
+// Prints first n rows.
 void affine::print_rows(int n) const {
   affine b;
   b.copy_transposed(*this);
@@ -45,17 +45,17 @@ void affine::print_rows(int n) const {
   }
 }
 
-// print all rows (may be useful for debugging)
+// Prints all rows (may be useful for debugging).
 void affine::print_all() const {
   print_rows(4);
 }
 
-// prints rotation and translation (first 3 rows)
+// Prints rotation and translation (first 3 rows).
 void affine::print() const {
   print_rows(3);
 }
 
-// copies b to a
+// Copies b to a.
 void affine::copy(const affine& b){
   double *p = a;
   const double *p1 = b.a;
@@ -102,7 +102,7 @@ void affine::mult(const affine& b, affine& c) const {
   c.mult(b);
 }
 
-// sets a to [rot,03;03^T,1]
+// Sets a to [rot,03;03^T,1].
 void affine::set_rotation(const dMatrix3& rot){
   double* p = a;
   const dReal* p1 = rot;
@@ -133,7 +133,7 @@ void affine::transpose(){
   copy(A);
 }
 
-// sets a_ij = val, i and j are counted from 0
+// Sets a_ij = val, i and j are counted from 0.
 void affine::set_a(int i, int j, double val){
   double* p = a + (j*4+i);
   *p = val;
@@ -190,7 +190,7 @@ void affine::invert_rigidbody(){
   translate(t1);
 }
 
-// returns right column-vector
+// Returns rightmost column-vector.
 void affine::get_translation(extvec& t) const {
   double *p = t.get_data();
   const double *p1 = a + 12;
@@ -203,13 +203,13 @@ extvec::extvec(double x, double y, double z){
   this->set(x,y,z);
 }
 
-// sets v (this vector) to [0;0;0;1]
+// Sets v (this vector) to [0;0;0;1].
 void extvec::set_zeros(){
   double* p = v;
   for(int i=0;i<3;i++){*p++ = 0;}
 }
 
-// prints first 3 components
+// Prints first 3 components.
 void extvec::print() const {
   const double* p = v;
   for(int i=0;i<3;i++){
@@ -240,7 +240,7 @@ void extvec::copy(const extvec& u){
   for(int i=0;i<4;i++){*p++ = *p1++;}
 }
 
-// copies first 3 components
+// Copies first 3 components.
 void extvec::copy3(const extvec& u){
   set(u.v);
 }
@@ -292,7 +292,7 @@ void extvec::times(double f){
   for(int i=0;i<3;i++){*p++ *= f;}
 }
 
-// normalizes v, so that norm(v) = 1
+// Normalizes v, so that norm(v) = 1.
 void extvec::normalize(){
   double* p = v;
   double len = norm();
@@ -307,7 +307,7 @@ double extvec::dot(const extvec& u) const {
   return s;
 }
 
-// copies to dVector
+// Copies to dVector.
 void extvec::to_dvec(dVector3& u) const {
   dReal *p = u; 
   const double *p1 = v;
