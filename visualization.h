@@ -42,7 +42,7 @@ class visualizer{
   dJointGroupID contact_group;
   vector<dGeomID> geoms;
   dsFunctions fn; // drawstuff function specifying simulation loop
-  kinematicmodel* model;
+  const kinematicmodel* model;
   modelplayer* player;
   viewpoint* view;
   bool manual_viewpoint_flag, texture_flag;
@@ -58,7 +58,7 @@ public:
   inline void push_geom(dGeomID geom){geoms.push_back(geom);}
   inline void set_player(modelplayer* player_){player = player_;}
   inline trimeshmanager* get_trimeshman(){return trimeshman;}
-  inline kinematicmodel* get_model(){return model;}
+  inline const kinematicmodel* get_model() const {return model;}
   inline viewpoint* get_view(){return view;}
   inline void set_model(kinematicmodel* model_){model = model_;}
   inline int get_speedup(){return speedup;}
@@ -77,10 +77,10 @@ public:
   void set_speedup(int f);
   void add_motor(dJointID hinge);
   void set_ode_motor_torques(const double* motor_torques);
-  void get_ode_motor_angles(double* as);
-  void get_ode_motor_adas(double* as, double* das);
-  void get_ode_config(double* config);
-  odepart* get_torso_opart();
+  void get_ode_motor_angles(double* as) const;
+  void get_ode_motor_adas(double* as, double* das) const;
+  void get_ode_config(double* config) const;
+  const odepart* get_torso_opart() const;
   void add_force(dBodyID body, const double* f);
 private:
   void draw_forces();
@@ -100,23 +100,23 @@ class odepart{
   double rcap; // capsule size (for capsule geoms, 0 otherwise)
 public:
   odepart(){rcap = 0;}
-  inline dBodyID get_body(){return dGeomGetBody(geom);}
-  inline string get_part_name(){return part_name;}
-  inline modelnode* get_mnode(){return mnode;}
-  inline double get_rcap(){return rcap;}
+  inline dBodyID get_body() const {return dGeomGetBody(geom);}
+  inline string get_part_name() const {return part_name;}
+  inline modelnode* get_mnode() const {return mnode;}
+  inline double get_rcap() const {return rcap;}
   void make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis);
   void capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, const double* fromto);
   void get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot);
   void print(int detail_level);
   void print_ode();
-  void get_com_pos(extvec& pos);
-  void get_foot_pos(extvec& pos);
-  void get_foot_pos(extvec& pos, bool from_body_flag);
+  void get_com_pos(extvec& pos) const;
+  void get_foot_pos(extvec& pos) const;
+  void get_foot_pos(extvec& pos, bool from_body_flag) const;
   void make_fixed_joint(odepart* parent_part, visualizer* vis);
   void make_hinge_joint(odepart* parent_part, visualizer* vis);
-  void get_frame_A_ground_from_body(affine& A_ground);
+  void get_frame_A_ground_from_body(affine& A_ground) const;
 private:
-  void get_ode_body_A_ground(affine& A_ground);
+  void get_ode_body_A_ground(affine& A_ground) const;
   void make_ccylinder(visualizer* vis, const xml_node<>* geom_node, bool capped_flag);
 };
 
@@ -128,7 +128,7 @@ class viewpoint{
   float xyz0[3], xyz_rate[3]; // torso com params
   double k0;
   bool smooth_flag; // enables PD controller
-  int speedup;
+  int speedup; // visualization speedup factor
 public:
   viewpoint();
   inline void set_smooth(bool flag_val){smooth_flag = flag_val;}

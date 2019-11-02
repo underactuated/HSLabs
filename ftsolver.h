@@ -27,7 +27,7 @@ class forcetorquesolver{
   VectorXd fts; // last force-torques solution
   list<int> jpart_ids;
 public:
-  forcetorquesolver(periodic* per);
+  forcetorquesolver(const periodic* per);
   ~forcetorquesolver();
   inline double* get_jzaxis(){return jzaxis;}
   inline VectorXd* get_fts(){return &fts;}

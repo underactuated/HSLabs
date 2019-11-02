@@ -52,7 +52,7 @@ public:
   pergensetup(int n);
   ~pergensetup();
   inline periodicgenerator* get_pergen() const {return pergen;}
-  inline int get_limb_number(){return n;}
+  inline int get_limb_number() const {return n;}
   inline int get_config_dim() const {return 6+3*n;}
   inline double get_period() const {return get_pergen()->get_period();}
   inline pair<int,double> get_foot_shift(){return foot_shift;}
@@ -65,7 +65,7 @@ public:
   void set_pos0s();
   void set_orientation(const extvec* orientation);
   void get_config_params(extvec& pos, extvec& angles, double& step_duration, double TLh[3]);
-  void get_config_params(pgsconfigparams* pcp);
+  void get_config_params(pgsconfigparams* pcp) const;
   void set_rec_rotation(const extvec& rec_eas);
   void set_rec_transform(const extvec& rec_transl, const extvec& rec_eas);
   void copy_rec_transform(const pergensetup* pgs);
@@ -81,18 +81,19 @@ private:
 };
 
 class pgssweeper{
-  pergensetup *pgs0, *pgs;
+  const pergensetup *pgs0;
+  pergensetup *pgs;
   int parami, n_val, vali;
   double val0, delval, val;
-  kinematicmodel* model;
+  const kinematicmodel* model;
   pgsconfigparams* pcp;
   int shift_type;
   extvec lat_shift;
   double rad_shift;
 public:
-  pgssweeper(pergensetup* pgs, kinematicmodel* model);
+  pgssweeper(const pergensetup* pgs, const kinematicmodel* model);
   ~pgssweeper();
-  inline pergensetup* get_pgs(){return pgs;}
+  inline pergensetup* get_pgs() const {return pgs;}
   inline double get_val(){return val;}
   void sweep(string param_name, double val0, double val1, int n_val);
   bool next();

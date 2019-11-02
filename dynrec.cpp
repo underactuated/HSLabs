@@ -56,7 +56,7 @@ void dynpart::recompute(){
   if(foot_flag){set_foot_pos();}
 }
 
-affine* dynpart::get_A_ground(){
+const affine* dynpart::get_A_ground(){
   return mnode->get_A_ground();
 }
 
@@ -138,7 +138,7 @@ void dynrecord::initialize(vector<dynpart*>& dynparts, double rcap){
     dynpart* dpart = (*it);
     pos[i].copy(*dpart->get_com_pos());
     jpos[i].copy(*dpart->get_joint_pos());
-    affine* A = dpart->get_A_ground();
+    const affine* A = dpart->get_A_ground();
     double x = (A->get_a(2,1)-A->get_a(1,2))/2;
     double y = (A->get_a(0,2)-A->get_a(2,0))/2;
     double z = (A->get_a(1,0)-A->get_a(0,1))/2;

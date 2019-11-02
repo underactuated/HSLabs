@@ -140,7 +140,7 @@ void affine::set_a(int i, int j, double val){
 }
 
 // a_ij
-double affine::get_a(int i, int j){
+double affine::get_a(int i, int j) const {
   return *(a + (j*4+i));
 }
 

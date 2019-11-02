@@ -125,7 +125,7 @@ void modelplayer::print_limb_pos0s(){
   model->get_lik()->print_limb_pos0s();
 }
 
-void modelplayer::orient_torso(const extvec* orientation){
+void modelplayer::orient_torso(const extvec* orientation) const {
   model->orient_torso(orientation);
 }
 

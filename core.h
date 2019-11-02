@@ -33,18 +33,18 @@ public:
   ~arrayops();
   void set_n(int n_);
   void print(double* a);
-  void assign(double* a, const double* a1);
-  double* add(double* a, const double* a1);
-  double* subtract(double* a, const double* a1);
-  double* times(double* a, double b);
-  double* modulus(double* a, double b);
-  double dot(const double* a, const double* a1);
-  double norm(const double * a);
+  void assign(double* a, const double* a1) const;
+  double* add(double* a, const double* a1) const;
+  double* subtract(double* a, const double* a1) const;
+  double* times(double* a, double b) const;
+  double* modulus(double* a, double b) const;
+  double dot(const double* a, const double* a1) const;
+  double norm(const double * a) const;
   double distance(const double* a, const double* a1);
-  void assign_scalar(double* a, double b);
-  double l1_norm(const double* a);
-  double** new_2d_array(int m);
-  void delete_2d_array(double** array, int m);
+  void assign_scalar(double* a, double b) const;
+  double l1_norm(const double* a) const;
+  double** new_2d_array(int m) const;
+  void delete_2d_array(double** array, int m) const;
 };
 
 

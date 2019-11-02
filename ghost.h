@@ -9,12 +9,12 @@
 #include "geom.h"
 
 class ghostmodel{
-  visualizer* vis;
-  heightfield* hfield;
+  const visualizer* vis;
+  const heightfield* hfield;
   int config_dim, nmj, nfeet;
   double dt, rcap, foot_min_z;
   double *config, *gconfig, *lik_rec; // (g)config - (g)model config
-  odepart* torso_opart;
+  const odepart* torso_opart;
   vector<odepart*> foot_oparts;
   kinematicmodel* gmodel; // gmodel = ghost model
   vector<extvec> limb_poss;
@@ -25,13 +25,13 @@ class ghostmodel{
   affine surf_rot;
   bool horizontal_flag, adaptive_orientation_flag;
   double** acd; // array of config_dim-sized elements
-  liksolver *lik, *glik; // (g)model LIK
+  const liksolver *lik, *glik; // (g)model LIK
 public:
-  ghostmodel(visualizer* vis, heightfield* hfield, double dt);
+  ghostmodel(const visualizer* vis, const heightfield* hfield, double dt);
   ~ghostmodel();
   kinematicmodel* nonvis_clone(const kinematicmodel* model);
   void get_motor_adas(double* as, double* das);
-  void set_torso_feet_oparts(kinematicmodel* model);
+  void set_torso_feet_oparts(const kinematicmodel* model);
   void set_surf_rot(const extvec& eas);
   void rotate_surf();
 private:

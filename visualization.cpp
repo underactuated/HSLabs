@@ -357,16 +357,16 @@ void visualizer::set_ode_motor_torques(const double* motor_torques){
 }
 
 // Gets motorized joint coordinates (angles).
-void visualizer::get_ode_motor_angles(double* as){
-  vector<dJointID>::iterator it = motors.begin();
+void visualizer::get_ode_motor_angles(double* as) const {
+  vector<dJointID>::const_iterator it = motors.begin();
   for(;it!=motors.end();it++){
     *as++ = dJointGetHingeAngle (*it);
   }
 }
 
 // Gets motor's angles and angle rates (as and das respectively).
-void visualizer::get_ode_motor_adas(double* as, double* das){
-  vector<dJointID>::iterator it = motors.begin();
+void visualizer::get_ode_motor_adas(double* as, double* das) const {
+  vector<dJointID>::const_iterator it = motors.begin();
   for(;it!=motors.end();it++){
     dJointID hinge = (*it);
     *as++ = dJointGetHingeAngle (hinge);
@@ -376,9 +376,8 @@ void visualizer::get_ode_motor_adas(double* as, double* das){
 
 // Computes model's configuration config from 
 // torso ode part's location and motor angles.
-void visualizer::get_ode_config(double* config){
-  //odepart* torso_opart = (*model->get_odeparts())[0];
-  odepart* torso_opart = get_torso_opart();
+void visualizer::get_ode_config(double* config) const {
+  const odepart* torso_opart = get_torso_opart();
   affine A, B, C;
   torso_opart->get_frame_A_ground_from_body(A);
   modelnode* mnode = torso_opart->get_mnode();
@@ -397,9 +396,8 @@ void visualizer::get_ode_config(double* config){
 }
 
 // opart = ode part
-odepart* visualizer::get_torso_opart(){
+const odepart* visualizer::get_torso_opart() const {
   return model->get_odepart(0);
-  //return (*model->get_odeparts())[0];
 }
 
 int draw_force_flag = 0;
@@ -521,7 +519,7 @@ void odepart::capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3
 // Computes ode-body position and rotation from mnode body-frame.
 // Note rot transposition to meet ODE convention.
 void odepart::get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot){
-  affine* A_frame = mnode->get_A_ground();
+  const affine* A_frame = mnode->get_A_ground();
   affine A_body_ground;
   //cout<<"a_geom:"<<endl;A_geom.print_all();
   A_frame->mult(A_geom,A_body_ground);
@@ -551,7 +549,7 @@ void odepart::print_ode(){
 }
 
 // Computes com from model node.
-void odepart::get_com_pos(extvec& pos){
+void odepart::get_com_pos(extvec& pos) const {
   extvec pos_body;
   A_geom.get_translation(pos_body);
   mnode->get_A_ground()->mult(pos_body,pos);
@@ -563,13 +561,13 @@ void odepart::get_com_pos(extvec& pos){
 */
 
 // Computes foot position from model node.
-void odepart::get_foot_pos(extvec& pos){
+void odepart::get_foot_pos(extvec& pos) const {
   get_foot_pos(pos, false);
 }
 
 // Computes foot position from ode-body if from_body_flag,
 // otherwise from model node.
-void odepart::get_foot_pos(extvec& pos, bool from_body_flag){
+void odepart::get_foot_pos(extvec& pos, bool from_body_flag) const {
   if (from_body_flag) {
     affine A;
     get_frame_A_ground_from_body(A);
@@ -617,7 +615,7 @@ void odepart::make_hinge_joint(odepart* parent_part, visualizer* vis){
 
 // Computes ode-body/geom transformation A_ground relative to ground frame.
 // Note rot transposition to meet ODE convention.
-void odepart::get_ode_body_A_ground(affine& A_ground){
+void odepart::get_ode_body_A_ground(affine& A_ground) const {
   dVector3 pos;
   dMatrix3 rot;
   dBodyID body = get_body();
@@ -632,7 +630,7 @@ void odepart::get_ode_body_A_ground(affine& A_ground){
 
 // Computes A_ground of body-frame from ode-body.
 // TODO: distinction between body and ode-body (hence between body-frame, and ode-body-frame) needs to be clarified.
-void odepart::get_frame_A_ground_from_body(affine& A_ground){
+void odepart::get_frame_A_ground_from_body(affine& A_ground) const {
   affine ode_A_ground;
   get_ode_body_A_ground(ode_A_ground);
 
@@ -653,6 +651,10 @@ void odepart::get_frame_A_ground_from_body(affine& A_ground){
 // is positioned relative to reference point, that smoothly tracks
 // torso com (via a DP control). In hard adjustment reference point
 // coinsides with torso com.
+// xyz and xyz_rate are torso position and velocity.
+// xyz_ref and xyz_ref_rate are reference point and velocity, relative
+// to which camera's position is defined.
+// k0 is the gain of the tracking (critical) PD controller.
 viewpoint::viewpoint(){
   k0 = .0002;
   for(int i=0;i<3;i++){

@@ -92,26 +92,26 @@ void arrayops::print(double* a){
 }
 
 // a = a1
-void arrayops::assign(double* a, const double* a1){
+void arrayops::assign(double* a, const double* a1) const {
   for(int i=0;i<n;i++){*a++ = *a1++;}
 }
 
 // a += a1
-double* arrayops::add(double* a, const double* a1){
+double* arrayops::add(double* a, const double* a1) const {
   double* p = a;
   for(int i=0;i<n;i++){*a++ += *a1++;}
   return p;
 }
 
 // a -= a1
-double* arrayops::subtract(double* a, const double* a1){
+double* arrayops::subtract(double* a, const double* a1) const {
   double* p = a;
   for(int i=0;i<n;i++){*a++ -= *a1++;}
   return p;
 }
 
 // a *= b, where b is scalar
-double* arrayops::times(double* a, double b){
+double* arrayops::times(double* a, double b) const {
   double* p = a;
   for(int i=0;i<n;i++){*a++ *= b;}
   return p;
@@ -119,7 +119,7 @@ double* arrayops::times(double* a, double b){
 
 // modulus is used for arguments of periodic functions (with period b)
 // to bring a to (-b/2,b/2]. It is assumed that a is in (-3*b/2,3*b/2].
-double* arrayops::modulus(double* a, double b){
+double* arrayops::modulus(double* a, double b) const {
   double* p = a;
   double bh = b/2;
   for(int i=0;i<n;i++){
@@ -131,7 +131,7 @@ double* arrayops::modulus(double* a, double b){
 }
 
 // dot-product of a and a1
-double arrayops::dot(const double* a, const double* a1){
+double arrayops::dot(const double* a, const double* a1) const {
   double s = 0;
   const double*p = a, *p1 = a1;
   for(int i=0;i<n;i++){
@@ -141,7 +141,7 @@ double arrayops::dot(const double* a, const double* a1){
 }
 
 // l2 norm
-double arrayops::norm(const double * a){
+double arrayops::norm(const double * a) const {
   return sqrt(dot(a,a));
 }
 
@@ -155,20 +155,20 @@ double arrayops::distance(const double* a, const double* a1){
 }
 
 // a = b, where b is scalar
-void arrayops::assign_scalar(double* a, double b){
+void arrayops::assign_scalar(double* a, double b) const {
   for(int i=0;i<n;i++){*a++ = b;}
 }
 
-double arrayops::l1_norm(const double* a){
+double arrayops::l1_norm(const double* a) const {
   double s = 0;
   for(int i=0;i<n;i++){s += fabs(*a++);}
   return s;
 }
 
-double** arrayops::new_2d_array(int m){
+double** arrayops::new_2d_array(int m) const {
   return ::new_2d_array(m, n);
 }
 
-void arrayops::delete_2d_array(double** array, int m){
+void arrayops::delete_2d_array(double** array, int m) const {
   ::delete_2d_array(array, m);
 }

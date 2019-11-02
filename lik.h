@@ -26,29 +26,29 @@ class liksolver{
   SolverFuncType* solver_func;
   double rcap;
 public:
-  liksolver(kinematicmodel* model);
+  liksolver(const kinematicmodel* model);
   ~liksolver();
-  inline int get_number_of_limbs(){return limbs.size();}
-  inline vector<liklimb*>* get_limbs(){return &limbs;}
-  inline double get_rcap(){return rcap;}
-  void place_limb(int limbi, double x, double y, double z);
-  void place_limbs(const double* rec);
-  void get_limb_pos0(int limbi, extvec& pos);
-  void print_limb_pos0s();
-  void solver_test(int n);
+  inline int get_number_of_limbs() const {return limbs.size();}
+  inline const vector<liklimb*>* get_limbs() const {return &limbs;}
+  inline double get_rcap() const {return rcap;}
+  void place_limb(int limbi, double x, double y, double z) const;
+  void place_limbs(const double* rec) const;
+  void get_limb_pos0(int limbi, extvec& pos) const;
+  void print_limb_pos0s() const;
+  void solver_test(int n) const;
 private:
-  void set_limbs(kinematicmodel* model);
-  void set_rcap(kinematicmodel* model, const vector<int>& limb_inds);
+  void set_limbs(const kinematicmodel* model);
+  void set_rcap(const kinematicmodel* model, const vector<int>& limb_inds);
 };
 
 class liklimb{
   int limbi;
-  modelnode *parent, *child;
+  const modelnode *parent, *child;
   double* values[3];
   SolverFuncType* solver_func;
   bool limb_bend;
 public:
-  liklimb(int limbi_, modelnode* child_);
+  liklimb(int limbi_, const modelnode* child_);
   inline void set_bend(bool bend){limb_bend = bend;}
   inline void set_solver_func(SolverFuncType* f){solver_func = f;}
   void setup_joint_values();

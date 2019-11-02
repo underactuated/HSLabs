@@ -9,11 +9,11 @@
 
 void fit_plane(extvec& plane, list<extvec>& points);
 
-ghostmodel::ghostmodel(visualizer* vis_, heightfield* hfield_, double dt_){
+ghostmodel::ghostmodel(const visualizer* vis_, const heightfield* hfield_, double dt_){
   vis = vis_;
   hfield = hfield_;
   dt = dt_;
-  kinematicmodel* model = vis->get_model();
+  const kinematicmodel* model = vis->get_model();
   config_dim = model->get_config_dim();
   nmj = model->number_of_motor_joints();
   //ao.set_n(config_dim);
@@ -66,14 +66,14 @@ void ghostmodel::get_motor_adas(double* as, double* das){
 }
 
 // gets torso and feet odeparts from model
-void ghostmodel::set_torso_feet_oparts(kinematicmodel* model){
+void ghostmodel::set_torso_feet_oparts(const kinematicmodel* model){
   torso_opart = model->get_vis()->get_torso_opart();
   torso_opart->get_mnode()->get_joint()->get_A_parent()->get_translation(parent_pos);
 
   set<modelnode*> foot_mnodes;
   model->get_foot_mnodes(foot_mnodes);
-  vector<odepart*>* oparts = model->get_odeparts();
-  vector<odepart*>::iterator it = oparts->begin();
+  const vector<odepart*>* oparts = model->get_odeparts();
+  vector<odepart*>::const_iterator it = oparts->begin();
   for(;it!=oparts->end();it++){
     modelnode* mnode = (*it)->get_mnode();
     if(foot_mnodes.count(mnode)){
@@ -214,10 +214,10 @@ void ghostmodel::set_surf_rot_from_normal(){
 void ghostmodel::set_gmodel_limb_bends(){
   extvec angles;
   double *p = config+6;
-  vector<liklimb*> *limbs, *glimbs;
+  const vector<liklimb*> *limbs, *glimbs;
   limbs = lik->get_limbs();
   glimbs = glik->get_limbs();
-  vector<liklimb*>::iterator it, it1;
+  vector<liklimb*>::const_iterator it, it1;
   it = limbs->begin();
   it1 = glimbs->begin();
   for(;it!=limbs->end();it++){

@@ -36,7 +36,7 @@ class modelplayer{
 public:
   modelplayer();
   ~modelplayer();
-  inline kinematicmodel* get_model(){return model;}
+  inline kinematicmodel* get_model() const {return model;}
   inline void set_play_dt(double dt){play_dt = dt;}
   void load_model(string fname);
   void step();
@@ -44,7 +44,7 @@ public:
   void set_flag(string flag_name, bool value);
   void set_jangles_with_lik(const double* rec);
   void print_limb_pos0s();
-  void orient_torso(const extvec* orientation);
+  void orient_torso(const extvec* orientation) const;
   void setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration);
   pergensetup* make_pergensu(string config_fname, int setup_id);
   void full_setup_pergen(pergensetup& pergensu, const pgsconfigparams& pcp);

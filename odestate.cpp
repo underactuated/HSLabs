@@ -36,9 +36,9 @@ void odebody::print(){
 }
 
 
-odestate::odestate(kinematicmodel* model){
-  vector<odepart*>* odeparts = model->get_odeparts();
-  vector<odepart*>::iterator it = odeparts->begin();
+odestate::odestate(const kinematicmodel* model){
+  const vector<odepart*>* odeparts = model->get_odeparts();
+  vector<odepart*>::const_iterator it = odeparts->begin();
   for(;it!=odeparts->end();it++){
     odebody* obody = new odebody ((*it)->get_body());
     obodys.push_back(obody);

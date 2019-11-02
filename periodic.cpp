@@ -11,7 +11,7 @@
 
 using namespace Eigen;
 
-periodic::periodic(kinematicmodel* model_){
+periodic::periodic(const kinematicmodel* model_){
   model = model_;
   n_t = 0;
   traj_size = 0;
@@ -38,12 +38,12 @@ void periodic::set_dynparts(){
   set<modelnode*> foot_set;
   set_footset(foot_set);
   int id = 0, fi = 0;
-  vector<odepart*>* odeparts = model->get_odeparts();
+  const vector<odepart*>* odeparts = model->get_odeparts();
   int n = odeparts->size();
   parentis = new int [n];
   masses = new double [n];
   footis = new int [nfeet];
-  vector<odepart*>::iterator it = odeparts->begin();
+  vector<odepart*>::const_iterator it = odeparts->begin();
   for(;it!=odeparts->end();it++){
     odepart* opart = (*it);
     modelnode* mnode = opart->get_mnode();
@@ -296,7 +296,7 @@ double periodic::work_over_period(){
   return work_period;
 }
 
-void periodic::hinge_joint_part_ids(list<int>& ids){
+void periodic::hinge_joint_part_ids(list<int>& ids) const {
   int n = get_number_of_dynparts();
   for(int i=0;i<n;i++){
     modeljoint* joint = model->get_mnode(i)->get_joint();

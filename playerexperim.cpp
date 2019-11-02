@@ -11,7 +11,7 @@ void modelplayer::test0(){
   for(int i=0;i<(int)joint_values->size();i++){
     if(i==5){*(*joint_values)[i]+=.02;}
   }
-  liksolver* lik = model->get_lik();
+  const liksolver* lik = model->get_lik();
   for(int i=0;i<4;i++){lik->place_limb(i,.25*cos(i*M_PI/2),.25*sin(i*M_PI/2),1);}
 }
 
@@ -23,7 +23,7 @@ void modelplayer::test1(){
   *(*joint_values)[2] = delz;
   *(*joint_values)[5] = .5*sin(play_t);
 model->recompute_modelnodes();
-  liksolver* lik = model->get_lik();
+  const liksolver* lik = model->get_lik();
   for(int i=0;i<4;i++){
     double a = (i+.5)*M_PI/2;
     lik->place_limb(i,.4*cos(a),.4*sin(a),.2+delz);

@@ -32,9 +32,10 @@ list<double*> modeljoint::get_values_list(){
 
 // joint transformation corresponding to its value
 // free6: rotation around origin, followed by translation
+// TODO: implement slider joint
 void modeljoint::transformation(affine& A){
   switch(type){
-  case free6: { // Euler angles conventions need to be verified. Perhaps rot needs to be transposed. Update: seems correct.
+  case free6: {
     extvec pos;
     dMatrix3 rot;
     double* p = values;
@@ -272,7 +273,7 @@ void kinematicmodel::draw(){
   vis->draw();
 }
 
-void kinematicmodel::recompute_modelnodes(){
+void kinematicmodel::recompute_modelnodes() const {
   affine A;
   A.set_unity();
   mrootnode->recompute_A_ground(A);
@@ -309,7 +310,7 @@ int kinematicmodel::get_config_dim() const {
 }
 
 // sets jvalues via torso orientation and limb positions
-void kinematicmodel::set_jvalues_with_lik(const double* rec){
+void kinematicmodel::set_jvalues_with_lik(const double* rec) const {
   const double* p = rec;
   for(int i=0;i<6;i++){*joint_values[i] = *p++;}
   recompute_modelnodes();
@@ -317,15 +318,15 @@ void kinematicmodel::set_jvalues_with_lik(const double* rec){
 }
 
 // sets jvalues directly
-void kinematicmodel::set_jvalues(const double* values){
+void kinematicmodel::set_jvalues(const double* values) const {
   const double* p = values;
-  vector<double*>::iterator it = joint_values.begin();
+  vector<double*>::const_iterator it = joint_values.begin();
   for(;it!=joint_values.end();it++){*(*it) = *p++;}
 }
 
-void kinematicmodel::get_jvalues(double* values){
+void kinematicmodel::get_jvalues(double* values) const {
   double* p = values;
-  vector<double*>::iterator it = joint_values.begin();
+  vector<double*>::const_iterator it = joint_values.begin();
   for(;it!=joint_values.end();it++){*p++ = *(*it);}
 }
 
@@ -356,7 +357,7 @@ void kinematicmodel::set_ode_joints(){
   }
 }
 
-void kinematicmodel::orient_torso(const extvec* orientation){
+void kinematicmodel::orient_torso(const extvec* orientation) const {
   for(int i=0;i<2;i++){
     const double* p = orientation[i].get_data();
     for(int j=0;j<3;j++){*joint_values[j+i*3] = *p++;}
@@ -364,9 +365,9 @@ void kinematicmodel::orient_torso(const extvec* orientation){
   recompute_modelnodes();
 }
 
-void kinematicmodel::get_foot_mnodes(set<modelnode*>& foot_set){
-  vector<liklimb*>* limbs = get_lik()->get_limbs();
-  vector<liklimb*>::iterator it = limbs->begin();
+void kinematicmodel::get_foot_mnodes(set<modelnode*>& foot_set) const {
+  const vector<liklimb*>* limbs = get_lik()->get_limbs();
+  vector<liklimb*>::const_iterator it = limbs->begin();
   for(;it!=limbs->end();it++){
     foot_set.insert((*it)->get_foot());
   }

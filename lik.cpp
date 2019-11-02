@@ -6,7 +6,7 @@
 #include "lik.h"
 
 
-liksolver::liksolver(kinematicmodel* model){
+liksolver::liksolver(const kinematicmodel* model){
   string xmlfname = model->get_xmlfname();
   if(xmlfname == "myant.xml"){index = 0;}
   else if(xmlfname == "hexapod.xml"){index = 1;}
@@ -43,7 +43,7 @@ bool bend_solver2(int limbi, extvec& pos, extvec& angles, bool pos_flag);
 
 // sets up liklimb objects (limbs) containing a lik solver for every limb
 // inds lists mnode indices of limbs
-void liksolver::set_limbs(kinematicmodel* model){
+void liksolver::set_limbs(const kinematicmodel* model){
   //model->print();
   vector<int> child_inds;
   solver_func = new SolverFuncType [2];
@@ -72,7 +72,7 @@ void liksolver::set_limbs(kinematicmodel* model){
   }
   int imax = child_inds.size();
   for(int i=0;i<imax;i++){
-    modelnode* child = model->get_mnode(child_inds[i]);
+    const modelnode* child = model->get_mnode(child_inds[i]);
     limbs.push_back(new liklimb (i,child));
     limbs.back()->set_solver_func(solver_func);
   }
@@ -81,12 +81,12 @@ void liksolver::set_limbs(kinematicmodel* model){
 
 // arranges limb (indexed by limbi) in the model (by setting joint values)
 // so that foot is placed at (x,y,z) 
-void liksolver::place_limb(int limbi, double x, double y, double z){
+void liksolver::place_limb(int limbi, double x, double y, double z) const {
   extvec pos_ground (x,y,z);
   limbs[limbi]->place_limb(pos_ground);
 }
 
-void liksolver::place_limbs(const double* rec){
+void liksolver::place_limbs(const double* rec) const {
   if(index == -1){cout << "WARNING: LIK undefined" << endl; return;}
 
   const double* p = rec;
@@ -100,11 +100,11 @@ void liksolver::place_limbs(const double* rec){
 }
 
 // gets limb position roughly corresponding to the hip position
-void liksolver::get_limb_pos0(int limbi, extvec& pos){
+void liksolver::get_limb_pos0(int limbi, extvec& pos) const {
   limbs[limbi]->get_pos0(pos);
 }
 
-void liksolver::print_limb_pos0s(){
+void liksolver::print_limb_pos0s() const {
   cout << "--- limb hip positions ---" << endl;
   for(int i=0;i<(int)limbs.size();i++){
     extvec pos0;
@@ -114,14 +114,14 @@ void liksolver::print_limb_pos0s(){
   }
 }
 
-void liksolver::solver_test(int n){
+void liksolver::solver_test(int n) const {
   cout << "LIK solver testing ..." << endl;
-  vector<liklimb*>::iterator it = limbs.begin();
+  vector<liklimb*>::const_iterator it = limbs.begin();
   for(;it!=limbs.end();it++){(*it)->solver_test_yxx(n);}
   cout << "... success!" << endl;
 }
 
-void liksolver::set_rcap(kinematicmodel* model, const vector<int>& limb_inds){
+void liksolver::set_rcap(const kinematicmodel* model, const vector<int>& limb_inds){
   if(!model->if_vis()){return;}
   vector<int>::const_iterator it = limb_inds.begin();
   for(;it!=limb_inds.end();it++){
@@ -288,7 +288,7 @@ bool bend_solver2(int limbi, extvec& pos, extvec& angles, bool pos_flag){
 }
 
 
-liklimb::liklimb(int limbi_, modelnode* child_){
+liklimb::liklimb(int limbi_, const modelnode* child_){
   limbi = limbi_;
   child = child_;
   parent = child->get_parent();
@@ -298,7 +298,7 @@ liklimb::liklimb(int limbi_, modelnode* child_){
 
 // pulls value refeerences from mnodes to values array
 void liklimb::setup_joint_values(){
-  modelnode* mnode = child;
+  const modelnode* mnode = child;
   for(int i=0;i<3;i++){
     double* val = mnode->get_joint()->get_values();
     values[i] = val;
@@ -351,7 +351,7 @@ void liklimb::set_joint_values(const extvec& joint_values){
 
 // gets hip position (using child frame's position)
 void liklimb::get_pos0(extvec& pos){
-  affine* A = child->get_A_ground();
+  const affine* A = child->get_A_ground();
   A->get_translation(pos);
 }
 

@@ -16,7 +16,7 @@ struct odebody{
 
 struct odestate{
   list<odebody*> obodys;
-  odestate(kinematicmodel* model);
+  odestate(const kinematicmodel* model);
   ~odestate();
   void save(); // from model
   void load(); // to model
