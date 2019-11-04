@@ -4,18 +4,18 @@
 #include "core.h"
 #include "model.h"
 
-struct odebody{
-  dBodyID body;
+struct odebodydata{
+  dBodyID odebody;
   dVector3 pos, vel, ang_vel;
   dQuaternion quat;
-  odebody(dBodyID body_){body = body_;}
-  void read(); // from body
-  void write(); // to body
+  odebodydata(dBodyID odebody_){odebody = odebody_;}
+  void read(); // from odebody
+  void write(); // to odebody
   void print();
 };
 
 struct odestate{
-  list<odebody*> obodys;
+  list<odebodydata*> obodys;
   odestate(const kinematicmodel* model);
   ~odestate();
   void save(); // from model

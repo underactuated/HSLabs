@@ -1,13 +1,3 @@
-//#include <map>
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
-//#include "lik.h"
-//#include <Eigen/Dense>
-//#include <Eigen/Sparse>
-//#include "pergen.h"
-//#include "periodic.h"
 #include "dynrec.h"
 
 
@@ -61,15 +51,15 @@ const affine* dynpart::get_A_ground(){
 }
 
 affine* dynpart::get_inertia_tensor(){
-  return &A_inertia;
+  return &inertia;
 }
 
 void dynpart::set_inertial_params(){
   dMass m;
-  dBodyGetMass(opart->get_body(),&m);
+  dBodyGetMass(opart->get_odebody(),&m);
   mass = m.mass;
-  A_inertia.set_rotation(m.I);
-  //cout<<mass<<endl;A_inertia.print();
+  inertia.set_rotation(m.I);
+  //cout<<mass<<endl;inertia.print();
 }
 
 void dynpart::setup_foot(const set<modelnode*>& foot_set){

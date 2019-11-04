@@ -81,7 +81,7 @@ public:
   void get_ode_motor_adas(double* as, double* das) const;
   void get_ode_config(double* config) const;
   const odepart* get_torso_opart() const;
-  void add_force(dBodyID body, const double* f);
+  void add_force(dBodyID odebody, const double* f);
 private:
   void draw_forces();
   //void trimesh_test(); // temp
@@ -92,7 +92,7 @@ class modelnode;
 // Class odepart is a counterpart of a model node, providing access
 // to modelnode's ODE representation and its state information
 class odepart{
-  affine A_geom; // in modelnode's body frame
+  affine A_body_geom; // relative to modelnode's body frame
   modelnode* mnode;
   dGeomID geom;
   string part_name; // corresponding body-name from xml file
@@ -100,13 +100,13 @@ class odepart{
   double rcap; // capsule size (for capsule geoms, 0 otherwise)
 public:
   odepart(){rcap = 0;}
-  inline dBodyID get_body() const {return dGeomGetBody(geom);}
+  inline dBodyID get_odebody() const {return dGeomGetBody(geom);}
   inline string get_part_name() const {return part_name;}
   inline modelnode* get_mnode() const {return mnode;}
   inline double get_rcap() const {return rcap;}
   void make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis);
   void capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, const double* fromto);
-  void get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot);
+  void get_odebody_posrot_from_body(dVector3& pos, dMatrix3& rot);
   void print(int detail_level);
   void print_ode();
   void get_com_pos(extvec& pos) const;
@@ -114,9 +114,11 @@ public:
   void get_foot_pos(extvec& pos, bool from_body_flag) const;
   void make_fixed_joint(odepart* parent_part, visualizer* vis);
   void make_hinge_joint(odepart* parent_part, visualizer* vis);
-  void get_frame_A_ground_from_body(affine& A_ground) const;
+  //void get_frame_A_ground_from_body(affine& A_ground) const;
+  void get_A_ground_body_from_odebody(affine& A_ground) const;
 private:
-  void get_ode_body_A_ground(affine& A_ground) const;
+  //void get_ode_body_A_ground(affine& A_ground) const;
+  void get_A_ground_odebody(affine& A_ground) const;
   void make_ccylinder(visualizer* vis, const xml_node<>* geom_node, bool capped_flag);
 };
 

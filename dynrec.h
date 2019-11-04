@@ -19,7 +19,7 @@ class dynpart{
   const odepart* opart;
   modelnode* mnode;
   double mass;
-  affine A_inertia; // check if affine should be replaced with 3x3 matrices
+  affine inertia; // TODO: maybe replace affine with dMatrix3?
   bool foot_flag;
 public:
   dynpart(const odepart* opart_){opart = opart_;}

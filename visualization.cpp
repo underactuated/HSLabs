@@ -1,5 +1,3 @@
-//#include "core.h"
-//#include "matrix.h"
 #include "visualization.h"
 #include "model.h"
 #include "geom.h"
@@ -217,6 +215,7 @@ void visualizer::start_loop(){
   dsSimulationLoop (3,argv1,352*2,288*2,&fn);
 }
 
+// Launches ds simulation/drawing loop.
 void visualizer::draw(){
   //cout<<"starting loop"<<endl;
   start_loop();
@@ -379,9 +378,10 @@ void visualizer::get_ode_motor_adas(double* as, double* das) const {
 void visualizer::get_ode_config(double* config) const {
   const odepart* torso_opart = get_torso_opart();
   affine A, B, C;
-  torso_opart->get_frame_A_ground_from_body(A);
+  //torso_opart->get_frame_A_ground_from_body(A);
+  torso_opart->get_A_ground_body_from_odebody(A);
   modelnode* mnode = torso_opart->get_mnode();
-  B.copy(*mnode->get_A_tobody());
+  B.copy(*mnode->get_A_pj_body());
   C.copy(*mnode->get_joint()->get_A_ground());
   B.invert_rigidbody();
   C.invert_rigidbody();
@@ -403,10 +403,10 @@ const odepart* visualizer::get_torso_opart() const {
 int draw_force_flag = 0;
 // Adds a perturbing force to ode-body 
 // and stores it for ds visualization.
-void visualizer::add_force(dBodyID body, const double* f){
-  dBodyAddForce(body,f[0],f[1],f[2]);
+void visualizer::add_force(dBodyID odebody, const double* f){
+  dBodyAddForce(odebody,f[0],f[1],f[2]);
   extvec force (f[0],f[1],f[2]);
-  added_forces[body] = force;
+  added_forces[odebody] = force;
   draw_force_flag = 5; // number of ds frames that visualization persists
 }
 
@@ -420,8 +420,8 @@ void visualizer::draw_forces(){
   }
   map<dBodyID,extvec>::iterator it = added_forces.begin();
   for(;it!=added_forces.end();it++){
-    dBodyID body = (*it).first;
-    const dReal* pos0 = dBodyGetPosition(body);
+    dBodyID odebody = (*it).first;
+    const dReal* pos0 = dBodyGetPosition(odebody);
     extvec pos (pos0[0],pos0[1],pos0[2]);
     extvec delpos = (*it).second;
     delpos.times(.01);
@@ -430,7 +430,7 @@ void visualizer::draw_forces(){
     pos.to_dvec(pos1);
     dsSetColor(0,1,0);
     dsDrawLine(pos0,pos1);
-    dsDrawSphere(pos1,dBodyGetRotation(body),.1);
+    dsDrawSphere(pos1,dBodyGetRotation(odebody),.1);
   }
 }
 
@@ -463,15 +463,15 @@ void odepart::make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis){
   xml_node<>* geom_node = xnode->first_node("geom");
   string type = geom_node->first_attribute("type")->value();
   //cout<< type << endl;
-  dBodyID body;
+  dBodyID odebody;
   if(type == "sphere"){
     double r, pos[3];
     xmlnode_attr_to_val(geom_node,"size",&r);
     xmlnode_attr_to_val(geom_node,"pos",pos);
-    body = dBodyCreate(world);
+    odebody = dBodyCreate(world);
     geom = dCreateSphere(space,r);
-    dGeomSetBody(geom,body);
-    A_geom.set_translation(pos);
+    dGeomSetBody(geom,odebody);
+    A_body_geom.set_translation(pos);
     vis->push_geom(geom);
   } else if(type == "capsule"){
     make_ccylinder(vis,geom_node,true);
@@ -495,10 +495,10 @@ void odepart::make_ccylinder(visualizer* vis, const xml_node<>* geom_node, bool 
   dVector3 pos;
   dMatrix3 rot;
   capsule_lenposrot_from_fromto(len,pos,rot,fromto);
-  dBodyID body = dBodyCreate(world);
+  dBodyID odebody = dBodyCreate(world);
   geom = (capped_flag)? dCreateCapsule(space,r,len) : dCreateCylinder(space,r,len);
-  dGeomSetBody(geom,body);
-  affine_from_posrot(A_geom,pos,rot);
+  dGeomSetBody(geom,odebody);
+  affine_from_posrot(A_body_geom,pos,rot);
   vis->push_geom(geom);
   if(capped_flag){rcap = r;}
 }
@@ -518,30 +518,31 @@ void odepart::capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3
 
 // Computes ode-body position and rotation from mnode body-frame.
 // Note rot transposition to meet ODE convention.
-void odepart::get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot){
-  const affine* A_frame = mnode->get_A_ground();
-  affine A_body_ground;
-  //cout<<"a_geom:"<<endl;A_geom.print_all();
-  A_frame->mult(A_geom,A_body_ground);
-  //cout<<"a_body_ground:"<<endl;A_body_ground.print_all();
-  posrot_from_affine(pos,rot,A_body_ground);
+//void odepart::get_body_posrot_from_frame(dVector3& pos, dMatrix3& rot){
+void odepart::get_odebody_posrot_from_body(dVector3& pos, dMatrix3& rot){
+  const affine* A_ground_body = mnode->get_A_ground();
+  affine A_ground_odebody;
+  //cout<<"a_geom:"<<endl;A_body_geom.print_all();
+  A_ground_body->mult(A_body_geom,A_ground_odebody);
+  //cout<<"A_ground_odebody:"<<endl;A_ground_odebody.print_all();
+  posrot_from_affine(pos,rot,A_ground_odebody);
   transpose_odematrix(rot);
 }
 
 void odepart::print(int detail_level){
   cout << "--- ode part ---" << endl;
   cout << "part name: " << part_name << endl;
-  cout << "A_geom:" << endl;
-  A_geom.print();
+  cout << "A_body_geom:" << endl;
+  A_body_geom.print();
 
   if(detail_level > 1){print_ode();}
 }
 
 // Prints ode-body position and velocity.
 void odepart::print_ode(){
-  dBodyID body = dGeomGetBody(geom);
-  const dReal* pos = dBodyGetPosition(body);
-  const dReal* vel = dBodyGetLinearVel(body);
+  dBodyID odebody = dGeomGetBody(geom);
+  const dReal* pos = dBodyGetPosition(odebody);
+  const dReal* vel = dBodyGetLinearVel(odebody);
   cout << "Position:" << endl;
   print_dvec(pos);
   cout << "LinearVel:" << endl;
@@ -551,7 +552,7 @@ void odepart::print_ode(){
 // Computes com from model node.
 void odepart::get_com_pos(extvec& pos) const {
   extvec pos_body;
-  A_geom.get_translation(pos_body);
+  A_body_geom.get_translation(pos_body);
   mnode->get_A_ground()->mult(pos_body,pos);
 }
 
@@ -570,7 +571,8 @@ void odepart::get_foot_pos(extvec& pos) const {
 void odepart::get_foot_pos(extvec& pos, bool from_body_flag) const {
   if (from_body_flag) {
     affine A;
-    get_frame_A_ground_from_body(A);
+    //get_frame_A_ground_from_body(A);
+    get_A_ground_body_from_odebody(A);
     A.mult(capsule_to_pos, pos);
   } else {
     mnode->get_A_ground()->mult(capsule_to_pos,pos);
@@ -581,10 +583,10 @@ void odepart::get_foot_pos(extvec& pos, bool from_body_flag) const {
 // in xml file for a given body).
 void odepart::make_fixed_joint(odepart* parent_part, visualizer* vis){
   dWorldID world = *vis->get_odeworld();
-  dBodyID body = get_body();
-  dBodyID parent_body = parent_part->get_body();
+  dBodyID odebody = get_odebody();
+  dBodyID parent_odebody = parent_part->get_odebody();
   dJointID joint = dJointCreateFixed(world,0);
-  dJointAttach(joint,parent_body,body);
+  dJointAttach(joint,parent_odebody,odebody);
   dJointSetFixed(joint);
 }
 
@@ -592,8 +594,8 @@ void odepart::make_fixed_joint(odepart* parent_part, visualizer* vis){
 // For now any hinge is assumed motorized.
 void odepart::make_hinge_joint(odepart* parent_part, visualizer* vis){
   dWorldID world = *vis->get_odeworld();
-  dBodyID body = get_body();
-  dBodyID parent_body = parent_part->get_body();
+  dBodyID odebody = get_odebody();
+  dBodyID parent_odebody = parent_part->get_odebody();
 
   modeljoint* joint = mnode->get_joint();
   affine* A = joint->get_A_ground();
@@ -603,8 +605,7 @@ void odepart::make_hinge_joint(odepart* parent_part, visualizer* vis){
   //cout<<"pos: ";pos.print();cout<<"axis: ";axis.print();cout<<endl;
 
   dJointID hinge = dJointCreateHinge(world,0);
-  //dJointAttach(hinge,parent_body,body);
-  dJointAttach(hinge,body,parent_body);
+  dJointAttach(hinge,odebody,parent_odebody);
   double *u = pos.get_data();
   dJointSetHingeAnchor(hinge,u[0],u[1],u[2]);
   u = axis.get_data();
@@ -615,29 +616,32 @@ void odepart::make_hinge_joint(odepart* parent_part, visualizer* vis){
 
 // Computes ode-body/geom transformation A_ground relative to ground frame.
 // Note rot transposition to meet ODE convention.
-void odepart::get_ode_body_A_ground(affine& A_ground) const {
+//void odepart::get_ode_body_A_ground(affine& A_ground) const {
+void odepart::get_A_ground_odebody(affine& A_ground) const {
   dVector3 pos;
   dMatrix3 rot;
-  dBodyID body = get_body();
-  const dReal* body_pos = dBodyGetPosition(body);
-  const dReal* body_rot = dBodyGetRotation(body);
+  dBodyID odebody = get_odebody();
+  const dReal* odebody_pos = dBodyGetPosition(odebody);
+  const dReal* odebody_rot = dBodyGetRotation(odebody);
   dReal *p = pos, *p1 = rot;
-  for(int i=0;i<4;i++){*p++ = *body_pos++;}
-  for(int i=0;i<12;i++){*p1++ = *body_rot++;}
+  for(int i=0;i<4;i++){*p++ = *odebody_pos++;}
+  for(int i=0;i<12;i++){*p1++ = *odebody_rot++;}
   transpose_odematrix(rot);
   affine_from_posrot(A_ground,pos,rot);
 }
 
 // Computes A_ground of body-frame from ode-body.
 // TODO: distinction between body and ode-body (hence between body-frame, and ode-body-frame) needs to be clarified.
-void odepart::get_frame_A_ground_from_body(affine& A_ground) const {
+//void odepart::get_frame_A_ground_from_body(affine& A_ground) const {
+void odepart::get_A_ground_body_from_odebody(affine& A_ground) const {
   affine ode_A_ground;
-  get_ode_body_A_ground(ode_A_ground);
+  //get_ode_body_A_ground(ode_A_ground);
+  get_A_ground_odebody(ode_A_ground);
 
-  affine A_geom_inv;
-  A_geom_inv.copy(A_geom);
-  A_geom_inv.invert_rigidbody();
-  ode_A_ground.mult(A_geom_inv,A_ground);
+  affine A_body_geom_inv;
+  A_body_geom_inv.copy(A_body_geom);
+  A_body_geom_inv.invert_rigidbody();
+  ode_A_ground.mult(A_body_geom_inv,A_ground);
 
   // check: REMOVE LATER
   //affine A; A.copy(A_ground); A.subtract(*mnode->get_A_ground()); float norm = A.norm(); if(norm>1e-5){cout << "ERROR: norm = " << norm << endl; exit(1);}

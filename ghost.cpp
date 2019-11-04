@@ -1,10 +1,3 @@
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
-//#include "lik.h"
-//#include "odestate.h"
-//#include "geom.h"
 #include "ghost.h"
 
 void fit_plane(extvec& plane, list<extvec>& points);
@@ -144,7 +137,8 @@ void ghostmodel::set_surf_rot(const extvec& eas){
 // rotates torso (by surf_rot that takes surface to horizontal ground)
 void ghostmodel::rotate_surf(){
   affine A, B;
-  torso_opart->get_frame_A_ground_from_body(A);
+  //torso_opart->get_frame_A_ground_from_body(A);
+  torso_opart->get_A_ground_body_from_odebody(A);
   A.get_translation(torso_com);
   set_torso_pos();
   surf_rot.mult(A,B);

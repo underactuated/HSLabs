@@ -46,7 +46,7 @@ modelplayer::~modelplayer(){
 void modelplayer::load_model(string fname){
   model->load_fromxml(fname);
   model->recompute_modelnodes();
-  model->orient_bodys();
+  model->orient_odebodys();
   model->set_ode_joints();
   make_play_rec();
 }
@@ -70,7 +70,7 @@ void modelplayer::step(){//cout<<"t = "<<play_t<<endl;
     break;
   }
   model->recompute_modelnodes();
-  model->orient_bodys();
+  model->orient_odebodys();
 }
 
 void modelplayer::test(int testi){
@@ -353,7 +353,7 @@ void modelplayer::init_play_config(pergensetup* pgs){
   pgs->set_rec(play_rec,play_t);
   set_jangles_with_lik(play_rec);
   model->recompute_modelnodes();
-  model->orient_bodys();
+  model->orient_odebodys();
 }
 
 void modelplayer::position_control_test(pergensetup* pgs, double t0){
@@ -563,9 +563,8 @@ void modelplayer::estimate_B_by_regression(){
 }
 
 void modelplayer::kick_torso(){
-  //dBodyID body = get_vis()->get_torso_opart()->get_body();
-  dBodyID body = get_torso_odebody();
-  //dBodyID body = (*model->get_odeparts())[12]->get_body();
+  dBodyID odebody = get_torso_odebody();
+  //dBodyID odebody = (*model->get_odeparts())[12]->get_odebody();
   int k = 500;
   if(int(play_t/play_dt)%k!=(k-1)){return;}
   float th = 2*3.1416*float(rand()%100)/100.;
@@ -579,10 +578,10 @@ void modelplayer::kick_torso(){
   //dBodySetLinearVel(body,v[0]+dvx,v[1],v[2]+dvz);
 
   double f[] = {dvx/play_dt,0,dvz/play_dt};
-  get_vis()->add_force(body,f);
-  //dBodyAddForce(body,f[0],f[1],f[2]);
-  //dBodyAddForce(body,dvx/play_dt,0,dvz/play_dt);
-  //dBodyAddTorque(body,0,dvx/play_dt,0);
+  get_vis()->add_force(odebody,f);
+  //dBodyAddForce(odebody,f[0],f[1],f[2]);
+  //dBodyAddForce(odebody,dvx/play_dt,0,dvz/play_dt);
+  //dBodyAddTorque(odebody,0,dvx/play_dt,0);
 }
 
 void modelplayer::set_default_flags(){
@@ -631,13 +630,13 @@ void modelplayer::record_per_traj_sweep(pergensetup* pgs, string param_name, dou
 }
 
 void modelplayer::torso_velocity(){
-  dBodyID body = get_torso_odebody();
-  const dReal* vel = dBodyGetLinearVel(body);
+  dBodyID odebody = get_torso_odebody();
+  const dReal* vel = dBodyGetLinearVel(odebody);
   print_array<const dReal>(vel,3,"torso vel: ");
 }
 
 dBodyID modelplayer::get_torso_odebody(){
-  return get_vis()->get_torso_opart()->get_body();
+  return get_vis()->get_torso_opart()->get_odebody();
 }
 
 void modelplayer::fall_check(double hc){

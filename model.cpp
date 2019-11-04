@@ -1,9 +1,8 @@
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
 #include "model.h"
 #include "lik.h"
 
+// A_parent (arg A), of joint host node's parent,
+// is supplied at construction
 modeljoint::modeljoint(joint_type type_, const affine& A){
   type = type_;
   A_parent.copy(A);
@@ -20,6 +19,7 @@ modeljoint::~modeljoint(){
   delete [] values;
 }
 
+// Returns joint values as a list.
 list<double*> modeljoint::get_values_list(){
   double* p = values;
   list<double*> values_list;
@@ -60,13 +60,16 @@ void modeljoint::transformation(affine& A){
   }
 }
 
+// Computes joint's A_ground from parent’s A_ground (arg A).
 void modeljoint::compute_A_ground(const affine* A){
   A->mult(A_parent,A_ground);
 }
 
 
+// Position pos, relative to parent, and parent's 
+// A_ground (arg A) are supplied at construction
 modelnode::modelnode(const double* pos, const affine* A){
-  A_tobody.set_translation(pos);
+  A_pj_body.set_translation(pos);
   compute_A_ground(A);
   joint = NULL;
   parent = NULL;
@@ -82,20 +85,22 @@ void modelnode::add_child(modelnode* child){
 }
 
 // computes A_ground at node construction only (before a joint is added)
+// from parent's A_ground (arg A)
 void modelnode::compute_A_ground(const affine* A){
   A_ground.copy(*A);
-  A_ground.mult(A_tobody);
+  A_ground.mult(A_pj_body);
 }
 
 void modelnode::print(){
-  cout << "A_tobody:" << endl;
-  A_tobody.print();
+  cout << "A_pj_body:" << endl;
+  A_pj_body.print();
   cout << "A_ground:" << endl;
   A_ground.print();
   cout << "has " << child_nodes.size() << " child nodes" << endl;
 }
 
-// makes hinge and slider (latter remains to be implemented)
+// Makes a joint specified by an axis, such as hinge or slider,
+// (the latter remains to be implemented).
 list<double*> modelnode::make_joint(joint_type type, const double* pos_, const double* axis){
   switch (type) {
   case hinge: {
@@ -109,16 +114,16 @@ list<double*> modelnode::make_joint(joint_type type, const double* pos_, const d
     affine A, A1;
     // setting joint
     A1.set_rotation(rot);
-    A.copy(A_tobody);
+    A.copy(A_pj_body);
     A.mult(A1);
     A.translate(pos);
     joint = new modeljoint (type,A);
 
-    // modifying A_tobody
+    // modifying A_pj_body
     dVector3 pos_dv;
     pos.to_dvec(pos_dv);
-    affine_from_posrot(A_tobody,pos_dv,rot);
-    A_tobody.invert_rigidbody();
+    affine_from_posrot(A_pj_body,pos_dv,rot);
+    A_pj_body.invert_rigidbody();
   } break;
   default:
     cout<<"ERROR: "<<type<<" not implemented"<<endl;exit(1);
@@ -127,7 +132,7 @@ list<double*> modelnode::make_joint(joint_type type, const double* pos_, const d
   return joint->get_values_list();
 }
 
-// makes free joint
+// Makes a free joint.
 list<double*> modelnode::make_joint(joint_type type, const double* pos_){
   switch (type) {
   case free6: {
@@ -136,15 +141,15 @@ list<double*> modelnode::make_joint(joint_type type, const double* pos_){
 
     affine A;
     // setting joint
-    A.copy(A_tobody);
+    A.copy(A_pj_body);
     A.translate(pos);
     joint = new modeljoint (type,A);
     
-    // modifying A_tobody
+    // modifying A_pj_body
     A.set_unity();
     pos.times(-1);
     A.translate(pos);
-    A_tobody.copy(A);
+    A_pj_body.copy(A);
   } break;
   default:
     cout<<"ERROR: "<<type<<" not implemented"<<endl;exit(1);
@@ -156,19 +161,21 @@ list<double*> modelnode::make_joint(joint_type type, const double* pos_){
 // relation between A_ground of two bodies connected by a joint:
 // let mnode1 be parent of mnode2 connected by joint
 // let B = mnode1.A_ground, C = mnode2.A_ground, D = joint.A_parent
-// E = joint.transformation, F = mnode2.A_tobody
+// E = joint.transformation, F = mnode2.A_pj_body
 // then C = B * D * E * F
+//////////////////////////
+// Recomputes A_ground from parent's A_ground
 void modelnode::recompute_A_ground(const affine& A){
   if(joint){
     joint->compute_A_ground(&A);
     A_ground.copy(*joint->get_A_ground());
-    affine A_joint;
-    joint->transformation(A_joint);
-    A_ground.mult(A_joint);
-    A_ground.mult(A_tobody);
+    affine A_joint_pastjoint;
+    joint->transformation(A_joint_pastjoint);
+    A_ground.mult(A_joint_pastjoint);
+    A_ground.mult(A_pj_body);
   } else {
     A_ground.copy(A);
-    A_ground.mult(A_tobody);
+    A_ground.mult(A_pj_body);
   }
   list<modelnode*>::iterator it = child_nodes.begin();
   for(;it!=child_nodes.end();it++){
@@ -177,6 +184,9 @@ void modelnode::recompute_A_ground(const affine& A){
 }
 
 
+// If !vis_flag, the model is not represented in a visualizer.
+// This is used in ghost walking, as a ghost model does
+// not have a physical presence in ODE world.
 kinematicmodel::kinematicmodel(bool vis_flag_){
   vis_flag = vis_flag_;
   if(vis_flag){set_vis();}
@@ -193,6 +203,7 @@ kinematicmodel::~kinematicmodel(){
   }
 }
 
+// Loads a model from xml file.
 void kinematicmodel::load_fromxml(string fname){
   xmlfname = fname;
   file<> xmlFile(fname.c_str());
@@ -206,14 +217,15 @@ void kinematicmodel::load_fromxml(string fname){
   affine A;
   A.set_unity();
   mrootnode = mnode_from_xnode(node,&A);
-  //lik = new liksolver (this);
   set_lik();
 }
 
-modelnode* kinematicmodel::mnode_from_xnode(xml_node<>* xnode, const affine* A_parent){
+// Makes model node according to xml node specifications.
+// Arg A is parent's A_ground
+modelnode* kinematicmodel::mnode_from_xnode(xml_node<>* xnode, const affine* A){
   double pos[3];
   xmlnode_attr_to_val(xnode,"pos",pos);
-  modelnode* mnode = new modelnode (pos,A_parent);
+  modelnode* mnode = new modelnode (pos,A);
   make_odepart(xnode,mnode);
   make_joint(xnode,mnode);
   xml_node<>* xchild = xnode->first_node("body");
@@ -226,6 +238,7 @@ modelnode* kinematicmodel::mnode_from_xnode(xml_node<>* xnode, const affine* A_p
   return mnode;
 }
 
+// Makes odepart if vis_flag.
 void kinematicmodel::make_odepart(const xml_node<>* xnode, modelnode* mnode){
   mnodes.push_back(mnode);
   if(!vis_flag){return;}
@@ -234,10 +247,10 @@ void kinematicmodel::make_odepart(const xml_node<>* xnode, modelnode* mnode){
   odeparts.push_back(part);
 }
 
+// Makes model joint for model node mnode.
 void kinematicmodel::make_joint(const xml_node<>* xnode, modelnode* mnode){
   xml_node<>* joint_node = xnode->first_node("joint");
   if(!joint_node){return;}
-  //return; // ignore joints
   string type = joint_node->first_attribute("type")->value();
   //cout << "joint type: " << type << endl;
   list<double*> values;
@@ -254,25 +267,29 @@ void kinematicmodel::make_joint(const xml_node<>* xnode, modelnode* mnode){
   joint_values.insert(joint_values.end(),values.begin(),values.end());
 }
 
-// orients ode bodys according to modelnodes
-void kinematicmodel::orient_bodys(){
+// Orients ode bodys according to model nodes.
+void kinematicmodel::orient_odebodys(){
   vector<odepart*>::iterator it = odeparts.begin();
   for(;it!=odeparts.end();it++){
     odepart* part = (*it);
     dVector3 pos;
     dMatrix3 rot;
-    part->get_body_posrot_from_frame(pos,rot);
-    dBodyID body = part->get_body();
+    //part->get_body_posrot_from_frame(pos,rot);
+    part->get_odebody_posrot_from_body(pos,rot);
+    dBodyID odebody = part->get_odebody();
     dReal* p = pos;
-    dBodySetPosition(body,*p,*(p+1),*(p+2));
-    dBodySetRotation(body,rot);
+    dBodySetPosition(odebody,*p,*(p+1),*(p+2));
+    dBodySetRotation(odebody,rot);
   }
 }
 
+// Launches visualizer's simulation/drawing loop.
 void kinematicmodel::draw(){
   vis->draw();
 }
 
+// Recomputes kinematic model tree. Should be used
+// after configuration values are changed.
 void kinematicmodel::recompute_modelnodes() const {
   affine A;
   A.set_unity();
@@ -305,11 +322,14 @@ void kinematicmodel::print(int detail_level){
   }
 }
 
+// Returns configuration dimensionality,
+// assumed to be the total number of joint values.
 int kinematicmodel::get_config_dim() const {
   return joint_values.size();
 }
 
-// sets jvalues via torso orientation and limb positions
+// Sets joint values with LIK, via torso orientation
+// and limb positions, contained in rec ( = record).
 void kinematicmodel::set_jvalues_with_lik(const double* rec) const {
   const double* p = rec;
   for(int i=0;i<6;i++){*joint_values[i] = *p++;}
@@ -317,7 +337,7 @@ void kinematicmodel::set_jvalues_with_lik(const double* rec) const {
   lik->place_limbs(p);
 }
 
-// sets jvalues directly
+// Sets joint values directly.
 void kinematicmodel::set_jvalues(const double* values) const {
   const double* p = values;
   vector<double*>::const_iterator it = joint_values.begin();
@@ -330,6 +350,7 @@ void kinematicmodel::get_jvalues(double* values) const {
   for(;it!=joint_values.end();it++){*p++ = *(*it);}
 }
 
+// ODE joints are set after kinematic model is completed.
 void kinematicmodel::set_ode_joints(){
   map<modelnode*,odepart*> mnode_part_map;
   vector<odepart*>::iterator it = odeparts.begin();
@@ -357,6 +378,7 @@ void kinematicmodel::set_ode_joints(){
   }
 }
 
+// Sets new torso irientation and recomputes model.
 void kinematicmodel::orient_torso(const extvec* orientation) const {
   for(int i=0;i<2;i++){
     const double* p = orientation[i].get_data();
@@ -365,6 +387,7 @@ void kinematicmodel::orient_torso(const extvec* orientation) const {
   recompute_modelnodes();
 }
 
+// Gets foot model nodes.
 void kinematicmodel::get_foot_mnodes(set<modelnode*>& foot_set) const {
   const vector<liklimb*>* limbs = get_lik()->get_limbs();
   vector<liklimb*>::const_iterator it = limbs->begin();
