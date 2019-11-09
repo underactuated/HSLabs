@@ -1,30 +1,47 @@
+/////////////////////////////////////////////////
+// lik.h: declaration of classes and functions
+// needed for inverse kinematics computation (IK).
+// Their primary purpose is to compute model's 
+// configuraiton (joint angles), that realize 
+// a desired arrangement of foot poisitions and
+// torso orientation.
+// Currently, the limbs are interchangible, so 
+// they have a shared set of IK functions.
+// IK is primarily used for generating walking cycle
+// trajectories and in ghost walking transformation.
+/////////////////////////////////////////////////
 #ifndef LIK_H
 #define LIK_H
 
 #include "matrix.h"
 #include "model.h"
 
-///////////////////////////////////////////////////////////
-// lik design outline from todo list, to be improved
-// --------------------------------------------------------
-// lik outline:
-// LIK = Limb Inverse Kinematics
-// lik has array of liklimbs objects (for each limb). Each liklimb contains first
-// leg-link model node and its parent. Lik function takes as input: limb index and
-// foot tip position; it sets joint values to the limb; optionally, it can use model
-// node to verify correctness of its output.
-///////////////////////////////////////////////////////////
-
 typedef bool(*SolverFuncType)(int, extvec&, extvec&, bool);
 
 class liklimb;
 
-// for now we assume that limbs are identical
+// Class liksolver (for Limb inverse kinematics solver,
+// or LIK solver) solves IK by setting up and calling
+// liklimb objects, responsible for solving IK for
+// every limb. limb_solver function -- the central 
+// element in computing limb IK -- defined in the source
+// file, solves IK in hip's joint frame for a given knee
+// bend. (There are two branches of solution, realizing
+// a desired foot position, with positive and negative
+// knee bends.) Additionally, we define bend_solver
+// function that determines bend given joint angles.
+// It is needed for ghost walking, because the ghost
+// is enforced to have the same bends as the model.
+// For now we assume identical limbs, but in principle
+// limb differentiation is supported by defining
+// liklimb object separately for each limb.
+// liksolver also implements (so far partially)
+// testing of limb_solver and bend_solver.
 class liksolver{
-  int index;
+  int index; // enumerates variants for lik solvers. If solver undefined, index = -1.
   vector<liklimb*> limbs;
   SolverFuncType* solver_func;
-  double rcap;
+  double rcap; // foot capsule cap radius
 public:
   liksolver(const kinematicmodel* model);
   ~liksolver();
@@ -41,6 +58,12 @@ private:
   void set_rcap(const kinematicmodel* model, const vector<int>& limb_inds);
 };
 
+///////////////////////////////////////////////////////////
+// Class liklimb stores information necessary for solving IK
+// for a given limb, indexed by limbi. It includes the first
+// leg-link model node (thigh) and its parent, model node joint
+// values and limb_ and bend_ solver functions.
+//////////////////////////////////////////////////////
 class liklimb{
   int limbi;
   const modelnode *parent, *child;

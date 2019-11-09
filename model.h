@@ -47,6 +47,7 @@ public:
   list<double*> get_values_list();
   void transformation(affine& A);
   void compute_A_ground(const affine* A);
+  void print();
 };
 
 
@@ -75,7 +76,8 @@ public:
   inline modelnode* get_first_child() const {return child_nodes.front();}
   inline modelnode* get_parent() const {return parent;}
   void add_child(modelnode* child);
-  void print();
+  void print(int detail_level);
+  void print(){print(0);}
   list<double*> make_joint(joint_type type, const double* pos, const double* axis);
   list<double*> make_joint(joint_type type, const double* pos_);
   void recompute_A_ground(const affine& A);
@@ -103,7 +105,7 @@ class kinematicmodel{
 public:
   kinematicmodel(bool vis_flag);
   ~kinematicmodel();
-  inline const modelnode* get_mnode(int i) const {return mnodes[i];} // gets model node by index (print model to see indexing)
+  inline const modelnode* get_mnode(int i) const {return mnodes[i];} // Gets model node by index (print model to see indexing).
   inline string get_xmlfname() const {return xmlfname;}
   inline vector<double*>* get_joint_values(){return &joint_values;}
   inline const liksolver* get_lik() const {return lik;}
@@ -131,7 +133,7 @@ public:
   void orient_torso(const extvec* orientation) const;
   void get_foot_mnodes(set<modelnode*>& foot_set) const;
 private:
-  void set_lik();
+  //void set_lik();
 };
 
 #endif

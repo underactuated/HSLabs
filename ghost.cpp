@@ -39,7 +39,6 @@ ghostmodel::~ghostmodel(){
 kinematicmodel* ghostmodel::nonvis_clone(const kinematicmodel* model){
   kinematicmodel* clone = new kinematicmodel (false);
   clone->load_fromxml(model->get_xmlfname());
-  clone->recompute_modelnodes();
   return clone;
 }
 

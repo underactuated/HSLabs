@@ -1,8 +1,3 @@
-//#include <map>
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
 #include "lik.h"
 #include "pergen.h"
 
@@ -386,14 +381,14 @@ bool pgssweeper::next(){
   if(parami == 0){pcp->step_duration = val;}
   else if (parami > 0 && parami < 4){pcp->TLh[parami-1] = val;}
   pgs = new pergensetup (n);
-  full_setup_pergen(*pgs, pcp);
+  setup_pergen(*pgs, pcp);
   pgs->set_TLh(pcp->TLh);
   pgs->copy_rec_transform(pgs0);
 
   return true;
 }
 
-void pgssweeper::setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration_){
+void pgssweeper::partial_setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration_){
   model->orient_torso(orientation);
   periodicgenerator* pergen = pergensu.get_pergen();
   pergen->set_step_duration(step_duration_);
@@ -412,9 +407,9 @@ void pgssweeper::setup_pergen(pergensetup& pergensu, const extvec* orientation, 
   pergensu.set_orientation(orientation);
 }
 
-void pgssweeper::full_setup_pergen(pergensetup& pergensu, const pgsconfigparams* pcp0){
+void pgssweeper::setup_pergen(pergensetup& pergensu, const pgsconfigparams* pcp0){
   pergensu.set_foot_shift(pcp0->foot_shift);
-  setup_pergen(pergensu, pcp0->orientation, pcp0->step_duration);
+  partial_setup_pergen(pergensu, pcp0->orientation, pcp0->step_duration);
   pergensu.set_TLh(pcp0->TLh);
   pergensu.set_curvature(pcp0->curvature);
 }

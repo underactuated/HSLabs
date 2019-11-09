@@ -162,7 +162,7 @@ void visualizer::unset_odeworld(){
 // that are used by ODE and drawstuff callback functions, e.g.
 // vis_start(), vis_loop(), nearCallback().
 // See also visualizer::initialize_fn
-visualizer loop_vis; 
+static visualizer loop_vis; 
 
 // Sets loop_vis as model's visualizer.
 void kinematicmodel::set_vis(){
@@ -536,6 +536,7 @@ void odepart::print(int detail_level){
   A_body_geom.print();
 
   if(detail_level > 1){print_ode();}
+  if(detail_level > 2){mnode->print(detail_level-3);}
 }
 
 // Prints ode-body position and velocity.

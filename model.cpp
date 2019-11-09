@@ -65,6 +65,15 @@ void modeljoint::compute_A_ground(const affine* A){
   A->mult(A_parent,A_ground);
 }
 
+void modeljoint::print(){
+  cout << "--- model joint ---" << endl;
+  cout << "type = " << type << endl;
+  cout << "A_parent:" << endl;
+  A_parent.print();
+  cout << "A_ground:" << endl;
+  A_ground.print();
+}
+
 
 // Position pos, relative to parent, and parent's 
 // A_ground (arg A) are supplied at construction
@@ -91,12 +100,16 @@ void modelnode::compute_A_ground(const affine* A){
   A_ground.mult(A_pj_body);
 }
 
-void modelnode::print(){
+void modelnode::print(int detail_level){
+  cout << "--- model node ---" << endl;
   cout << "A_pj_body:" << endl;
   A_pj_body.print();
   cout << "A_ground:" << endl;
   A_ground.print();
   cout << "has " << child_nodes.size() << " child nodes" << endl;
+  if(detail_level > 0){
+    if(joint != NULL){joint->print();}
+  }
 }
 
 // Makes a joint specified by an axis, such as hinge or slider,
@@ -217,7 +230,11 @@ void kinematicmodel::load_fromxml(string fname){
   affine A;
   A.set_unity();
   mrootnode = mnode_from_xnode(node,&A);
-  set_lik();
+  lik = new liksolver (this);
+  recompute_modelnodes();
+  // Recomputation is needed for correct joint.A_ground,
+  // as can be checked by printing model->print(5)
+  // before and after recomputation.
 }
 
 // Makes model node according to xml node specifications.
@@ -318,7 +335,7 @@ void kinematicmodel::print(int detail_level){
     if(detail_level == 0){
       cout << i << ": " << odeparts[i]->get_part_name() << endl;
     }
-    if(detail_level > 0){odeparts[i]->print(detail_level);}
+    if(detail_level > 0){odeparts[i]->print(detail_level-1);}
   }
 }
 

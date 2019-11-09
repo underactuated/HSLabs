@@ -1,3 +1,15 @@
+/////////////////////////////////////////////////
+// pergen.h: declaration of classes tasked with
+// generating periodic gates. There are two main
+// classes: periodicgenerator (pergen for short)
+// and pergen setup. periodicgenerator contains
+// minimal information needed to generate periodic
+// motion of feet, possible along a curved path.
+// (pergen has no information about torso).
+// pergensetup contains additional information
+// needed to generate full robot gate (including
+// its torso).
+/////////////////////////////////////////////////
 #ifndef PERGEN_H
 #define PERGEN_H
 
@@ -21,9 +33,6 @@ public:
   inline double get_curvature(){return curvature;}
   void set_step_duration(double f); // f is in [0,1]
   void set_scales(double period, double step_length, double step_height);
-  double stepx(double t) const;
-  double stepz(double t) const;
-  double step_frac(int limbi, double t) const;
   void limb_positions(double time, vector<extvec>& limb_poss);
   void set_pos0s(const vector<extvec>& limb_pos0s);
   void change_pos0(int limbi, const extvec& delpos0);
@@ -31,9 +40,13 @@ public:
   void print(int detail_level);
   void get_TLh(double TLh[3]);
   void set_curvature(double curvature);
+  void get_turn_orientation(double dx, extvec* orientation);
+private:
+  double stepx(double t) const;
+  double stepz(double t) const;
+  double step_frac(int limbi, double t) const;
   void compute_max_radius();
   void turn_position(const extvec& pos0, const extvec& delpos, extvec& pos);
-  void get_turn_orientation(double dx, extvec* orientation);
 };
 
 struct pgsconfigparams;
@@ -97,8 +110,8 @@ public:
   inline double get_val(){return val;}
   void sweep(string param_name, double val0, double val1, int n_val);
   bool next();
-  void setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration);
-  void full_setup_pergen(pergensetup& pergensu, const pgsconfigparams* pcp);
+  void partial_setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration);
+  void setup_pergen(pergensetup& pergensu, const pgsconfigparams* pcp);
 private:
   void shift_pos0(int limbi, extvec& pos);
   void setup_foot_shift(pergensetup& pergensu);
