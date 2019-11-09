@@ -1,13 +1,3 @@
-//#include <map>
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
-//#include "lik.h"
-//#include <Eigen/Dense>
-//#include <Eigen/Sparse>
-//#include "pergen.h"
-//#include "periodic.h"
 #include "dynrec.h"
 
 
@@ -56,20 +46,20 @@ void dynpart::recompute(){
   if(foot_flag){set_foot_pos();}
 }
 
-affine* dynpart::get_A_ground(){
+const affine* dynpart::get_A_ground(){
   return mnode->get_A_ground();
 }
 
 affine* dynpart::get_inertia_tensor(){
-  return &A_inertia;
+  return &inertia;
 }
 
 void dynpart::set_inertial_params(){
   dMass m;
-  dBodyGetMass(opart->get_body(),&m);
+  dBodyGetMass(opart->get_odebody(),&m);
   mass = m.mass;
-  A_inertia.set_rotation(m.I);
-  //cout<<mass<<endl;A_inertia.print();
+  inertia.set_rotation(m.I);
+  //cout<<mass<<endl;inertia.print();
 }
 
 void dynpart::setup_foot(const set<modelnode*>& foot_set){
@@ -138,7 +128,7 @@ void dynrecord::initialize(vector<dynpart*>& dynparts, double rcap){
     dynpart* dpart = (*it);
     pos[i].copy(*dpart->get_com_pos());
     jpos[i].copy(*dpart->get_joint_pos());
-    affine* A = dpart->get_A_ground();
+    const affine* A = dpart->get_A_ground();
     double x = (A->get_a(2,1)-A->get_a(1,2))/2;
     double y = (A->get_a(0,2)-A->get_a(2,0))/2;
     double z = (A->get_a(1,0)-A->get_a(0,1))/2;

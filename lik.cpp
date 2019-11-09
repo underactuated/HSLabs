@@ -1,12 +1,10 @@
-//#include <map>
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
 #include "lik.h"
 
 
-liksolver::liksolver(kinematicmodel* model){
+// Initializes LIK solver for a given model.
+// Solver functions must be implemented in 
+// this file for every model.
+liksolver::liksolver(const kinematicmodel* model){
   string xmlfname = model->get_xmlfname();
   if(xmlfname == "myant.xml"){index = 0;}
   else if(xmlfname == "hexapod.xml"){index = 1;}
@@ -29,21 +27,21 @@ liksolver::~liksolver(){
   if(solver_func){delete [] solver_func;}
 }
 
-// limb solver solves for joint_angles, given limbi, pos_limb and (limb) bend
-// returns true if solution exists
+// limb_solver# solves for joint_angles, given limbi, pos_limb and (knee) bend
+// returns true if solution exists.
 bool limb_solver0(int limbi, extvec& pos_limb, extvec& joint_angles, bool bend);
 bool limb_solver1(int limbi, extvec& pos_limb, extvec& joint_angles, bool bend);
 bool limb_solver2(int limbi, extvec& pos_limb, extvec& joint_angles, bool bend);
 
-// bend solver solves for and returns bend, given limbi and angles
-// optionally solving for (foot) pos, if pos_flag set true
+// bend_solver# solves for and returns bend, given limbi and angles
+// optionally solving for (foot) pos, if pos_flag set true.
 bool bend_solver0(int limbi, extvec& pos, extvec& angles, bool pos_flag);
 bool bend_solver1(int limbi, extvec& pos, extvec& angles, bool pos_flag);
 bool bend_solver2(int limbi, extvec& pos, extvec& angles, bool pos_flag);
 
-// sets up liklimb objects (limbs) containing a lik solver for every limb
-// inds lists mnode indices of limbs
-void liksolver::set_limbs(kinematicmodel* model){
+// Sets up liklimb objects (limbs) containing a lik solver for every limb.
+// Array inds lists model node indices of top-link limb nodes.
+void liksolver::set_limbs(const kinematicmodel* model){
   //model->print();
   vector<int> child_inds;
   solver_func = new SolverFuncType [2];
@@ -72,23 +70,24 @@ void liksolver::set_limbs(kinematicmodel* model){
   }
   int imax = child_inds.size();
   for(int i=0;i<imax;i++){
-    modelnode* child = model->get_mnode(child_inds[i]);
+    const modelnode* child = model->get_mnode(child_inds[i]);
     limbs.push_back(new liklimb (i,child));
     limbs.back()->set_solver_func(solver_func);
   }
   set_rcap(model,child_inds);
 }
 
-// arranges limb (indexed by limbi) in the model (by setting joint values)
-// so that foot is placed at (x,y,z) 
-void liksolver::place_limb(int limbi, double x, double y, double z){
+// Arranges a limb (indexed by limbi) in the model (by setting joint values)
+// so that its foot is placed at (x,y,z) (in absolute coordinates). 
+void liksolver::place_limb(int limbi, double x, double y, double z) const {
   extvec pos_ground (x,y,z);
   limbs[limbi]->place_limb(pos_ground);
 }
 
-void liksolver::place_limbs(const double* rec){
+// rec contains torso orientation (first 6 components)
+// and ground positions for all feet (the rest 3*imax components).
+void liksolver::place_limbs(const double* rec) const {
   if(index == -1){cout << "WARNING: LIK undefined" << endl; return;}
-
   const double* p = rec;
   int imax = limbs.size();
   for(int i=0;i<imax;i++){
@@ -99,12 +98,13 @@ void liksolver::place_limbs(const double* rec){
   }
 }
 
-// gets limb position roughly corresponding to the hip position
-void liksolver::get_limb_pos0(int limbi, extvec& pos){
+// Gets limb position (body position of top-link model node),
+// that usually coinsides with the hip-joint position.
+void liksolver::get_limb_pos0(int limbi, extvec& pos) const {
   limbs[limbi]->get_pos0(pos);
 }
 
-void liksolver::print_limb_pos0s(){
+void liksolver::print_limb_pos0s() const {
   cout << "--- limb hip positions ---" << endl;
   for(int i=0;i<(int)limbs.size();i++){
     extvec pos0;
@@ -114,27 +114,34 @@ void liksolver::print_limb_pos0s(){
   }
 }
 
-void liksolver::solver_test(int n){
+// Tests LIK solver functions. Currently only tests
+// consistency of lik_solver and bend_solver funcsions,
+// and only for yxx join axes configurations.
+// TODO: implement testing for other limb configurations,
+// verification of lik_solver correctness using model.
+void liksolver::solver_test(int n) const {
   cout << "LIK solver testing ..." << endl;
-  vector<liklimb*>::iterator it = limbs.begin();
+  vector<liklimb*>::const_iterator it = limbs.begin();
   for(;it!=limbs.end();it++){(*it)->solver_test_yxx(n);}
   cout << "... success!" << endl;
 }
 
-void liksolver::set_rcap(kinematicmodel* model, const vector<int>& limb_inds){
+// Extracts rcap from foot odeparts, and verifies that
+// all feet have capsules of the same size.
+void liksolver::set_rcap(const kinematicmodel* model, const vector<int>& limb_inds){
   if(!model->if_vis()){return;}
   vector<int>::const_iterator it = limb_inds.begin();
   for(;it!=limb_inds.end();it++){
     double rcap1 = model->get_odepart((*it)+2)->get_rcap();
-    //cout <<rcap1<<endl;
     if((rcap > 0) && (rcap1 != rcap)){cout<<"ERROR: currently, rcaps must be same for all feet, rcap = "<<rcap<<", rcap1 = "<<rcap1<<endl;exit(1);}
     rcap = rcap1;
   }
 }
 
 
-// solves 3-link leg with hinge axis y-x-x
-// to change leg's bend (inward/outward) flip sign of beta and gamma 
+// Solves 3-link limb with hinge axis y-x-x, (quadruped/hexapod configuration).
+// Foot position pos_limb is in the hip joint's frame.
+// To change knee bend (inward/outward) flip sign of s1.
 bool limb_solver_yxx(int limbi, const extvec& pos_limb, extvec& joint_angles, const double* ls, int ysign, bool bend){
   double l0=ls[0], l1=ls[1], l2=ls[2];
 
@@ -167,8 +174,9 @@ bool limb_solver_yxx(int limbi, const extvec& pos_limb, extvec& joint_angles, co
   return true;
 }
 
-// solves 3-link leg with hinge axis z-x-x
-// to change leg's bend (inward/outward) flip sign of beta and gamma 
+// Solves 3-link limb with hinge axis z-x-x, (spider configuration).
+// Foot position pos_limb is in the hip joint's frame.
+// To change knee bend (inward/outward) flip sign of s1.
 bool limb_solver_zxx(int limbi, const extvec& pos_limb, extvec& joint_angles, const double* ls, int ysign, bool bend){
   double l0=ls[0], l1=ls[1], l2=ls[2];
 
@@ -201,25 +209,7 @@ bool limb_solver_zxx(int limbi, const extvec& pos_limb, extvec& joint_angles, co
   return true;
 }
 
-/*bool limb_solver_zxx(int limbi, extvec& pos_limb, extvec& joint_angles, double* ls, int ysign, bool bend){
-  return limb_solver_zxx1(limbi,pos_limb,joint_angles,ls,ysign,bend);
-  double x, y, z;
-  pos_limb.get_components(x,y,z);
-  double l0 = ls[0];
-  z += l0; y += 2*l0*ysign;
-  //pos_limb.print();//exit(1);
-  extvec pos_limb1;
-  //int s = 2*(limbi % 2)-1;int s = ysign;//if(s < 0) {bend = !bend;}s=1;
-  pos_limb1.set(x,-z,y);
-  //return limb_solver_yxx(limbi,pos_limb1,joint_angles,ls,ysign,bend);
-  bool result = limb_solver_yxx(limbi,pos_limb1,joint_angles,ls,ysign,bend);
-  double *p = joint_angles.get_data();
-  *p *= ysign;
-  //extvec delangs (0, -M_PI/2, 0);joint_angles.add(delangs);
-  return result;
-  }*/
-
-
+// limb link lengths, (hex/quad and spider configurations).
 double limb_ls[] = {.05, .4, .4};
 double limb_ls1[] = {.1, .4, .4};
 
@@ -241,7 +231,7 @@ bool limb_solver2(int limbi, extvec& pos_limb, extvec& joint_angles, bool bend){
   return limb_solver_zxx(limbi,pos_limb,joint_angles,limb_ls1,ysign,bend);
 }
 
-// solves for 3-link leg with hinge axis y-x-x 
+// Solves for 3-link limb knew bend with hinge axis y-x-x.
 bool bend_solver_yxx(int limbi, extvec& pos, const extvec& angles, const double* ls, int ysign, bool pos_flag){
   int s0 = ysign;
   double alpha0, alpha1, alpha2;
@@ -268,27 +258,28 @@ bool bend_solver_yxx(int limbi, extvec& pos, const extvec& angles, const double*
   return (alpha2*s0 < 0);
 }
 
-// quad solver
+// quad bend solver
 bool bend_solver0(int limbi, extvec& pos, extvec& angles, bool pos_flag){
   int ysign = (limbi<2)? 1 : -1;
   return bend_solver_yxx(limbi,pos,angles,limb_ls,ysign,pos_flag);
 }
 
-// hex solver
+// hex bend solver
 bool bend_solver1(int limbi, extvec& pos, extvec& angles, bool pos_flag){
   int ysign = (limbi % 2 == 0)? 1 : -1;
   return bend_solver_yxx(limbi,pos,angles,limb_ls,ysign,pos_flag);
 }
 
-// spider solver
-// UNFINISHED
+// spider bend solver
+// Solver is unfinished! Always returns true bend.
+// TODO: finish bend solver.
 bool bend_solver2(int limbi, extvec& pos, extvec& angles, bool pos_flag){
   return true;
-  //return false;
 }
 
 
-liklimb::liklimb(int limbi_, modelnode* child_){
+// Child is limb's top-link node. 
+liklimb::liklimb(int limbi_, const modelnode* child_){
   limbi = limbi_;
   child = child_;
   parent = child->get_parent();
@@ -296,9 +287,9 @@ liklimb::liklimb(int limbi_, modelnode* child_){
   limb_bend = true;
 }
 
-// pulls value refeerences from mnodes to values array
+// Pulls value refeerences from model nodes to values array.
 void liklimb::setup_joint_values(){
-  modelnode* mnode = child;
+  const modelnode* mnode = child;
   for(int i=0;i<3;i++){
     double* val = mnode->get_joint()->get_values();
     values[i] = val;
@@ -306,8 +297,9 @@ void liklimb::setup_joint_values(){
   }
 }
 
-// solves for joint values given foot position
-// if successful, sets values in the model
+// Solves for joint values given foot position.
+// If successful, sets values in the model.
+// Otherwise, program is aborted.
 void liklimb::place_limb(const extvec& pos_ground){
   extvec pos_limb;
   poslimb(pos_ground,pos_limb);
@@ -327,12 +319,10 @@ void liklimb::place_limb(const extvec& pos_ground){
   //joint_angles.print();
   set_joint_values(joint_angles);
 
-  //pos_ground.print();
-  //pos_limb.print();
-  //exit(1);
+  //pos_ground.print();pos_limb.print();exit(1);
 }
 
-// computes foot position in the hip's joint frame
+// Computes foot position in the hip's joint frame.
 void liklimb::poslimb(const extvec& pos_ground, extvec& pos_limb){
   modeljoint* joint = child->get_joint();
   joint->compute_A_ground(parent->get_A_ground());
@@ -342,25 +332,27 @@ void liklimb::poslimb(const extvec& pos_ground, extvec& pos_limb){
   A.mult(pos_ground,pos_limb);
 }
 
-// sets joint values in the model
+// Sets joint values in the model.
 void liklimb::set_joint_values(const extvec& joint_values){
   const double* p = joint_values.get_data();
   double** p1 = values;
   for (int i=0;i<3;i++) {**p1++ = *p++;}
 }
 
-// gets hip position (using child frame's position)
+// Gets hip position (using child body frame's position).
 void liklimb::get_pos0(extvec& pos){
-  affine* A = child->get_A_ground();
+  const affine* A = child->get_A_ground();
   A->get_translation(pos);
 }
 
-// gets foot mnode
+// Gets foot model node.
 modelnode* liklimb::get_foot(){
-  return child->get_first_child()->get_first_child(); // leg is assumed to have three parts
+  return child->get_first_child()->get_first_child(); // limb is assumed to have three links
 }
 
-// test is only suitable for yxx limbs
+// Tests LIK solver functions.
+// See liksolver::solver_test() for more info.
+// Test is only suitable for yxx limbs.
 void liklimb::solver_test_yxx(int n){
   int m = 1; // use m = 1(2) for testing bend and pos (pos only)
   for(int i=0;i<n;i++){
@@ -402,7 +394,7 @@ bool liklimb::bend_from_angles(extvec& angles){
 }
 
 
-void kinematicmodel::set_lik(){
+/*void kinematicmodel::set_lik(){
   lik = new liksolver (this);
-}
+  }*/
 

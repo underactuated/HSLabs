@@ -16,13 +16,13 @@ typedef SparseMatrix<double> SpMat; // column-major sparse matrix
 class dynpart{
   int id, parent_id;
   extvec com_pos, joint_pos, foot_pos;
-  odepart* opart;
+  const odepart* opart;
   modelnode* mnode;
   double mass;
-  affine A_inertia; // check if affine should be replaced with 3x3 matrices
+  affine inertia; // TODO: maybe replace affine with dMatrix3?
   bool foot_flag;
 public:
-  dynpart(odepart* opart_){opart = opart_;}
+  dynpart(const odepart* opart_){opart = opart_;}
   inline extvec* get_com_pos(){return &com_pos;}
   inline extvec* get_joint_pos(){return &joint_pos;}
   inline extvec* get_foot_pos(){return &foot_pos;}
@@ -32,7 +32,7 @@ public:
   void setup(map<modelnode*,int>& mnode_id_map);
   void print();
   void recompute();
-  affine* get_A_ground();
+  const affine* get_A_ground();
   affine* get_inertia_tensor();
   void setup_foot(const set<modelnode*>& foot_set);
   void get_joint_zaxis(extvec& axis);

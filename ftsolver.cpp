@@ -13,7 +13,7 @@
 
 using namespace Eigen;
 
-forcetorquesolver::forcetorquesolver(periodic* per){
+forcetorquesolver::forcetorquesolver(const periodic* per){
   n = per->get_number_of_dynparts();
   nf = per->get_nfeet();
   parentis = per->get_parentis();

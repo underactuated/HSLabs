@@ -26,23 +26,25 @@ double randf();
 // TODO: maybe generalize to any type with templates?
 class arrayops{
   int n;  // array size
+  double* tmp; // extra array
 public:
-  arrayops(int n_){n = n_;}
-  arrayops(){n = 0;}
-  void set_n(int n_){n = n_;}
+  arrayops(int n);
+  arrayops();
+  ~arrayops();
+  void set_n(int n_);
   void print(double* a);
-  void assign(double* a, const double* a1);
-  double* add(double* a, const double* a1);
-  double* subtract(double* a, const double* a1);
-  double* times(double* a, double b);
-  double* modulus(double* a, double b);
-  double dot(const double* a, const double* a1);
-  double norm(const double * a);
+  void assign(double* a, const double* a1) const;
+  double* add(double* a, const double* a1) const;
+  double* subtract(double* a, const double* a1) const;
+  double* times(double* a, double b) const;
+  double* modulus(double* a, double b) const;
+  double dot(const double* a, const double* a1) const;
+  double norm(const double * a) const;
   double distance(const double* a, const double* a1);
-  void assign_scalar(double* a, double b);
-  double l1_norm(const double* a);
-  double** new_2d_array(int m);
-  void delete_2d_array(double** array, int m);
+  void assign_scalar(double* a, double b) const;
+  double l1_norm(const double* a) const;
+  double** new_2d_array(int m) const;
+  void delete_2d_array(double** array, int m) const;
 };
 
 
@@ -50,7 +52,7 @@ public:
 using namespace std;
 
 template <typename T>
-void print_array (T* a, int n){
+void print_array (const T* a, int n){
   for(int i=0;i<n;i++){
     if(i){cout << " ";}
     cout << *a++;
@@ -59,7 +61,7 @@ void print_array (T* a, int n){
 }
 
 template <typename T>
-void print_array (T* a, int n, const char* prefix){
+void print_array (const T* a, int n, const char* prefix){
   cout << prefix;
   print_array <T> (a,n);
 }

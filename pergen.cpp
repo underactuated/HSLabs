@@ -1,8 +1,3 @@
-//#include <map>
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
 #include "lik.h"
 #include "pergen.h"
 
@@ -256,7 +251,7 @@ void pergensetup::get_config_params(extvec& pos, extvec& angles, double& step_du
   pergen->get_TLh(TLh);
 }
 
-void pergensetup::get_config_params(pgsconfigparams* pcp){
+void pergensetup::get_config_params(pgsconfigparams* pcp) const {
   pcp->orientation[0].copy(torso_pos0);
   pcp->orientation[1].copy(euler_angles);
   pcp->step_duration = pergen->get_step_duration();
@@ -348,7 +343,7 @@ void pergensetup::turn_torso(double t, extvec* orientation){
 }
 
 
-pgssweeper::pgssweeper(pergensetup* pgs_, kinematicmodel* model_){
+pgssweeper::pgssweeper(const pergensetup* pgs_, const kinematicmodel* model_){
   pgs0 = pgs_;
   pgs = NULL;
   model = model_;
@@ -386,18 +381,18 @@ bool pgssweeper::next(){
   if(parami == 0){pcp->step_duration = val;}
   else if (parami > 0 && parami < 4){pcp->TLh[parami-1] = val;}
   pgs = new pergensetup (n);
-  full_setup_pergen(*pgs, pcp);
+  setup_pergen(*pgs, pcp);
   pgs->set_TLh(pcp->TLh);
   pgs->copy_rec_transform(pgs0);
 
   return true;
 }
 
-void pgssweeper::setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration_){
+void pgssweeper::partial_setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration_){
   model->orient_torso(orientation);
   periodicgenerator* pergen = pergensu.get_pergen();
   pergen->set_step_duration(step_duration_);
-  liksolver* lik = model->get_lik();
+  const liksolver* lik = model->get_lik();
   int n = pergensu.get_limb_number();
   assert(n == lik->get_number_of_limbs());
   double rcap = lik->get_rcap();
@@ -412,9 +407,9 @@ void pgssweeper::setup_pergen(pergensetup& pergensu, const extvec* orientation, 
   pergensu.set_orientation(orientation);
 }
 
-void pgssweeper::full_setup_pergen(pergensetup& pergensu, const pgsconfigparams* pcp0){
+void pgssweeper::setup_pergen(pergensetup& pergensu, const pgsconfigparams* pcp0){
   pergensu.set_foot_shift(pcp0->foot_shift);
-  setup_pergen(pergensu, pcp0->orientation, pcp0->step_duration);
+  partial_setup_pergen(pergensu, pcp0->orientation, pcp0->step_duration);
   pergensu.set_TLh(pcp0->TLh);
   pergensu.set_curvature(pcp0->curvature);
 }
@@ -424,7 +419,7 @@ void pgssweeper::setup_foot_shift(pergensetup& pergensu){
   shift_type = foot_shift.first;
   if(shift_type == 0){
     extvec shift (0, foot_shift.second, 0);
-    affine* A = model->get_mnode(0)->get_A_ground();
+    const affine* A = model->get_mnode(0)->get_A_ground();
     A->mult(shift,lat_shift);
   } else if(shift_type == 1){
     rad_shift = foot_shift.second;

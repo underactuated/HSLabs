@@ -5,13 +5,15 @@
 #include "odestate.h"
 #include "ghost.h"
 
+
+
 // quadruped spinning with foot tips fixed
 void modelplayer::test0(){
   vector<double*>* joint_values = model->get_joint_values();
   for(int i=0;i<(int)joint_values->size();i++){
     if(i==5){*(*joint_values)[i]+=.02;}
   }
-  liksolver* lik = model->get_lik();
+  const liksolver* lik = model->get_lik();
   for(int i=0;i<4;i++){lik->place_limb(i,.25*cos(i*M_PI/2),.25*sin(i*M_PI/2),1);}
 }
 
@@ -23,7 +25,7 @@ void modelplayer::test1(){
   *(*joint_values)[2] = delz;
   *(*joint_values)[5] = .5*sin(play_t);
 model->recompute_modelnodes();
-  liksolver* lik = model->get_lik();
+  const liksolver* lik = model->get_lik();
   for(int i=0;i<4;i++){
     double a = (i+.5)*M_PI/2;
     lik->place_limb(i,.4*cos(a),.4*sin(a),.2+delz);
@@ -37,7 +39,7 @@ void modelplayer::test2(){
     extvec torso_pos (0,0,-0.1);
     extvec euler_angles (0,0,0*M_PI/2);
     extvec orientation[] = {torso_pos,euler_angles};
-    setup_pergen(*play_pgs,orientation,.5);
+    partial_setup_pergen(*play_pgs,orientation,.5);
     play_pgs->set_TLh(.5,.8,.1);
   }
   play_pgs->set_rec(play_rec,play_t);
@@ -54,7 +56,7 @@ void modelplayer::test3(){
     extvec torso_pos (0,0,.35);
     extvec euler_angles (0,M_PI/2,0*M_PI/2);
     extvec orientation[] = {torso_pos,euler_angles};
-    setup_pergen(*play_pgs,orientation,1);
+    partial_setup_pergen(*play_pgs,orientation,1);
     extvec delpos0 (0,0,.9);
     for(int i=1;i<4;i+=2){
       play_pgs->get_pergen()->change_pos0(i,delpos0);
@@ -75,12 +77,58 @@ void modelplayer::test4(){
     extvec torso_pos (0,0,-.07);
     extvec euler_angles (0,0,-.5*M_PI/2);
     extvec orientation[] = {torso_pos,euler_angles};
-    setup_pergen(*play_pgs,orientation,.5);
+    partial_setup_pergen(*play_pgs,orientation,.5);
     play_pgs->set_TLh(.5,.7,.1);
   }
   play_pgs->set_rec(play_rec,play_t);
   set_jangles_with_lik(play_rec);
   play_t += play_dt;
+}
+
+// Sets torso orientation (with model recomputation).
+// (old experiments, currently unused?)
+void modelplayer::orient_torso(const extvec* orientation) const {
+  model->orient_torso(orientation);
+}
+
+// old open loop control test. 
+// (old experiments)
+void modelplayer::test_dynamics(pergensetup* pgs){
+  // preparing per
+  periodic per (model);
+  prepare_per_traj_dyn(per,pgs,20);
+
+  int nf = per.get_nfeet();
+  double* torques = new double [nmj];
+  double* contforces = new double [3*nf];
+  double* contforces1 = new double [3*nf];
+  int tsi = 2; // time step
+  // obtaining torques for a given time step tsi
+  per.solve_torques_contforces(tsi,torques,contforces);
+
+  for(int i=0;i<nf;i++){cout<<contforces[3*i+2]<<" ";}cout<<endl;
+  //for(int i=0;i<nmj;i++){cout<<torques[i]<<" ";}cout<<endl;
+
+  // computing contact forces for a given tsi and torques 
+  per.solve_contforces_given_torques(tsi,contforces1,torques);
+  //for(int i=0;i<nf;i++){cout<<contforces1[3*i+2]<<" ";}cout<<endl;
+
+  // verifying correctness of cfs
+  double s=0;for(int i=0;i<3*nf;i++){double d = contforces[i]-contforces1[i];s+=d*d;}cout<<"s = "<<sqrt(s)<<endl;
+
+  delete [] torques;
+  delete [] contforces;
+  delete [] contforces1;
+}
+
+// Simulates pgs from play_t = t0.
+// (old experiments)
+void modelplayer::simulate_pergensu(pergensetup* pgs, double t0){
+  play_t = t0;
+  //set_flag("manual_viewpoint",false);
+  step_mode = 6;
+  init_play_config(pgs);
+  model->draw();
 }
 
 // open loop controller
@@ -138,4 +186,15 @@ void modelplayer::estimate_B(){
   //state.print();
   //B /= del_torque;
   //if(play_t>.05){cout<<B.leftCols(6)<<endl;exit(1);}
+}
+
+
+void traverse(xml_node<> *node){
+  cout << node->name() << endl;
+  xml_node<> *n = node->first_node();
+  while(n){
+    //cout << n->name() << endl;
+    traverse(n);
+    n = n->next_sibling();
+  }
 }

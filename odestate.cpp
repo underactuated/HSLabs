@@ -1,34 +1,30 @@
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
 #include "odestate.h"
 
 
-void odebody::read(){
-  const dReal* body_pos = dBodyGetPosition(body);
-  const dReal* body_vel = dBodyGetLinearVel(body);
-  const dReal* body_ang_vel = dBodyGetAngularVel(body);
-  const dReal* body_quat = dBodyGetQuaternion(body);
+void odebodydata::read(){
+  const dReal* odebody_pos = dBodyGetPosition(odebody);
+  const dReal* odebody_vel = dBodyGetLinearVel(odebody);
+  const dReal* odebody_ang_vel = dBodyGetAngularVel(odebody);
+  const dReal* odebody_quat = dBodyGetQuaternion(odebody);
   dReal *p = pos, *p1 = vel, *p2 = ang_vel, *p3 = quat;
   for(int i=0;i<4;i++){
-    *p++ = *body_pos++;
-    *p1++ = *body_vel++;
-    *p2++ = *body_ang_vel++;
-    *p3++ = *body_quat++;
+    *p++ = *odebody_pos++;
+    *p1++ = *odebody_vel++;
+    *p2++ = *odebody_ang_vel++;
+    *p3++ = *odebody_quat++;
   }
 }
 
-void odebody::write(){
+void odebodydata::write(){
   //float e = float(rand()%100-50)/100.;
-  dBodySetPosition(body,pos[0],pos[1],pos[2]);
-  dBodySetLinearVel(body,vel[0],vel[1],vel[2]);
-  dBodySetAngularVel(body,ang_vel[0],ang_vel[1],ang_vel[2]);
-  const dQuaternion body_quat = {quat[0],quat[1],quat[2],quat[3]};
-  dBodySetQuaternion(body,body_quat);
+  dBodySetPosition(odebody,pos[0],pos[1],pos[2]);
+  dBodySetLinearVel(odebody,vel[0],vel[1],vel[2]);
+  dBodySetAngularVel(odebody,ang_vel[0],ang_vel[1],ang_vel[2]);
+  const dQuaternion odebody_quat = {quat[0],quat[1],quat[2],quat[3]};
+  dBodySetQuaternion(odebody,odebody_quat);
 }
 
-void odebody::print(){
+void odebodydata::print(){
   print_array<dReal>(pos,4,"pos: ");
   print_array<dReal>(vel,4,"vel: ");
   print_array<dReal>(ang_vel,4,"ang_vel: ");
@@ -36,36 +32,36 @@ void odebody::print(){
 }
 
 
-odestate::odestate(kinematicmodel* model){
-  vector<odepart*>* odeparts = model->get_odeparts();
-  vector<odepart*>::iterator it = odeparts->begin();
+odestate::odestate(const kinematicmodel* model){
+  const vector<odepart*>* odeparts = model->get_odeparts();
+  vector<odepart*>::const_iterator it = odeparts->begin();
   for(;it!=odeparts->end();it++){
-    odebody* obody = new odebody ((*it)->get_body());
+    odebodydata* obody = new odebodydata ((*it)->get_odebody());
     obodys.push_back(obody);
   }
 }
 
 odestate::~odestate(){
-  list<odebody*>::iterator it = obodys.begin();
+  list<odebodydata*>::iterator it = obodys.begin();
   for(;it!=obodys.end();it++){delete *it;}
 }
 
 void odestate::save(){
-  list<odebody*>::iterator it = obodys.begin();
+  list<odebodydata*>::iterator it = obodys.begin();
   for(;it!=obodys.end();it++){(*it)->read();}
 }
 
 void odestate::load(){
-  list<odebody*>::iterator it = obodys.begin();
+  list<odebodydata*>::iterator it = obodys.begin();
   for(;it!=obodys.end();it++){(*it)->write();}
 }
 
 void odestate::print(){
   cout << "----- ode state -----" << endl;
-  list<odebody*>::iterator it = obodys.begin();
+  list<odebodydata*>::iterator it = obodys.begin();
   int i = 0;
   for(;it!=obodys.end();it++){
-    cout << "body " << i++ << ":" << endl;
+    cout << "obody " << i++ << ":" << endl;
     (*it)->print();
   }
 }

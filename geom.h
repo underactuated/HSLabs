@@ -51,7 +51,7 @@ public:
   void random_field(double lb, double ub, bool add_flag);
   dGeomID make_geom(double x, double y, trimeshmanager* trimeshman);
   void slope_field(double h0, double h1);
-  double get_h(double x, double y);
+  double get_h(double x, double y) const;
   void ripple_field(double h0, double h1, bool add_flag);
   void ridge_field(double h0, double h1);
   void tan_field(double phi, double f);
@@ -59,9 +59,9 @@ public:
   void gauss_field(double h1);
 private:
   void compute_heightcs();
-  double* hpointer(int ix, int iy, bool c_flag);
-  void nearby_cell_coords(double x, double y, int& ix, int& iy, double& dx, double& dy);
-  void ixyq_to_z01c(int ix, int iy, int iq, double* z01c);
+  double* hpointer(int ix, int iy, bool c_flag) const;
+  void nearby_cell_coords(double x, double y, int& ix, int& iy, double& dx, double& dy) const;
+  void ixyq_to_z01c(int ix, int iy, int iq, double* z01c) const;
 };
 
 #endif

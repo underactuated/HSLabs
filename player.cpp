@@ -1,18 +1,13 @@
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
 #include "lik.h"
 #include "pergen.h"
 #include "player.h"
-//#include <Eigen/Dense>
-//#include <Eigen/Sparse>
 #include "periodic.h"
 #include "odestate.h"
 #include "cpc.h"
 #include "geom.h"
 #include "ghost.h"
 
+// Step function is called from visualizer loop.
 void visualizer::step(){
   if(player){player->step();}
 }
@@ -20,11 +15,11 @@ void visualizer::step(){
 
 modelplayer::modelplayer(){
   model = new kinematicmodel (true);
-  visualizer* vis = get_vis();
+  visualizer* vis = get_vis(); // vis is initialized in visualization.cpp
   vis->set_player(this);
   set_default_flags();
   play_t = 0;
-  play_dt = .01;
+  play_dt = .01; // default dt
   play_rec = NULL;
   last_motor_torques = NULL;
   tdertrack = NULL;
@@ -45,24 +40,24 @@ modelplayer::~modelplayer(){
 
 void modelplayer::load_model(string fname){
   model->load_fromxml(fname);
-  model->recompute_modelnodes();
-  model->orient_bodys();
+  model->orient_odebodys(); 
+  // ode-bodies must be oriented before setting ode-joints.
   model->set_ode_joints();
   make_play_rec();
 }
 
 bool cin_flag=false;//true;
-// step is called repeatedly from vis loop
+// Step is called repeatedly from vis loop.
 void modelplayer::step(){//cout<<"t = "<<play_t<<endl;
   if(cin_flag){cin.ignore();cin_flag=false;}
   //if(play_t > .9){cin.ignore();}
   switch (step_mode) {
-  case 0: test0(); break; // myant.xml
-  case 1: test1(); break; // myant.xml
-  case 2: test2(); break; // hexapod.xml
-  case 3: test3(); break; // myant.xml
-  case 4: test4(); break; // myant.xml
-  case 5: play_pergensu(); break;
+  case 0: test0(); break; // myant.xml test
+  case 1: test1(); break; // myant.xml test
+  case 2: test2(); break; // hexapod.xml test
+  case 3: test3(); break; // myant.xml test
+  case 4: test4(); break; // myant.xml test
+  case 5: play_pergensu_step(); break;
   case 6: simulate_ode(); return; break;
   case 7: break;
   default: 
@@ -70,9 +65,10 @@ void modelplayer::step(){//cout<<"t = "<<play_t<<endl;
     break;
   }
   model->recompute_modelnodes();
-  model->orient_bodys();
+  model->orient_odebodys();
 }
 
+// various (mostly old) tests, testi in [0,4]
 void modelplayer::test(int testi){
   step_mode = testi;
   model->print();
@@ -114,9 +110,10 @@ void modelplayer::set_flag(string flag_name, bool value){
   }
 }
 
-// set_jangles_directly ?????
+// set_jangles_directly. do we need it?
 
-// rec contains torso orientation and foot positions
+// Sets joint angles on the model using LIK.
+// rec contains torso orientation and foot positions.
 void modelplayer::set_jangles_with_lik(const double* rec){
   model->set_jvalues_with_lik(rec);
 }
@@ -125,23 +122,24 @@ void modelplayer::print_limb_pos0s(){
   model->get_lik()->print_limb_pos0s();
 }
 
-void modelplayer::orient_torso(const extvec* orientation){
-  model->orient_torso(orientation);
-}
-
-void modelplayer::setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration){
-  //if(!model->if_loaded()){cout<<"ERROR: model not loaded"<<endl;exit(1);}
+// partial setup of a pgs (pgs = pergen setup, pergen = periodic generator)
+// Sets up pgs for given orientation and duration. Must be
+// followed with setting TLh (period, step length and height).
+void modelplayer::partial_setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration){
   check_model_loaded();
   pgssweeper sweeper (NULL,model);
-  sweeper.setup_pergen(pergensu, orientation, step_duration);
+  sweeper.partial_setup_pergen(pergensu, orientation, step_duration);
 }
 
-void modelplayer::full_setup_pergen(pergensetup& pergensu, const pgsconfigparams& pcp){
+// full setup of a pgs, for given pgsconfigparams
+void modelplayer::setup_pergen(pergensetup& pergensu, const pgsconfigparams& pcp){
   check_model_loaded();
   pgssweeper sweeper (NULL,model);
-  sweeper.full_setup_pergen(pergensu, &pcp);
+  sweeper.setup_pergen(pergensu, &pcp);
 }
 
+// Makes a pergen setup according to setup specifications
+// in a config_fname file.
 pergensetup* modelplayer::make_pergensu(string config_fname, int setup_id){
   string confrec;
   get_rec_str(confrec,config_fname,setup_id);
@@ -159,11 +157,12 @@ pergensetup* modelplayer::make_pergensu(string config_fname, int setup_id){
   }
   int n = model->get_lik()->get_number_of_limbs();
   pergensetup* pergensu = new pergensetup (n);
-  full_setup_pergen(*pergensu, pcp);
+  setup_pergen(*pergensu, pcp);
   return pergensu;
 }
 
-// reads params from pgs configuration string
+// Reads parameters from a pgs configuration string.
+// Stores them in pgsconfigparams structure.
 void modelplayer::get_pgs_config_params(const string& rec_str, pgsconfigparams& pcp){
   stringstream ss;
   ss << rec_str;
@@ -202,6 +201,9 @@ void modelplayer::get_pgs_config_params(const string& rec_str, pgsconfigparams& 
   pcp.orientation[1].copy(torso_angles);
 }
 
+// Plays pergen setup from play_t = 0.
+// This is not a simulation, the played trajectory
+// need not be physically realizable.
 void modelplayer::play_pergensu(pergensetup* pgs){
   play_pgs = pgs;
   play_t = 0;
@@ -210,12 +212,15 @@ void modelplayer::play_pergensu(pergensetup* pgs){
   model->draw();
 }
 
-void modelplayer::play_pergensu(){
+// one step updates to play play_pgs
+void modelplayer::play_pergensu_step(){
   play_pgs->set_rec(play_rec,play_t);
   set_jangles_with_lik(play_rec);
   play_t += play_dt;
 }
 
+// Gets a record, prefexed with "id ", from file fname,
+// where id is int.
 void modelplayer::get_rec_str(string& rec_str, string fname, int rec_id){
   ifstream file;
   file.open(fname.c_str());
@@ -232,6 +237,7 @@ void modelplayer::get_rec_str(string& rec_str, string fname, int rec_id){
   cout << "ERROR: no string with rec_id = " << rec_id << endl; exit(1);
 }
 
+// Allocates memmory for play_rec and last_motor_torques
 void modelplayer::make_play_rec(){
   config_dim = model->get_config_dim();
   nmj = model->number_of_motor_joints();
@@ -239,6 +245,11 @@ void modelplayer::make_play_rec(){
   last_motor_torques = new double [nmj];
 }
 
+// Prepares a (periodic cycle) trajectory of length n_t 
+// (points per cycle) in periodic obj, generated by pgs.
+// Computes relevant dynamic quantities, such as velocities
+// and accelerations of model parts, but not of its
+// generalized coordinates. Switches on torso penalties.
 void modelplayer::prepare_per_traj_dyn(periodic& per, pergensetup* pgs, int n_t){
   per.record_trajectory(pgs,n_t);
   per.compute_dynrecs();
@@ -246,6 +257,9 @@ void modelplayer::prepare_per_traj_dyn(periodic& per, pergensetup* pgs, int n_t)
   per.switch_torso_penalty(1,1);
 }
 
+// Mesures COT for given pgs over a cycle of size n_t.
+// Optinally prints minimal contact force
+// and maximal (non-sleep) friction coefficient. 
 double modelplayer::measure_cot(pergensetup* pgs, int n_t){
   periodic per (model);
   prepare_per_traj_dyn(per,pgs,n_t);
@@ -264,6 +278,8 @@ double modelplayer::measure_cot(pergensetup* pgs, int n_t){
   return cot;
 }
 
+// Writes pgs congig parameters to a string,
+// in config string format.
 void modelplayer::pergensu_config_string(pergensetup* pgs, string& str){
   str.clear();
   string fname = model->get_xmlfname();
@@ -282,6 +298,10 @@ void modelplayer::pergensu_config_string(pergensetup* pgs, string& str){
   str += ss.str();
 }
 
+// Measures COT by sweeping through values of a parameter.
+// Sweeps through n_val values from val0 to val1, for param_name
+// parameter. Supported parameters: step_duration, period,
+// step_length and step height.
 void modelplayer::measure_cot_sweep(pergensetup* pgs, int n_t, string param_name, double val0, double val1, int n_val){
 
   pgssweeper sweeper (pgs, model);
@@ -294,34 +314,9 @@ void modelplayer::measure_cot_sweep(pergensetup* pgs, int n_t, string param_name
   }
 }
 
-void modelplayer::test_dynamics(pergensetup* pgs){
-  // preparing per
-  periodic per (model);
-  prepare_per_traj_dyn(per,pgs,20);
-
-  int nf = per.get_nfeet();
-  double* torques = new double [nmj];
-  double* contforces = new double [3*nf];
-  double* contforces1 = new double [3*nf];
-  int tsi = 2; // time step
-  // obtaining torques for a given time step tsi
-  per.solve_torques_contforces(tsi,torques,contforces);
-
-  for(int i=0;i<nf;i++){cout<<contforces[3*i+2]<<" ";}cout<<endl;
-  //for(int i=0;i<nmj;i++){cout<<torques[i]<<" ";}cout<<endl;
-
-  // computing contact forces for a given tsi and torques 
-  per.solve_contforces_given_torques(tsi,contforces1,torques);
-  //for(int i=0;i<nf;i++){cout<<contforces1[3*i+2]<<" ";}cout<<endl;
-
-  // verifying correctness of cfs
-  double s=0;for(int i=0;i<3*nf;i++){double d = contforces[i]-contforces1[i];s+=d*d;}cout<<"s = "<<sqrt(s)<<endl;
-
-  delete [] torques;
-  delete [] contforces;
-  delete [] contforces1;
-}
-
+// various simulation step updates, such as
+// settin motor torques, followed by ODE
+// simulation step.
 void modelplayer::simulate_ode(){
   if(dynamics_from_simulation_flag){estimate_B();}
   //model->print(2);//exit(1);
@@ -337,36 +332,34 @@ void modelplayer::simulate_ode(){
   play_t += play_dt;
 }
 
-void modelplayer::simulate_pergensu(pergensetup* pgs, double t0){
-  play_t = t0;
-  //set_flag("manual_viewpoint",false);
-  step_mode = 6;
-  init_play_config(pgs);
-  model->draw();
-}
-
+// Sets drawing speedup factor f, which is the number 
+// of simulation steps per one ds visualization.
 void modelplayer::speedup_draw(int f){
   get_vis()->set_speedup(f);
 }
 
+// Sets initial configuration to be the state
+// from pgs trajectory at time play_t, but with
+// all velocities = 0.
 void modelplayer::init_play_config(pergensetup* pgs){
   pgs->set_rec(play_rec,play_t);
   set_jangles_with_lik(play_rec);
   model->recompute_modelnodes();
-  model->orient_bodys();
+  model->orient_odebodys();
 }
 
 void modelplayer::position_control_test(pergensetup* pgs, double t0){
   set_flag("position_control",true);
-  setup_per_controller(pgs,t0);
+  setup_per_controller(pgs,t0);//exit(1);
   model->draw();
   unset_per_controller();
   set_flag("position_control",false);
 }
 
-// helper function to use in a controller
-// creates per, that makes trajectory and computes forces over period
-// sets sim mode, sets initial state configuration (all vels are zero)
+// helper function to use in a controller setup.
+// Constructs play_per, that makes trajectory and computes 
+// forces over a period (cycle). Sets sim mode, sets initial
+// state configuration (all velocities are zero).
 void modelplayer::setup_per_controller(pergensetup* pgs, double t0){
   double T = pgs->get_period();
   int n_t = int(T/play_dt+.5);
@@ -385,6 +378,11 @@ void modelplayer::unset_per_controller(){
   delete play_per;
 }
 
+// Sets position control torques by: 
+// reading targets state from play_per,
+// reading current state from vis,
+// computing linear feedback controls
+// and setting motor torques.
 void modelplayer::set_position_control_torques(){
   double k = 100;
   double k1 = -k, k2 = -2*sqrt(k);
@@ -402,12 +400,12 @@ void modelplayer::set_position_control_torques(){
   linear_feedback_control(motor_torques,x0,x,k1,k2);
   //arrayops ao (nmj); cout << ao.norm(p) << " " << ao.norm(motor_torques) << " " << ao.distance(motor_torques,p) << endl;
   //arrayops ao (nmj); cout << ao.norm(motor_torques)<<endl;
-  /*get_vis()->set_ode_motor_torques(motor_torques);
-    save_last_motor_torques(motor_torques);*/
   set_ode_motor_torques(motor_torques);
   delete_2d_array(a,an);
 }
 
+// Computes linear feedback torques given target state x0,
+// current state x, position and velocity gains k1 and k2.
 void modelplayer::linear_feedback_control(double* torques, double** x0, double** x, double k1, double k2){
   double *q0 = x0[0], *dq0 = x0[1], *q = x[0], *dq = x[1];
   double* a1 = new double [2*nmj];
@@ -431,6 +429,7 @@ void modelplayer::save_last_motor_torques(const double* torques){
   ao.assign(last_motor_torques,torques);
 }
 
+// Configuration path control (CPC) test.
 void modelplayer::cpc_test(pergensetup* pgs, double t0){
   set_flag("dynamics_from_simulation",true);
   set_flag("cpc_control",true);
@@ -440,8 +439,6 @@ void modelplayer::cpc_test(pergensetup* pgs, double t0){
   unset_per_controller();
   set_flag("cpc_control",false);
   exit(1);
-  // for now it is just this:
-  position_control_test(pgs,t0);
 }
 
 void modelplayer::setup_cpc_controller(){
@@ -454,6 +451,10 @@ void modelplayer::setup_cpc_controller(){
   play_cpc->set_flag("goal_t0s",true); // experimental
 }
 
+// Sets CPC torques by:
+// copying estimated B and current state to cpc controller,
+// computing torques with CPC algorithm,
+// setting motor torques. 
 void modelplayer::set_cpc_torques(){
   //if(play_t>20){exit(1);}//cout<<play_t<<endl;
   //if(play_t<10){set_position_control_torques();return;}
@@ -472,6 +473,8 @@ void modelplayer::set_cpc_torques(){
   //arrayops ao (nmj);cout<<ao.norm(last_motor_torques)<<endl;cout<<endl;//cin.ignore();
 }
 
+// Records trajectory produced by position control
+// starting at t0 for duration of traj_duration.
 void modelplayer::record_pos_control_traj(pergensetup* pgs, double t0, double traj_duration){
   traj_t_limit = t0 + traj_duration;
   set_flag("dynamics_from_simulation",true);
@@ -480,6 +483,9 @@ void modelplayer::record_pos_control_traj(pergensetup* pgs, double t0, double tr
   set_flag("record_traj",false);
 }
 
+// Adds a record to trajectory recording.
+// When play_t >= traj_t_limit, trajectory
+// gets saved and program exits.
 void modelplayer::add_traj_record(){
   int rec_len = 2*config_dim+nmj;
   double* rec = new double [rec_len];
@@ -494,6 +500,7 @@ void modelplayer::add_traj_record(){
   exit(1);
 }
 
+// Saves recorded trajectory to a file.
 void modelplayer::save_traj_recording(string fname, int rec_len){
   int size = traj_recording.size();
   double** traj = new double* [size];
@@ -503,6 +510,8 @@ void modelplayer::save_traj_recording(string fname, int rec_len){
   delete [] traj;
 }
 
+// Sets right m columns of B transposed to unity.
+// Note, n > m;
 void set_Bt_unity(double** Bt, int m, int n){
   arrayops ao (n);
   double** p = Bt;
@@ -512,6 +521,7 @@ void set_Bt_unity(double** Bt, int m, int n){
   }
 }
 
+// Estimates B from T and U, (see CPC paper notations).
 void B_from_T_U(double** Bt, MatrixXd& T, MatrixXd& U){
   int nmj = T.rows(), config_dim = U.rows();
   if(T.cols()==0){set_Bt_unity(Bt,nmj,config_dim);return;}
@@ -528,6 +538,8 @@ void B_from_T_U(double** Bt, MatrixXd& T, MatrixXd& U){
   }
 }
 
+// Runs m simulations from the current state,
+// estimted B by regression.
 void modelplayer::estimate_B_by_regression(){
   int m = config_dim + 10*2;//*2; // experim
   // m=0; // for unity Bt
@@ -562,10 +574,10 @@ void modelplayer::estimate_B_by_regression(){
   B_from_T_U(B_transp,T,U);
 }
 
+// Torso perturbation by impuls forces ("kicks").
 void modelplayer::kick_torso(){
-  //dBodyID body = get_vis()->get_torso_opart()->get_body();
-  dBodyID body = get_torso_odebody();
-  //dBodyID body = (*model->get_odeparts())[12]->get_body();
+  dBodyID odebody = get_torso_odebody();
+  //dBodyID odebody = (*model->get_odeparts())[12]->get_odebody();
   int k = 500;
   if(int(play_t/play_dt)%k!=(k-1)){return;}
   float th = 2*3.1416*float(rand()%100)/100.;
@@ -579,21 +591,24 @@ void modelplayer::kick_torso(){
   //dBodySetLinearVel(body,v[0]+dvx,v[1],v[2]+dvz);
 
   double f[] = {dvx/play_dt,0,dvz/play_dt};
-  get_vis()->add_force(body,f);
-  //dBodyAddForce(body,f[0],f[1],f[2]);
-  //dBodyAddForce(body,dvx/play_dt,0,dvz/play_dt);
-  //dBodyAddTorque(body,0,dvx/play_dt,0);
+  get_vis()->add_force(odebody,f);
+  //dBodyAddForce(odebody,f[0],f[1],f[2]);
+  //dBodyAddForce(odebody,dvx/play_dt,0,dvz/play_dt);
+  //dBodyAddTorque(odebody,0,dvx/play_dt,0);
 }
 
 void modelplayer::set_default_flags(){
   manual_viewpoint_flag = true, contact_force_flag = false, open_loop_flag = false, position_control_flag = false, dynamics_from_simulation_flag = false, cpc_control_flag = false, record_traj_flag = false, torso_kicks_flag = false, ghost_walking_flag = false, clip_torque_flag = false;
 }
 
+// Loads and draws model as defined in xml file.
 void modelplayer::load_draw_model(string fname){
   load_model(fname);
   test(7);
 }
 
+// Records trajectory as generated by periodic.
+// Trajectory need not be physically realizable.
 void modelplayer::record_per_traj(pergensetup* pgs){
   double T = pgs->get_period();
   int n_t = int(T/play_dt+.5);
@@ -607,6 +622,8 @@ void modelplayer::record_per_traj(pergensetup* pgs){
   delete_2d_array(traj,n_t);
 }
 
+// Records n_val trajectories by sweeping over
+// a parameter param_name, from val0 to val1.
 void modelplayer::record_per_traj_sweep(pergensetup* pgs, string param_name, double val0, double val1, int n_val){
   double T = pgs->get_period();
   int n_t = int(T/play_dt+.5);
@@ -630,22 +647,25 @@ void modelplayer::record_per_traj_sweep(pergensetup* pgs, string param_name, dou
   delete_2d_array(traj,n_t);
 }
 
+// Outputs torso velocity.
 void modelplayer::torso_velocity(){
-  dBodyID body = get_torso_odebody();
-  const dReal* vel = dBodyGetLinearVel(body);
+  dBodyID odebody = get_torso_odebody();
+  const dReal* vel = dBodyGetLinearVel(odebody);
   print_array<const dReal>(vel,3,"torso vel: ");
 }
 
 dBodyID modelplayer::get_torso_odebody(){
-  return get_vis()->get_torso_opart()->get_body();
+  return get_vis()->get_torso_opart()->get_odebody();
 }
 
+// Detects model fall: if torso height gets < hc, program aborts.
 void modelplayer::fall_check(double hc){
   const dReal* pos = dBodyGetPosition(get_torso_odebody());
   print_array<const dReal>(pos,2);
   if(pos[2] < hc){cout << "Fall at t = " << play_t << endl; exit(1);}
 }
 
+// Test for navigating various kinds of uneven ground. 
 void modelplayer::uneven_ground_test(){
   float f = 1;// .2;
   double l = 1*f;
@@ -676,6 +696,7 @@ void modelplayer::uneven_ground_test(){
   set_torque_limit(10);
 }
 
+// Sets ghost state as the current state in CPC controller.
 void modelplayer::set_ghost_cpc_state(double** ders){
   double** a = new_2d_array(2,config_dim);
   double *q = a[0], *dq = a[1];
@@ -686,6 +707,7 @@ void modelplayer::set_ghost_cpc_state(double** ders){
   delete_2d_array(a,2);
 }
 
+// Outputs maximal motor torque component.
 void modelplayer::max_motor_torque(){
   float max_torque = 0;
   double* p = last_motor_torques;
@@ -708,6 +730,7 @@ void modelplayer::set_torque_limit(double torque){
   set_flag("clip_torque",true);
 }
 
+// Clips torque components exceeding torque_limit.
 void modelplayer::clip_torque(double* motor_torques){
   double* p = motor_torques;
   for(int i=0;i<nmj;i++){
@@ -723,10 +746,12 @@ void modelplayer::test_lik_solvers(){
   model->get_lik()->solver_test(10000);
 }
 
+// Shifts camera view point.
 void modelplayer::shift_view(double x, double y, double z){
   get_vis()->get_view()->shift_cam(x,y,z);
 }
 
+// Checks if model is loaded, aborts othersize.
 void modelplayer::check_model_loaded(){
   if(!model->if_loaded()){cout<<"ERROR: model not loaded"<<endl;exit(1);}
 }

@@ -10,7 +10,7 @@ class dynrecord;
 class forcetorquesolver;
 
 class periodic{
-  kinematicmodel* model;
+  const kinematicmodel* model;
   vector<dynpart*> dynparts;
   int n_t, config_dim, traj_size, nmj; // traj_size is slightly larger than n_t to simplify computation of derivatives over one period
   double** traj; // config traj, no vels or torques
@@ -23,14 +23,14 @@ class periodic{
   forcetorquesolver* ftsolver;
   double min_cfz, max_mu; // minimum ground reaction force, maximum friction coeff
 public:
-  periodic(kinematicmodel* model);
+  periodic(const kinematicmodel* model);
   ~periodic();
   inline dynpart* get_dynpart(int i) const {return dynparts[i];}
   inline double* get_masses() const {return masses;}
-  inline int get_number_of_dynparts(){return dynparts.size();}
-  inline int* get_parentis(){return parentis;}
-  inline int* get_footis(){return footis;}
-  inline int get_nfeet(){return nfeet;}
+  inline int get_number_of_dynparts() const {return dynparts.size();}
+  inline int* get_parentis() const {return parentis;}
+  inline int* get_footis() const {return footis;}
+  inline int get_nfeet() const {return nfeet;}
   inline int get_nt(){return n_t;}
   inline void get_contforce_stat(double* stat){stat[0] = min_cfz; stat[1] = max_mu;}
   inline double* get_computed_torques(int i) const {return computed_torques[i % n_t];}
@@ -49,7 +49,7 @@ public:
   void compute_dynrec_ders();
   void switch_torso_penalty(bool force, bool torque);
   void check_solve_ft(); // temporary
-  void hinge_joint_part_ids(list<int>& ids);
+  void hinge_joint_part_ids(list<int>& ids) const;
   void compute_joint_vel_traj();
   double work_over_period();
   double get_total_mass();

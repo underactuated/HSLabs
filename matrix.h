@@ -44,7 +44,7 @@ public:
   void translate(const extvec& t);
   void transpose();
   void set_a(int i, int j, double val);
-  double get_a(int i, int j);
+  double get_a(int i, int j) const;
   void mult(const extvec& v, extvec& u) const;
   void subtract(const affine& b);
   double norm() const;

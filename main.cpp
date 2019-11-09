@@ -12,18 +12,10 @@
 
 #include "effdata.h" // temp
 
-//using namespace std;
-//using namespace rapidxml;
-
-void traverse(xml_node<> *node);
 
 int main(int argc, char *argv[]){
 
-  /*balltreetester tester (10);
-  tester.test();
-  exit(1);*/
-
-  //srand(time(NULL));
+  srand(time(NULL));
   //srand(4);
   //srand(3);// 4
 
@@ -31,7 +23,9 @@ int main(int argc, char *argv[]){
   player1.load_draw_model("spider.xml");
   //player1.load_draw_model("walker2d5l.xml");
   //player1.load_draw_model("ant.xml");
-  exit(1);*/
+  //player1.load_draw_model("myant.xml"); 
+  //player1.load_draw_model("hexapod.xml");
+  exit(1);//*/
 
   modelplayer player0;
   player0.set_play_dt(.02);
@@ -97,44 +91,14 @@ int main(int argc, char *argv[]){
   player0.play_pergensu(pgs); 
   delete pgs; exit(1);
 
-  /*kinematicmodel model;
-  model.load_fromxml("myant.xml");
-  model.recompute_modelnodes();
-  periodic per (model);
-  per.print();exit(1);*/
-
   modelplayer player;
   player.load_model("myant.xml");
   //player.load_model("hexapod.xml");
   player.set_flag("manual_viewpoint",false);
   player.test(4);
 
-  /*kinematicmodel model (true);
-  //model.load_fromxml("ant.xml");
-  model.load_fromxml("myant.xml");
-  model.print(); //exit(1);
-  //model.recompute_modelnodes();
-  //model.test_joints(true);
-  model.orient_bodys();
-  model.draw();*/
-
-  /*kinematicmodel model (true);
-  model.load_fromxml("hexapod.xml");
-  model.print(); //exit(1);
-  model.orient_bodys();
-  model.draw(); exit(1);*/
-
   return 0;
 }
 
-void traverse(xml_node<> *node){
-  cout << node->name() << endl;
-  xml_node<> *n = node->first_node();
-  while(n){
-    //cout << n->name() << endl;
-    traverse(n);
-    n = n->next_sibling();
-  }
-}
 
 

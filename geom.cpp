@@ -190,7 +190,7 @@ void heightfield::compute_heightcs(){
   }
 }
 
-double* heightfield::hpointer(int ix, int iy, bool c_flag){
+double* heightfield::hpointer(int ix, int iy, bool c_flag) const {
   int n = ny + 1;
   double* p = heights;
   if(c_flag){n--; p = heightcs;}
@@ -207,7 +207,7 @@ void heightfield::slope_field(double h0, double h1){
   compute_heightcs();
 }
 
-double heightfield::get_h(double x, double y){
+double heightfield::get_h(double x, double y) const {
   int ix = -1, iy = -1;
   double dx, dy;
   nearby_cell_coords(x,y,ix,iy,dx,dy);
@@ -231,7 +231,7 @@ double heightfield::get_h(double x, double y){
   return h;
 }
 
-void heightfield::nearby_cell_coords(double x, double y, int& ix, int& iy, double& dx, double& dy){
+void heightfield::nearby_cell_coords(double x, double y, int& ix, int& iy, double& dx, double& dy) const {
   x -= x0;
   y -= y0;
   ix = floor(x/l+.5*nx);
@@ -242,7 +242,7 @@ void heightfield::nearby_cell_coords(double x, double y, int& ix, int& iy, doubl
   dy = y-yc;
 }
 
-void heightfield::ixyq_to_z01c(int ix, int iy, int iq, double* z01c){
+void heightfield::ixyq_to_z01c(int ix, int iy, int iq, double* z01c) const {
   int ix0 = -1, iy0 = -1, ix1 = -1, iy1 = -1;
   switch (iq) {
   case 0: ix0 = ix; iy0 = iy+1; ix1 = ix+1; iy1 = iy+1; break;
