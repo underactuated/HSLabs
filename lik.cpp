@@ -100,6 +100,7 @@ void liksolver::place_limbs(const double* rec) const {
 
 // Gets limb position (body position of top-link model node),
 // that usually coinsides with the hip-joint position.
+// Therefore, we also referr to it as hip-position.
 void liksolver::get_limb_pos0(int limbi, extvec& pos) const {
   limbs[limbi]->get_pos0(pos);
 }
