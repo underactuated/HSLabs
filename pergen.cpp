@@ -174,7 +174,8 @@ void periodicgenerator::turn_position(const extvec& pos0, const extvec& delpos, 
   
   extvec delpos1 (dx,dy,dz);
   delpos1.add(pos0);
-  pos.copy(delpos1);
+  //pos.copy(delpos1);
+  pos = delpos1;
 }
 
 // Computes (change) of torso orientation as function of dx and curvature.
@@ -219,8 +220,10 @@ void pergensetup::set_TLh(double T, double L, double h){
 // Additionally transforms rec if rec_transform_flag.
 void pergensetup::set_rec(double* rec, double t){
   extvec orientation[2];
-  orientation[0].copy(torso_pos0);
-  orientation[1].copy(euler_angles);
+  //orientation[0].copy(torso_pos0);
+  //orientation[1].copy(euler_angles);
+  orientation[0] = torso_pos0;
+  orientation[1] = euler_angles;
   turn_torso(t, orientation);
   orientation_to_rec(orientation, rec);  
   pergen->limb_positions(t,limb_poss);
@@ -262,7 +265,8 @@ void pergensetup::set_limb_poss(int limbi, const extvec& pos, double rcap){
   int j = likpergen_map[limbi];
   //pos.set_v(2,rcap+(j%2));
   pos0.set_v(2,rcap);
-  limb_poss[j].copy(pos0);
+  //limb_poss[j].copy(pos0);
+  limb_poss[j] = pos0;
 }
 
 void pergensetup::set_pos0s(){
@@ -270,20 +274,26 @@ void pergensetup::set_pos0s(){
 }
 
 void pergensetup::set_orientation(const extvec* orientation){
-  torso_pos0.copy(orientation[0]);
-  euler_angles.copy(orientation[1]);
+  //torso_pos0.copy(orientation[0]);
+  //euler_angles.copy(orientation[1]);
+  torso_pos0 = orientation[0];
+  euler_angles = orientation[1];
 }
 
 void pergensetup::get_config_params(extvec& pos, extvec& angles, double& step_duration, double TLh[3]){
-  pos.copy(torso_pos0);
-  angles.copy(euler_angles);
+  //pos.copy(torso_pos0);
+  //angles.copy(euler_angles);
+  pos = torso_pos0;
+  angles = euler_angles;
   step_duration = pergen->get_step_duration();
   pergen->get_TLh(TLh);
 }
 
 void pergensetup::get_config_params(pgsconfigparams* pcp) const {
-  pcp->orientation[0].copy(torso_pos0);
-  pcp->orientation[1].copy(euler_angles);
+  //pcp->orientation[0].copy(torso_pos0);
+  //pcp->orientation[1].copy(euler_angles);
+  pcp->orientation[0] = torso_pos0;
+  pcp->orientation[1] = euler_angles;
   pcp->step_duration = pergen->get_step_duration();
   pergen->get_TLh(pcp->TLh);
   pcp->curvature = pergen->get_curvature();
@@ -318,7 +328,8 @@ void pergensetup::transform_rec(double* rec){
 
 void pergensetup::copy_rec_transform(const pergensetup* pgs){
   rec_transform_flag = pgs->rec_transform_flag;
-  rec_transform.copy(pgs->rec_transform);
+  //rec_transform.copy(pgs->rec_transform);
+  rec_transform = pgs->rec_transform;
 }
 
 void pergensetup::print(int detail_level){
@@ -460,7 +471,8 @@ void pgssweeper::shift_pos0(int limbi, extvec& pos){
   if(shift_type < 0){return;}
   extvec delpos;
   if(shift_type == 0){
-    delpos.copy(lat_shift);
+    //delpos.copy(lat_shift);
+    delpos = lat_shift;
     if(limbi % 2){delpos.times(-1);}
   } else if (shift_type == 1){
     double x, y, z;

@@ -197,8 +197,10 @@ void modelplayer::get_pgs_config_params(const string& rec_str, pgsconfigparams& 
     }
   }
   pcp.set_TLh(period, step_length, step_height);
-  pcp.orientation[0].copy(torso_pos);
-  pcp.orientation[1].copy(torso_angles);
+  //pcp.orientation[0].copy(torso_pos);
+  //pcp.orientation[1].copy(torso_angles);
+  pcp.orientation[0] = torso_pos;
+  pcp.orientation[1] = torso_angles;
 }
 
 // Plays pergen setup from play_t = 0.

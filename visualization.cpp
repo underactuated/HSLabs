@@ -21,7 +21,7 @@ void rot_ztov(dMatrix3& rot, const extvec& v){
   dRFromAxisAndAngle(rot,*p,*(p+1),*(p+2),angle);
 
   // correctness check; TODO: leave for now, comment out later
-  affine A; A.set_rotation(rot); extvec b,c; c.copy(v); c.normalize(); A.mult(z,b); c.subtract(b); if(c.norm()>1e-3){cout<<"A:"<<endl;A.print();cout<<"b:"<<endl;b.print();cout<<"v:"<<endl;v.print();cout<<"angle:"<<angle<<endl;cout<<"error: "<<b.norm()<<endl;exit(1);}
+  affine A; A.set_rotation(rot); extvec b,c; c=v; c.normalize(); A.mult(z,b); c.subtract(b); if(c.norm()>1e-3){cout<<"A:"<<endl;A.print();cout<<"b:"<<endl;b.print();cout<<"v:"<<endl;v.print();cout<<"angle:"<<angle<<endl;cout<<"error: "<<b.norm()<<endl;exit(1);}
 }
 
 void transpose_odematrix(dMatrix3& m){
@@ -377,12 +377,12 @@ void visualizer::get_ode_motor_adas(double* as, double* das) const {
 // torso ode part's location and motor angles.
 void visualizer::get_ode_config(double* config) const {
   const odepart* torso_opart = get_torso_opart();
-  affine A, B, C;
+  affine A;
   //torso_opart->get_frame_A_ground_from_body(A);
   torso_opart->get_A_ground_body_from_odebody(A);
   modelnode* mnode = torso_opart->get_mnode();
-  B.copy(*mnode->get_A_pj_body());
-  C.copy(*mnode->get_joint()->get_A_ground());
+  affine B (*mnode->get_A_pj_body());
+  affine C (*mnode->get_joint()->get_A_ground());
   B.invert_rigidbody();
   C.invert_rigidbody();
   C.mult(A);
@@ -636,16 +636,14 @@ void odepart::get_A_ground_odebody(affine& A_ground) const {
 //void odepart::get_frame_A_ground_from_body(affine& A_ground) const {
 void odepart::get_A_ground_body_from_odebody(affine& A_ground) const {
   affine ode_A_ground;
-  //get_ode_body_A_ground(ode_A_ground);
   get_A_ground_odebody(ode_A_ground);
 
-  affine A_body_geom_inv;
-  A_body_geom_inv.copy(A_body_geom);
+  affine A_body_geom_inv (A_body_geom);
   A_body_geom_inv.invert_rigidbody();
   ode_A_ground.mult(A_body_geom_inv,A_ground);
 
   // check: REMOVE LATER
-  //affine A; A.copy(A_ground); A.subtract(*mnode->get_A_ground()); float norm = A.norm(); if(norm>1e-5){cout << "ERROR: norm = " << norm << endl; exit(1);}
+  //affine A; A=A_ground; A.subtract(*mnode->get_A_ground()); float norm = A.norm(); if(norm>1e-5){cout << "ERROR: norm = " << norm << endl; exit(1);}
 }
 
 

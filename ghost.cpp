@@ -155,11 +155,11 @@ void ghostmodel::set_plane_zf(){
 // of their (vertical) projection onto surface
 void ghostmodel::surf_rotate_pos(extvec& pos){
   if(horizontal_flag){return;}
-  extvec pos1, pos2, xy1;
-  xy1.copy(pos);
+  extvec xy1 (pos);
   xy1.set_v(2,1);
-  pos1.copy(pos);
+  extvec pos1 (pos);
   pos1.set_v(2,xy1.dot(plane_zf));
+  extvec pos2;
   surf_rot.mult(pos1,pos2);
   pos2.subtract(pos1);
   pos.add(pos2);
@@ -169,8 +169,7 @@ void ghostmodel::surf_rotate_pos(extvec& pos){
 // transforms torso_pos according to torso_com rotation
 // note: torso_com is global coord, torso_pos is relative (from free6)
 void ghostmodel::surf_rotate_torso_pos(){
-  extvec del;
-  del.copy(torso_com);
+  extvec del (torso_com);
   surf_rotate_pos(del);
   del.subtract(torso_com);
   torso_pos.add(del);
@@ -178,7 +177,8 @@ void ghostmodel::surf_rotate_torso_pos(){
 
 // sets torso_pos from torso_com
 void ghostmodel::set_torso_pos(){
-  torso_pos.copy(torso_com);
+  //torso_pos.copy(torso_com);
+  torso_pos = torso_com;
   torso_pos.subtract(parent_pos);
   //torso_pos.print();torso_com.print();
   //exit(1);

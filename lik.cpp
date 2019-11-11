@@ -149,8 +149,8 @@ bool limb_solver_yxx(int limbi, const extvec& pos_limb, extvec& joint_angles, co
   int s0 = ysign;
   int s1 = 2*int(bend)-1;
 
-  extvec pos0 (0,0,s0*l0), pos1;
-  pos1.copy(pos_limb);
+  extvec pos0 (0,0,s0*l0);
+  extvec pos1 (pos_limb);
   pos1.subtract(pos0);
   double l = pos1.norm();
   if(l1+l2-l<0){cout<<"LIK ERROR: limb position is unreachable"<<endl;return false;}
@@ -184,8 +184,8 @@ bool limb_solver_zxx(int limbi, const extvec& pos_limb, extvec& joint_angles, co
   int s0 = ysign;
   int s1 = 2*int(bend)-1;
 
-  extvec pos0 (0,0,l0), pos1;
-  pos1.copy(pos_limb);
+  extvec pos0 (0,0,l0);
+  extvec pos1 (pos_limb);
   pos1.add(pos0);
   double l = pos1.norm();
   if(l1+l2-l<0){cout<<"LIK ERROR: limb position is unreachable"<<endl;return false;}
@@ -327,8 +327,7 @@ void liklimb::place_limb(const extvec& pos_ground){
 void liklimb::poslimb(const extvec& pos_ground, extvec& pos_limb){
   modeljoint* joint = child->get_joint();
   joint->compute_A_ground(parent->get_A_ground());
-  affine A;
-  A.copy(*joint->get_A_ground());
+  affine A (*joint->get_A_ground());
   A.invert_rigidbody();
   A.mult(pos_ground,pos_limb);
 }
