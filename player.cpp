@@ -118,8 +118,8 @@ void modelplayer::set_jangles_with_lik(const double* rec){
   model->set_jvalues_with_lik(rec);
 }
 
-void modelplayer::print_limb_pos0s(){
-  model->get_lik()->print_limb_pos0s();
+void modelplayer::print_hip_poss(){
+  model->get_lik()->print_hip_poss();
 }
 
 // partial setup of a pgs (pgs = pergen setup, pergen = periodic generator)
@@ -197,8 +197,10 @@ void modelplayer::get_pgs_config_params(const string& rec_str, pgsconfigparams& 
     }
   }
   pcp.set_TLh(period, step_length, step_height);
-  pcp.orientation[0].copy(torso_pos);
-  pcp.orientation[1].copy(torso_angles);
+  //pcp.orientation[0].copy(torso_pos);
+  //pcp.orientation[1].copy(torso_angles);
+  pcp.orientation[0] = torso_pos;
+  pcp.orientation[1] = torso_angles;
 }
 
 // Plays pergen setup from play_t = 0.
@@ -259,7 +261,7 @@ void modelplayer::prepare_per_traj_dyn(periodic& per, pergensetup* pgs, int n_t)
 
 // Mesures COT for given pgs over a cycle of size n_t.
 // Optinally prints minimal contact force
-// and maximal (non-sleep) friction coefficient. 
+// and maximal (non-slip) friction coefficient. 
 double modelplayer::measure_cot(pergensetup* pgs, int n_t){
   periodic per (model);
   prepare_per_traj_dyn(per,pgs,n_t);
@@ -366,7 +368,7 @@ void modelplayer::setup_per_controller(pergensetup* pgs, double t0){
   play_per = new periodic (model);
   prepare_per_traj_dyn(*play_per,pgs,n_t);
   play_per->compute_torques_over_period();
-  play_per->compute_joint_vel_traj();
+  play_per->compute_vel_traj();
   
   play_t = int(t0/play_dt+.5)*play_dt;
   //set_flag("manual_viewpoint",false);

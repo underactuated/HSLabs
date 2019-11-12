@@ -98,7 +98,8 @@ void affine::mult(const affine& b){
 
 // c = a * b
 void affine::mult(const affine& b, affine& c) const {
-  c.copy(*this);
+  //c.copy(*this);
+  c = (*this);
   c.mult(b);
 }
 

@@ -15,7 +15,7 @@
 
 int main(int argc, char *argv[]){
 
-  srand(time(NULL));
+  //srand(time(NULL));
   //srand(4);
   //srand(3);// 4
 
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
   //pergensetup* pgs = player0.make_pergensu("pgs_config.txt",2);
   pergensetup* pgs = player0.make_pergensu("pgs_config.txt",26);
   //pgs->print(2);
-  //player0.print_limb_pos0s();exit(1);
+  //player0.print_hip_poss();exit(1);
   //extvec rec_eas (0,0,-1.571); pgs->set_rec_rotation(rec_eas);
   //player0.test_dynamics(pgs);exit(1);
   player0.speedup_draw(5);//(3);//5);

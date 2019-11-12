@@ -126,8 +126,10 @@ void dynrecord::initialize(vector<dynpart*>& dynparts, double rcap){
   int fi = 0;
   for(int i=0;i<n;i++){
     dynpart* dpart = (*it);
-    pos[i].copy(*dpart->get_com_pos());
-    jpos[i].copy(*dpart->get_joint_pos());
+    //pos[i].copy(*dpart->get_com_pos());
+    //jpos[i].copy(*dpart->get_joint_pos());
+    pos[i] = (*dpart->get_com_pos());
+    jpos[i] = (*dpart->get_joint_pos());
     const affine* A = dpart->get_A_ground();
     double x = (A->get_a(2,1)-A->get_a(1,2))/2;
     double y = (A->get_a(0,2)-A->get_a(2,0))/2;
@@ -135,7 +137,8 @@ void dynrecord::initialize(vector<dynpart*>& dynparts, double rcap){
     ust[i].set(x,y,z);
     rot[i].set_rotation(*A);
     if(dpart->if_foot()){
-      fpos[fi].copy(*dpart->get_foot_pos());
+      //fpos[fi].copy(*dpart->get_foot_pos());
+      fpos[fi] = (*dpart->get_foot_pos());
       contacts[fi] = (fpos[fi].get_data()[2] < rcap+1e-4);
       fi++;
     }
@@ -177,7 +180,8 @@ void dynrecord::compute_ders(int stage, const dynrecord* prev_rec, const dynreco
 
 void dynrecord::compute_ders(extvec *p_der, const extvec *p_func_prev, const extvec *p_func_next, double dt){
   for(int i=0;i<n;i++){
-    p_der->copy(*p_func_next);
+    //p_der->copy(*p_func_next);
+    *p_der = (*p_func_next);
     p_der->subtract(*p_func_prev);
     p_der->times(1./(2*dt));
     
@@ -202,7 +206,8 @@ void dynrecord::compute_ang_mom(periodic* per){
 void dynrecord::compute_mom(const double* masses){
   for(int i=0;i<n;i++){
     double mass = masses[i];
-    mom[i].copy(vel[i]);
+    //mom[i].copy(vel[i]);
+    mom[i] = vel[i];
     mom[i].times(mass);
   }
 }
@@ -238,11 +243,11 @@ void ftsys_cross_elems(int i, int j, extvec& r, SpMat& B, int n){
 }
 
 void ftsys_cross_elems(int i, int pi, extvec& ipos, extvec& jpos, extvec* ppos, SpMat& B, int n){
-  extvec r;
-  r.copy(jpos);
+  extvec r (jpos);
   r.subtract(ipos);
   ftsys_cross_elems(i,i,r,B,n);
-  r.copy(*ppos);
+  //r.copy(*ppos);
+  r = (*ppos);
   r.subtract(jpos);
   ftsys_cross_elems(pi,i,r,B,n);
 }
@@ -304,8 +309,7 @@ void dynrecord::ftsys_contact_forces(int i, int ci, SpMat& B){
 // fi - foot id
 // ci - contact id
 void dynrecord::ftsys_contact_torques(int fi, int i, int ci, SpMat& B){
-  extvec r;
-  r.copy(fpos[fi]);
+  extvec r (fpos[fi]);
   r.subtract(pos[i]);
   ftsys_cross_elems(i,2*n+ci,r,B,n);
 }

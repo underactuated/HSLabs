@@ -16,14 +16,22 @@
 #include "matrix.h"
 #include "model.h"
 
+// Class periodicgenerator generates peiodic motion
+// of feet. Periodic pattern is formulated in
+// reduced time and distance, measured in period
+// and step length respectivly. When curvature = 0,
+// walking motion is along x axis. Walking while
+// turning is produced by transforming x-y plane so
+// that strait lines of constant y transform into
+// concentric circles.
 class periodicgenerator{
   int n; // number of limbs
   double t_step; // step duration in reduced time
   double *ts, *xs; // reduced time and space liftoff moments
   double period, step_length, step_height;
-  vector<extvec> limb_pos0s; // (initial) limb positions (pergen ordering)
-  double step_duration;
-  double curvature, max_radius;
+  vector<extvec> limb_pos0s; // default foot positions (pergen ordering)
+  double step_duration; // parameter in [0,1]
+  double curvature, max_radius; // path curvature, max turning-center to hip distance
 public:
   periodicgenerator(int n);
   ~periodicgenerator();
@@ -51,16 +59,20 @@ private:
 
 struct pgsconfigparams;
 
+// Class pergensetup completes periodic cycle specification by
+// incrorporating torso information. It can also additionally
+// transform trajectory (record) to generate motion in arbitrary
+// direction. (recall that pergen only generate motion in x direction)
 class pergensetup{
   int n; // number of limbs
   periodicgenerator* pergen;
-  map<int,int> likpergen_map;
+  map<int,int> likpergen_map; // LIK-pergen correspondence 
   vector<extvec> limb_poss; // limb positions = foot positions (pergen ordering)
-  double v;
+  double v; // velocity = step_length/period
   extvec torso_pos0, euler_angles; // torso orientation
-  affine rec_transform;
+  affine rec_transform; // trajectory transformation
   bool rec_transform_flag;
-  pair<int,double> foot_shift;
+  pair<int,double> foot_shift; // foot shift parameter = pair<type,value>
 public:
   pergensetup(int n);
   ~pergensetup();
@@ -74,7 +86,7 @@ public:
   void set_TLh(double T, double L, double h);
   void set_rec(double* rec, double t);
   void set_likpergen_map(int n);
-  void set_limb_poss(int limbi, extvec& pos, double rcap);
+  void set_limb_poss(int limbi, const extvec& pos, double rcap);
   void set_pos0s();
   void set_orientation(const extvec* orientation);
   void get_config_params(extvec& pos, extvec& angles, double& step_duration, double TLh[3]);
@@ -89,20 +101,22 @@ private:
   void transform_rec(double* rec);
   void rec_to_orientation(const double* rec, extvec* orientation);
   void orientation_to_rec(const extvec* orientation, double* rec);
-  void transform_orientation(affine& A, extvec* orientation);
+  void transform_orientation(const affine& A, extvec* orientation);
   void turn_torso(double t, extvec* orientation);
 };
 
+// Class pgssweeper iterates over pgs configurations by varying
+// one of the config parameters.
 class pgssweeper{
-  const pergensetup *pgs0;
+  const pergensetup *pgs0; // reference pgs
   pergensetup *pgs;
-  int parami, n_val, vali;
-  double val0, delval, val;
+  int parami, n_val, vali; // parameter index, number of values, value index
+  double val0, delval, val; // initial value, increment, current value
   const kinematicmodel* model;
   pgsconfigparams* pcp;
   int shift_type;
-  extvec lat_shift;
-  double rad_shift;
+  extvec lat_shift; // lateral shift value (also direction)
+  double rad_shift; // radial shift value
 public:
   pgssweeper(const pergensetup* pgs, const kinematicmodel* model);
   ~pgssweeper();
@@ -117,6 +131,7 @@ private:
   void setup_foot_shift(pergensetup& pergensu);
 };
 
+// Structure pgsconfigparams stores pergen-setup config parameters.
 struct pgsconfigparams{
   string fname;
   extvec orientation[2];

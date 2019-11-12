@@ -5,7 +5,8 @@
 // is supplied at construction
 modeljoint::modeljoint(joint_type type_, const affine& A){
   type = type_;
-  A_parent.copy(A);
+  //A_parent.copy(A);
+  A_parent = A;
   switch(type){
   case free6: val_size = 6; break;
   default: val_size = 1; break;
@@ -96,7 +97,8 @@ void modelnode::add_child(modelnode* child){
 // computes A_ground at node construction only (before a joint is added)
 // from parent's A_ground (arg A)
 void modelnode::compute_A_ground(const affine* A){
-  A_ground.copy(*A);
+  //A_ground.copy(*A);
+  A_ground = (*A);
   A_ground.mult(A_pj_body);
 }
 
@@ -124,10 +126,10 @@ list<double*> modelnode::make_joint(joint_type type, const double* pos_, const d
     dMatrix3 rot;
     rot_ztov(rot,v);
 
-    affine A, A1;
+    affine A1;
     // setting joint
     A1.set_rotation(rot);
-    A.copy(A_pj_body);
+    affine A (A_pj_body);
     A.mult(A1);
     A.translate(pos);
     joint = new modeljoint (type,A);
@@ -152,9 +154,8 @@ list<double*> modelnode::make_joint(joint_type type, const double* pos_){
     extvec pos;
     pos.set(pos_);
 
-    affine A;
     // setting joint
-    A.copy(A_pj_body);
+    affine A (A_pj_body);
     A.translate(pos);
     joint = new modeljoint (type,A);
     
@@ -162,7 +163,8 @@ list<double*> modelnode::make_joint(joint_type type, const double* pos_){
     A.set_unity();
     pos.times(-1);
     A.translate(pos);
-    A_pj_body.copy(A);
+    //A_pj_body.copy(A);
+    A_pj_body = A;
   } break;
   default:
     cout<<"ERROR: "<<type<<" not implemented"<<endl;exit(1);
@@ -181,13 +183,15 @@ list<double*> modelnode::make_joint(joint_type type, const double* pos_){
 void modelnode::recompute_A_ground(const affine& A){
   if(joint){
     joint->compute_A_ground(&A);
-    A_ground.copy(*joint->get_A_ground());
+    //A_ground.copy(*joint->get_A_ground());
+    A_ground = (*joint->get_A_ground());
     affine A_joint_pastjoint;
     joint->transformation(A_joint_pastjoint);
     A_ground.mult(A_joint_pastjoint);
     A_ground.mult(A_pj_body);
   } else {
-    A_ground.copy(A);
+    //A_ground.copy(A);
+    A_ground = A;
     A_ground.mult(A_pj_body);
   }
   list<modelnode*>::iterator it = child_nodes.begin();

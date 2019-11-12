@@ -100,17 +100,18 @@ void liksolver::place_limbs(const double* rec) const {
 
 // Gets limb position (body position of top-link model node),
 // that usually coinsides with the hip-joint position.
-void liksolver::get_limb_pos0(int limbi, extvec& pos) const {
-  limbs[limbi]->get_pos0(pos);
+// Therefore, we also referr to it as hip-position.
+void liksolver::get_limb_hip_pos(int limbi, extvec& pos) const {
+  limbs[limbi]->get_hip_pos(pos);
 }
 
-void liksolver::print_limb_pos0s() const {
+void liksolver::print_hip_poss() const {
   cout << "--- limb hip positions ---" << endl;
   for(int i=0;i<(int)limbs.size();i++){
-    extvec pos0;
-    get_limb_pos0(i,pos0);
+    extvec hip_pos;
+    get_limb_hip_pos(i,hip_pos);
     cout << i << ": ";
-    pos0.print();
+    hip_pos.print();
   }
 }
 
@@ -148,8 +149,8 @@ bool limb_solver_yxx(int limbi, const extvec& pos_limb, extvec& joint_angles, co
   int s0 = ysign;
   int s1 = 2*int(bend)-1;
 
-  extvec pos0 (0,0,s0*l0), pos1;
-  pos1.copy(pos_limb);
+  extvec pos0 (0,0,s0*l0);
+  extvec pos1 (pos_limb);
   pos1.subtract(pos0);
   double l = pos1.norm();
   if(l1+l2-l<0){cout<<"LIK ERROR: limb position is unreachable"<<endl;return false;}
@@ -183,8 +184,8 @@ bool limb_solver_zxx(int limbi, const extvec& pos_limb, extvec& joint_angles, co
   int s0 = ysign;
   int s1 = 2*int(bend)-1;
 
-  extvec pos0 (0,0,l0), pos1;
-  pos1.copy(pos_limb);
+  extvec pos0 (0,0,l0);
+  extvec pos1 (pos_limb);
   pos1.add(pos0);
   double l = pos1.norm();
   if(l1+l2-l<0){cout<<"LIK ERROR: limb position is unreachable"<<endl;return false;}
@@ -309,10 +310,10 @@ void liklimb::place_limb(const extvec& pos_ground){
     cout << "limbi = " << limbi << endl;
     cout << "pos_ground: ";
     pos_ground.print();
-    extvec pos0;
-    get_pos0(pos0);
-    cout << "pos0: ";
-    pos0.print();
+    extvec hip_pos;
+    get_hip_pos(hip_pos);
+    cout << "hip pos: ";
+    hip_pos.print();
     exit(1);
   }
   
@@ -322,12 +323,13 @@ void liklimb::place_limb(const extvec& pos_ground){
   //pos_ground.print();pos_limb.print();exit(1);
 }
 
-// Computes foot position in the hip's joint frame.
+// Computes foot position pos_limb in hip's joint frame A
+// from foot's position pos_ground in the ground frame,
+// by inverting A * pos_limb = pos_ground.
 void liklimb::poslimb(const extvec& pos_ground, extvec& pos_limb){
   modeljoint* joint = child->get_joint();
   joint->compute_A_ground(parent->get_A_ground());
-  affine A;
-  A.copy(*joint->get_A_ground());
+  affine A (*joint->get_A_ground());
   A.invert_rigidbody();
   A.mult(pos_ground,pos_limb);
 }
@@ -340,7 +342,8 @@ void liklimb::set_joint_values(const extvec& joint_values){
 }
 
 // Gets hip position (using child body frame's position).
-void liklimb::get_pos0(extvec& pos){
+//void liklimb::get_pos0(extvec& pos){
+void liklimb::get_hip_pos(extvec& pos){
   const affine* A = child->get_A_ground();
   A->get_translation(pos);
 }

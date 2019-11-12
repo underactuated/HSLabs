@@ -15,7 +15,7 @@ periodic::periodic(const kinematicmodel* model_){
   set_dynparts();
   dynrecs = NULL;
   ftsolver = new forcetorquesolver (this);
-  joint_vel_traj = NULL;
+  vel_traj = NULL;
   computed_torques = NULL;
 }
 
@@ -29,6 +29,8 @@ periodic::~periodic(){
   delete ftsolver;
 }
 
+// Sets dynparts, parentis, footis, masses.
+// Called by constructor.
 void periodic::set_dynparts(){
   map<modelnode*,int> mnode_id_map;
   set<modelnode*> foot_set;
@@ -68,13 +70,16 @@ void periodic::print(){
   cout << "rcap = " << rcap << endl;
 }
 
+// Records trajectory over one cycle over n_t points
+// using pgs. Internaly, trajectory stores a few more
+// points (beyond one period) to simplify computation
+// of time derivatives.
 void periodic::record_trajectory(pergensetup* pgs, int n_t_){
   n_t = n_t_;
   traj_size = n_t + 5;
   config_dim = pgs->get_config_dim();
   nmj = model->number_of_motor_joints();
   double t = 0;
-  //double dt = pgs->get_pergen()->get_period() / n_t;
   double dt = pgs->get_period() / n_t;
   double* rec = new double [config_dim];
   traj = new_2d_array(traj_size,config_dim);
@@ -87,10 +92,10 @@ void periodic::record_trajectory(pergensetup* pgs, int n_t_){
   }
   delete rec;
   dt_traj = dt;
-  //rcap = pgs->get_rcap();
   rcap = model->get_lik()->get_rcap();
 }
 
+// Prints whole trajectory.
 void periodic::print_trajectory(){
   cout << "--- trajectory (all) ---" << endl;
   cout << "traj_size = " << traj_size << endl;
@@ -99,6 +104,7 @@ void periodic::print_trajectory(){
   }
 }
 
+// Prints trajectory records from i to m.
 void periodic::print_trajectory(int i, int m){
   cout << "--- trajectory (" << i << " to " << (i+m-1)%traj_size <<") ---" << endl;
   cout << "traj_size = " << traj_size << endl;
@@ -107,6 +113,7 @@ void periodic::print_trajectory(int i, int m){
   }
 }
 
+// Prints i-th record of trajectory.
 void periodic::print_trajectory(int i){
   double* p = traj[i % traj_size];
   for(int j=0;j<config_dim;j++){
@@ -116,13 +123,13 @@ void periodic::print_trajectory(int i){
   cout << endl;
 }
 
+// Deletes trajectory.
 void periodic::clear_traj(){
   delete_2d_array(traj,traj_size);
-  delete_joint_vel_traj();
+  delete_vel_traj();
   delete_computed_torques();
   traj_size = 0;
 }
-
 
 void periodic::new_dynrecs(){
   dynrecs = new dynrecord* [traj_size];
@@ -152,18 +159,21 @@ void periodic::compute_dynrecs(){
   }
 }
 
+// Prints dynamic records for id-th part.
 void periodic::print_dynrecs(int id){
   cout << "--- dynrecs (all) ---" << endl;
   cout << "part id = " << id << endl; 
   for(int i=0;i<traj_size;i++){dynrecs[i]->print(id);}
 }
 
+// Prints dynamic records (from i to m) for id-th part.
 void periodic::print_dynrecs(int id, int i, int m){
   cout << "--- dynrecs (" << i << " to " << (i+m-1)%traj_size <<") ---" << endl;
   cout << "part id = " << id << endl; 
   for(int j=0;j<m;j++){dynrecs[(i+j) % traj_size]->print(id);}
 }
 
+// Prints i-th dynamic record (for all parts).
 void periodic::print_dynrec(int i){
   cout << "--- dynrec (i = " << i <<") ---" << endl;
   for(int j=0;j<(int)dynparts.size();j++){
@@ -177,7 +187,8 @@ void periodic::recompute_dynparts(){
   for(;it!=dynparts.end();it++){(*it)->recompute();}
 }
 
-// order n+1 ders are computed one stage after order n
+// Computes time derivatives of quantities in dynrecs.
+// Order n+1 derivatives are computed one stage after order n.
 void periodic::compute_dynrec_ders(){
   dynrecord** p = dynrecs;
   int n_stages = 2;
@@ -190,10 +201,13 @@ void periodic::compute_dynrec_ders(){
   }
 }
 
+// Switches torso penalty flags in force-torque solver.
 void periodic::switch_torso_penalty(bool force, bool torque){
   ftsolver->switch_torso_penalty(force,torque);
 }
 
+// ft-solver test
+// TODO: explain what it does
 void periodic::check_solve_ft(){
   //test_mats(); // temporary
   VectorXd x, y, xsum;
@@ -222,21 +236,21 @@ void periodic::check_solve_ft(){
   cout<<"s = "<<s<<endl;
 }
 
+// Fills foot_set with foot model nodes.
 void periodic::set_footset(set<modelnode*>& foot_set){
   model->get_foot_mnodes(foot_set);
   nfeet = foot_set.size();
 }
 
-void periodic::new_joint_vel_traj(){
-  joint_vel_traj = new_2d_array(traj_size,config_dim);
+void periodic::new_vel_traj(){
+  vel_traj = new_2d_array(traj_size,config_dim);
 }
 
-void periodic::delete_joint_vel_traj(){
-  delete_2d_array(joint_vel_traj,traj_size);
+void periodic::delete_vel_traj(){
+  delete_2d_array(vel_traj,traj_size);
 }
 
 void periodic::new_computed_torques(){
-  //nmj = model->number_of_motor_joints();
   computed_torques = new_2d_array(n_t,nmj);
 }
 
@@ -244,11 +258,11 @@ void periodic::delete_computed_torques(){
   delete_2d_array(computed_torques,n_t);
 }
 
-void periodic::compute_joint_vel_traj(){
-  double** p = joint_vel_traj;
+void periodic::compute_vel_traj(){
+  double** p = vel_traj;
   if(p == NULL){
-    new_joint_vel_traj();
-    p = joint_vel_traj;
+    new_vel_traj();
+    p = vel_traj;
   }
   p++;
   double** p1 = traj;
@@ -267,12 +281,12 @@ void periodic::compute_joint_vel_traj(){
   }
 }
 
+// Computes total positive work by all torques over a period. 
 double periodic::work_over_period(){
   compute_torques_over_period();
-  compute_joint_vel_traj();
-  //nmj = model->number_of_motor_joints();
+  compute_vel_traj();
   int i0 = 2;
-  double** p_jvtraj = joint_vel_traj + i0;
+  double** p_jvtraj = vel_traj + i0;
   double work_period = 0; // work over period
   for(int i=i0;i<n_t+i0;i++){
     double work_dt = 0; // work over dt
@@ -292,6 +306,7 @@ double periodic::work_over_period(){
   return work_period;
 }
 
+// Gets list of ids of model node with hinge joints.
 void periodic::hinge_joint_part_ids(list<int>& ids) const {
   int n = get_number_of_dynparts();
   for(int i=0;i<n;i++){
@@ -309,6 +324,7 @@ double periodic::get_total_mass(){
   return m_tot;
 }
 
+// Gets (previously computed) motor torques from ft-solver.
 void periodic::get_motor_torques(double* motor_torques){
   int n = get_number_of_dynparts();
   list<int> ids; // ids of parts with joints
@@ -326,6 +342,8 @@ void periodic::get_motor_torques(double* motor_torques){
   }
 }
 
+// Updates minimum contact force's z-component
+// and maximum no-slip friction coefficient.
 void periodic::analyze_contforces(const double* contforces){
   const double *p = contforces;
   for(int i=0;i<nfeet;i++){
@@ -338,8 +356,8 @@ void periodic::analyze_contforces(const double* contforces){
   }
 }
 
-// solves for motor torques and contact forces 
-// given trajectory and contacts info
+// Solves for motor torques and contact forces, 
+// given trajectory and contacts info.
 void periodic::solve_torques_contforces(int i, double* torques, double* contforces){
   VectorXd x, y;
   ftsolver->solve_forcetorques(dynrecs[i],x,y);
@@ -347,22 +365,21 @@ void periodic::solve_torques_contforces(int i, double* torques, double* contforc
   VectorXd::Map(contforces,y.size()) = y;
 }
 
-// solves for contact forces given trajectory and motor torques
+// Solves for contact forces given trajectory and motor torques.
 void periodic::solve_contforces_given_torques(int i, double* contforces, double* torques){
   VectorXd y;
-  //nmj = model->number_of_motor_joints();
   VectorXd z = Map<VectorXd> (torques,nmj);
   ftsolver->solve_forces(dynrecs[i],z,y);
   VectorXd::Map(contforces,y.size()) = y;
 }
 
+// computed torques are stored in computed_torques
 void periodic::compute_torques_over_period(){
   new_computed_torques();
   double* contforces = new double [3*nfeet];
   min_cfz = 1e10, max_mu = -1e10;
   int i0 = 2;
   for(int i=i0;i<n_t+i0;i++){
-    //dynrecord* dynrec = dynrecs[i];
     VectorXd x, y;
     ftsolver->solve_forcetorques(dynrecs[i],x,y);
     VectorXd::Map(contforces,y.size()) = y;
@@ -373,32 +390,35 @@ void periodic::compute_torques_over_period(){
   delete [] contforces;
 }
 
+// Gets motor angles and angular rates.
 void periodic::get_motor_adas(int tsi, double* as, double* das){
-  if(!(traj && joint_vel_traj)){cout<<"ERROR: no data"<<endl;exit(1);}
+  if(!(traj && vel_traj)){cout<<"ERROR: no data"<<endl;exit(1);}
   tsi %= n_t;
   if (tsi < 2) {tsi += n_t;}
   int offset = 6;
-  double *p = traj[tsi]+offset, *p1 = joint_vel_traj[tsi]+offset;
+  double *p = traj[tsi]+offset, *p1 = vel_traj[tsi]+offset;
   for(int i=offset;i<config_dim;i++){
     *as++ = *p++;
     *das++ = *p1++;
   }
 }
 
+// Gets a complete traj record, that includes
+// configuration, velocity and computed torques.
 void periodic::get_complete_traj_rec(int tsi, double* rec){
   if(tsi >= n_t){cout<<"ERROR: time step must be < n_t"<<endl;exit(1);}
   if (tsi < 2) {tsi += n_t;}
   arrayops ao (config_dim), ao1 (nmj);
   ao.assign(rec,traj[tsi]);
   rec += config_dim;
-  ao.assign(rec,joint_vel_traj[tsi]);
+  ao.assign(rec,vel_traj[tsi]);
   rec += config_dim;
   ao1.assign(rec,get_computed_torques(tsi));
 }
 
 void periodic::get_complete_traj(double** complete_traj){
   compute_torques_over_period();
-  compute_joint_vel_traj();
+  compute_vel_traj();
   double **p = complete_traj;
   for(int i=0;i<n_t;i++){
     get_complete_traj_rec(i,*p++);
