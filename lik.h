@@ -50,8 +50,8 @@ public:
   inline double get_rcap() const {return rcap;}
   void place_limb(int limbi, double x, double y, double z) const;
   void place_limbs(const double* rec) const;
-  void get_limb_pos0(int limbi, extvec& pos) const;
-  void print_limb_pos0s() const;
+  void get_limb_hip_pos(int limbi, extvec& pos) const;
+  void print_hip_poss() const;
   void solver_test(int n) const;
 private:
   void set_limbs(const kinematicmodel* model);
@@ -77,7 +77,7 @@ public:
   void setup_joint_values();
   void place_limb(const extvec& pos_ground);
   void set_joint_values(const extvec& joint_values);
-  void get_pos0(extvec& pos);
+  void get_hip_pos(extvec& pos);
   modelnode* get_foot();
   void solver_test_yxx(int n);
   bool bend_from_angles(extvec& angles);

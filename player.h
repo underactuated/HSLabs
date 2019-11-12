@@ -67,7 +67,7 @@ public:
   void test(int testi);
   void set_flag(string flag_name, bool value);
   void set_jangles_with_lik(const double* rec);
-  void print_limb_pos0s();
+  void print_hip_poss();
   void orient_torso(const extvec* orientation) const;
   void partial_setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration);
   pergensetup* make_pergensu(string config_fname, int setup_id);

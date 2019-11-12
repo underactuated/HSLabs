@@ -1,3 +1,14 @@
+/////////////////////////////////////////////////
+// periodic.h: declaration of the class periodic,
+// dealing with periodic trajectories. Presented
+// with a sequence of configuration points (and
+// time step between the points), representing a
+// periodic trajectory, it fills in the missing
+// information, such as velocities and accelerations
+// of all parts, as well as forces and torques.
+// It should eventually be used for computing
+// objective function derivatives.
+/////////////////////////////////////////////////
 #ifndef PERIODIC_H
 #define PERIODIC_H
 
@@ -9,18 +20,22 @@ class dynpart;
 class dynrecord;
 class forcetorquesolver;
 
+// Class periodic contains information determining
+// model dynamics. Periodic computes time derivatives
+// of quantities of interest along the trajectory,
+// as well as actuations that realize it.
 class periodic{
   const kinematicmodel* model;
-  vector<dynpart*> dynparts;
+  vector<dynpart*> dynparts; // model part info determining dynamics
   int n_t, config_dim, traj_size, nmj; // traj_size is slightly larger than n_t to simplify computation of derivatives over one period
   double** traj; // config traj, no vels or torques
-  double dt_traj, rcap;
-  dynrecord** dynrecs;
-  int *parentis, *footis;
-  double* masses;
-  int nfeet;
-  double **joint_vel_traj, **computed_torques;
-  forcetorquesolver* ftsolver;
+  double dt_traj, rcap; // time step and foot cap radius
+  dynrecord** dynrecs; // dynamic quantities along the trajectory
+  int *parentis, *footis; // parent ids (enumerate by child ids), foot node ids (enumerated by limb ids in lik-order)
+  double* masses; // part masses
+  int nfeet; // number of feet
+  double **vel_traj, **computed_torques; // velocities and torques along traj
+  forcetorquesolver* ftsolver; // force and torque solver
   double min_cfz, max_mu; // minimum ground reaction force, maximum friction coeff
 public:
   periodic(const kinematicmodel* model);
@@ -50,7 +65,7 @@ public:
   void switch_torso_penalty(bool force, bool torque);
   void check_solve_ft(); // temporary
   void hinge_joint_part_ids(list<int>& ids) const;
-  void compute_joint_vel_traj();
+  void compute_vel_traj();
   double work_over_period();
   double get_total_mass();
   void get_motor_torques(double* motor_torques);
@@ -64,8 +79,8 @@ private:
   void set_dynparts();
   void clear_traj();
   void set_footset(set<modelnode*>& foot_set);
-  void new_joint_vel_traj();
-  void delete_joint_vel_traj();
+  void new_vel_traj();
+  void delete_vel_traj();
   void analyze_contforces(const double* contforces);
   void new_computed_torques();
   void delete_computed_torques();

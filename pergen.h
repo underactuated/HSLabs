@@ -29,7 +29,7 @@ class periodicgenerator{
   double t_step; // step duration in reduced time
   double *ts, *xs; // reduced time and space liftoff moments
   double period, step_length, step_height;
-  vector<extvec> limb_pos0s; // (initial) limb positions (pergen ordering)
+  vector<extvec> limb_pos0s; // default foot positions (pergen ordering)
   double step_duration; // parameter in [0,1]
   double curvature, max_radius; // path curvature, max turning-center to hip distance
 public:
@@ -101,7 +101,7 @@ private:
   void transform_rec(double* rec);
   void rec_to_orientation(const double* rec, extvec* orientation);
   void orientation_to_rec(const extvec* orientation, double* rec);
-  void transform_orientation(affine& A, extvec* orientation);
+  void transform_orientation(const affine& A, extvec* orientation);
   void turn_torso(double t, extvec* orientation);
 };
 
