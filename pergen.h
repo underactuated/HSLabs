@@ -59,10 +59,12 @@ private:
 
 struct pgsconfigparams;
 
-// Class pergensetup completes periodic cycle specification by
-// incrorporating torso information. It can also additionally
-// transform trajectory (record) to generate motion in arbitrary
-// direction. (recall that pergen only generate motion in x direction)
+// Class pergensetup ( = periodic generator setup) completes
+// periodic cycle specification by incrorporating torso
+// information. It can also additionally transform
+// trajectory (record) to generate motion in arbitrary
+// direction. (recall that pergen only generate motion
+// in x direction)
 class pergensetup{
   int n; // number of limbs
   periodicgenerator* pergen;
@@ -85,19 +87,19 @@ public:
   inline void set_foot_shift(const pair<int,double> foot_shift_){foot_shift = foot_shift_;}
   void set_TLh(double T, double L, double h);
   void set_rec(double* rec, double t);
-  void set_likpergen_map(int n);
   void set_limb_poss(int limbi, const extvec& pos, double rcap);
   void set_pos0s();
   void set_orientation(const extvec* orientation);
   void get_config_params(extvec& pos, extvec& angles, double& step_duration, double TLh[3]);
   void get_config_params(pgsconfigparams* pcp) const;
   void set_rec_rotation(const extvec& rec_eas);
-  void set_rec_transform(const extvec& rec_transl, const extvec& rec_eas);
   void copy_rec_transform(const pergensetup* pgs);
   void print(){print(0);}
   void print(int detail_level);
   void set_curvature(double curvature);
 private:
+  void set_likpergen_map(int n);
+  void set_rec_transform(const extvec& rec_transl, const extvec& rec_eas);
   void transform_rec(double* rec);
   void rec_to_orientation(const double* rec, extvec* orientation);
   void orientation_to_rec(const extvec* orientation, double* rec);

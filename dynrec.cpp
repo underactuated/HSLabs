@@ -1,6 +1,7 @@
 #include "dynrec.h"
 
 
+// Sets ids, positions, model node, inertia parameters.
 void dynpart::setup(map<modelnode*,int>& mnode_id_map){
   modelnode* pmnode;
   mnode = opart->get_mnode();
@@ -26,6 +27,7 @@ void dynpart::print(){
   }
 }
 
+// Sets joint_pos.
 void dynpart::set_joint_pos(){
   modeljoint* joint = mnode->get_joint();
   if(joint){
@@ -36,10 +38,12 @@ void dynpart::set_joint_pos(){
   //joint_pos.print();
 }
 
+// Sets com_pos.
 void dynpart::set_com_pos(){
   opart->get_com_pos(com_pos);
 }
 
+// Sets joint, com and foot positions.
 void dynpart::recompute(){
   set_joint_pos();
   set_com_pos();
@@ -54,6 +58,7 @@ affine* dynpart::get_inertia_tensor(){
   return &inertia;
 }
 
+// Copies inertial parameters from ode-body.
 void dynpart::set_inertial_params(){
   dMass m;
   dBodyGetMass(opart->get_odebody(),&m);
@@ -62,6 +67,7 @@ void dynpart::set_inertial_params(){
   //cout<<mass<<endl;inertia.print();
 }
 
+// Sets foot flag and position.
 void dynpart::setup_foot(const set<modelnode*>& foot_set){
   if(foot_set.count(mnode)){
     foot_flag = true;
@@ -69,10 +75,12 @@ void dynpart::setup_foot(const set<modelnode*>& foot_set){
   } else {foot_flag = false;}
 }
 
+// Sets foot_pos.
 void dynpart::set_foot_pos(){
   opart->get_foot_pos(foot_pos);
 }
 
+// Gets z-component of joint axis.
 void dynpart::get_joint_zaxis(extvec& axis){
   modeljoint* joint = mnode->get_joint();
   if(joint){
@@ -121,13 +129,13 @@ dynrecord::~dynrecord(){
   delete [] contacts;
 }
 
+// Sets all non-dynamic quantities:
+// pos, jpos, ust, fpos, jzaxis, rot, contacts.
 void dynrecord::initialize(vector<dynpart*>& dynparts, double rcap){
   vector<dynpart*>::iterator it = dynparts.begin();
   int fi = 0;
   for(int i=0;i<n;i++){
     dynpart* dpart = (*it);
-    //pos[i].copy(*dpart->get_com_pos());
-    //jpos[i].copy(*dpart->get_joint_pos());
     pos[i] = (*dpart->get_com_pos());
     jpos[i] = (*dpart->get_joint_pos());
     const affine* A = dpart->get_A_ground();
@@ -137,7 +145,6 @@ void dynrecord::initialize(vector<dynpart*>& dynparts, double rcap){
     ust[i].set(x,y,z);
     rot[i].set_rotation(*A);
     if(dpart->if_foot()){
-      //fpos[fi].copy(*dpart->get_foot_pos());
       fpos[fi] = (*dpart->get_foot_pos());
       contacts[fi] = (fpos[fi].get_data()[2] < rcap+1e-4);
       fi++;
@@ -162,6 +169,9 @@ void dynrecord::print(int id){
   cout << "rot: " << endl; rot[id].print();
 }
 
+// Computes first and second order time derivatives.
+// First order: vel, ang_vel, mom, ang_mom.
+// Second order: mom_rate, acc, ang_mom_rate.
 void dynrecord::compute_ders(int stage, const dynrecord* prev_rec, const dynrecord* next_rec, double dt, periodic* per){
   switch (stage) {
   case 0: {
@@ -178,6 +188,7 @@ void dynrecord::compute_ders(int stage, const dynrecord* prev_rec, const dynreco
   }
 }
 
+// Computes time derivative of a dynrec field.
 void dynrecord::compute_ders(extvec *p_der, const extvec *p_func_prev, const extvec *p_func_next, double dt){
   for(int i=0;i<n;i++){
     //p_der->copy(*p_func_next);
@@ -212,6 +223,7 @@ void dynrecord::compute_mom(const double* masses){
   }
 }
 
+// Sets ft matrix B and com-ft vector f.
 void dynrecord::set_forcetorque_system(SpMat& B, VectorXd& f, const int* parentis, const double* masses){
   for(int i=0;i<n;i++){
     int pi = parentis[i];
@@ -222,15 +234,22 @@ void dynrecord::set_forcetorque_system(SpMat& B, VectorXd& f, const int* parenti
   B.makeCompressed();
 }
 
+// Sets 1 entries to ft matrix B.
+// i and pi are part's and part parent's ids.
 void ftsys_unit_elems(int i, int pi, SpMat& B){
   for(int j=0;j<3;j++){
     int k = 3*i+j, k1 = 3*pi+j;
     B.insert(k,k) = 1;
     if(pi >= 0){B.insert(k1,k) = -1;}
   }
+  // Force/torque acting on part's joint (id = i), 
+  // also acts on its COM and on its parent with negative sign.
 }
 
-// effect of force applied at joint j on part i
+// Sets entries corresponding to cross product of
+// a force and a positon vector (arg r). They descibe effect
+// of the force applied at joint (id = j) on the torque
+// at COM of part (id = i).
 void ftsys_cross_elems(int i, int j, extvec& r, SpMat& B, int n){
   int k = 3*(n+i), k1 = 3*j;
   double *p = r.get_data();
@@ -242,22 +261,26 @@ void ftsys_cross_elems(int i, int j, extvec& r, SpMat& B, int n){
   }
 }
 
+// Sets all the cross-product entries arising from
+// joint forces between part (id = i) and its parent (id = pi).
+// ipos, jpos and ppos are part, joint and parent positions.
 void ftsys_cross_elems(int i, int pi, extvec& ipos, extvec& jpos, extvec* ppos, SpMat& B, int n){
   extvec r (jpos);
   r.subtract(ipos);
   ftsys_cross_elems(i,i,r,B,n);
-  //r.copy(*ppos);
   r = (*ppos);
   r.subtract(jpos);
   ftsys_cross_elems(pi,i,r,B,n);
 }
 
+// Sets com-ft forces and force-related entries in ft matrix B.
 void dynrecord::ftsys_forces(int i, int pi, SpMat& B, VectorXd& f){
   ftsys_unit_elems(i,pi,B);
   int k0 = 3*i;
   mom_rate[i].get_components(f(k0),f(k0+1),f(k0+2));
 }
 
+// Sets com-ft torques and torque-related entries in ft matrix B.
 void dynrecord::ftsys_torques(int i, int pi, SpMat& B, VectorXd& f){
   int pi1 = (pi < 0)? pi : pi+n;
   ftsys_unit_elems(i+n,pi1,B);
@@ -266,12 +289,14 @@ void dynrecord::ftsys_torques(int i, int pi, SpMat& B, VectorXd& f){
   ang_mom_rate[i].get_components(f(k0),f(k0+1),f(k0+2));  
 }
 
+// Adds gravity force to com-ft vector.
 void dynrecord::ftsys_gravity(int i, VectorXd& f, const double* ms){
   const double g = 1;
   //const double g = 10;
   f(3*i+2) += ms[i]*g;
 }
 
+// Counts number of contacts.
 int dynrecord::get_ncontacts(){
   int s = 0;
   bool *p = contacts;
@@ -279,10 +304,12 @@ int dynrecord::get_ncontacts(){
   return s;
 }
 
+// Sets force-torque system with contacts.
 void dynrecord::set_forcetorque_system_contacts(SpMat& B, const int* footis){
   set_forcetorque_system_contacts(B,footis,true);
 }
 
+// Sets force-torque system with optional contacts.
 void dynrecord::set_forcetorque_system_contacts(SpMat& B, const int* footis, bool contact_feet_flag){
   int ci = 0;
   for(int fi=0;fi<nf;fi++){
@@ -297,7 +324,8 @@ void dynrecord::set_forcetorque_system_contacts(SpMat& B, const int* footis, boo
   B.makeCompressed();
 }
 
-// for i and ci see ftsys_contact_torques comment
+// Sets entries arising from contact forces.
+// For args i and ci see ftsys_contact_torques comment.
 void dynrecord::ftsys_contact_forces(int i, int ci, SpMat& B){
   for(int j=0;j<3;j++){
     int  k = 3*i+j, k1 = 3*(2*n+ci)+j;
@@ -305,9 +333,10 @@ void dynrecord::ftsys_contact_forces(int i, int ci, SpMat& B){
   }
 }
 
-// i - foot part id
-// fi - foot id
-// ci - contact id
+// Sets entries arising from contact force torques.
+// Arg notations: i - foot part id,
+// fi - foot index (different from foot part id),
+// ci - contact index.
 void dynrecord::ftsys_contact_torques(int fi, int i, int ci, SpMat& B){
   extvec r (fpos[fi]);
   r.subtract(pos[i]);

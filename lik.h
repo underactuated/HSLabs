@@ -74,7 +74,6 @@ public:
   liklimb(int limbi_, const modelnode* child_);
   inline void set_bend(bool bend){limb_bend = bend;}
   inline void set_solver_func(SolverFuncType* f){solver_func = f;}
-  void setup_joint_values();
   void place_limb(const extvec& pos_ground);
   void set_joint_values(const extvec& joint_values);
   void get_hip_pos(extvec& pos);
@@ -82,6 +81,7 @@ public:
   void solver_test_yxx(int n);
   bool bend_from_angles(extvec& angles);
 private:
+  void setup_joint_values();
   void poslimb(const extvec& pos_ground, extvec& pos_limb);
 };
 

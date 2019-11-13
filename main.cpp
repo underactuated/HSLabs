@@ -15,7 +15,7 @@
 
 int main(int argc, char *argv[]){
 
-  //srand(time(NULL));
+  srand(time(NULL));
   //srand(4);
   //srand(3);// 4
 

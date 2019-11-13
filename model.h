@@ -115,11 +115,8 @@ public:
   inline bool if_loaded(){return !(xmlfname == "");}
   inline const odepart* get_odepart(int i) const {return odeparts[i];}
   inline bool if_vis() const {return vis_flag;}
-  void set_vis();
+  //void set_vis();
   void load_fromxml(string fname);
-  modelnode* mnode_from_xnode(xml_node<>* xnode, const affine* A);
-  void make_odepart(const xml_node<>* xnode, modelnode* mnode);
-  void make_joint(const xml_node<>* xnode, modelnode* mnode);
   void orient_odebodys();
   void draw();
   void recompute_modelnodes() const;
@@ -133,7 +130,10 @@ public:
   void orient_torso(const extvec* orientation) const;
   void get_foot_mnodes(set<modelnode*>& foot_set) const;
 private:
-  //void set_lik();
+  void set_vis();
+  modelnode* mnode_from_xnode(xml_node<>* xnode, const affine* A);
+  void make_odepart(const xml_node<>* xnode, modelnode* mnode);
+  void make_joint(const xml_node<>* xnode, modelnode* mnode);
 };
 
 #endif

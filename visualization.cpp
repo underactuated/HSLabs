@@ -434,19 +434,6 @@ void visualizer::draw_forces(){
   }
 }
 
-/*void visualizer::trimesh_test(){
-  for(int i=0;i<4;i++){
-    dReal vert[3];
-    for(int j=0;j<3;j++){vert[j] = rand()%10;}
-    print_array<dReal>(vert,3);
-    trimeshman->push_vertex(vert[0],vert[1],vert[2]);
-  }
-  trimeshman->push_triangle(0,1,2);
-  trimeshman->push_triangle(0,1,3);
-  dGeomID geom = trimeshman->new_trimesh();
-  push_geom(geom);
-  }*/
-
 
 // Creates an ODE part (body and geom) corresponding to 
 // xml_node/modelnode (xnode and mnode, respectively).

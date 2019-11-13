@@ -681,8 +681,8 @@ void modelplayer::uneven_ground_test(){
   //hfield->tanh_field(5);
   //hfield->gauss_field(4);
   hfield->ridge_field(0,2.0);
-  /*hfield->slope_field(0,4);
-    hfield->ripple_field(0.01,.4*f,true);*/
+  /* hfield->slope_field(0,4);
+     hfield->ripple_field(0.01,.4*f,true); */
   //hfield->random_field(0.01,.2,true);
   //hfield->make_geom(n*l/2+3,0,get_vis());
   visualizer* vis = get_vis();

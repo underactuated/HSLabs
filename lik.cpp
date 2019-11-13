@@ -288,7 +288,7 @@ liklimb::liklimb(int limbi_, const modelnode* child_){
   limb_bend = true;
 }
 
-// Pulls value refeerences from model nodes to values array.
+// Pulls value references from model nodes to values array.
 void liklimb::setup_joint_values(){
   const modelnode* mnode = child;
   for(int i=0;i<3;i++){

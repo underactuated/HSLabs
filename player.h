@@ -66,17 +66,10 @@ public:
   void step();
   void test(int testi);
   void set_flag(string flag_name, bool value);
-  void set_jangles_with_lik(const double* rec);
   void print_hip_poss();
-  void orient_torso(const extvec* orientation) const;
-  void partial_setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration);
   pergensetup* make_pergensu(string config_fname, int setup_id);
-  void setup_pergen(pergensetup& pergensu, const pgsconfigparams& pcp);
-  void get_pgs_config_params(const string& rec_str, pgsconfigparams& confparams);
   void play_pergensu(pergensetup* pgs);
-  void prepare_per_traj_dyn(periodic& per, pergensetup* pgs, int n_t);
   double measure_cot(pergensetup* pgs, int n_t);
-  void pergensu_config_string(pergensetup* pgs, string& str);
   void measure_cot_sweep(pergensetup* pgs, int n_t, string param_name, double val0, double val1, int n_val);
   void test_dynamics(pergensetup* pgs); // probably temporary
   void simulate_pergensu(pergensetup* pgs, double t0);
@@ -89,10 +82,10 @@ public:
   void record_per_traj(pergensetup* pgs);
   void record_per_traj_sweep(pergensetup* pgs, string param_name, double val0, double val1, int n_val);
   void uneven_ground_test();
-  void set_torque_limit(double torque);
   void test_lik_solvers();
   void shift_view(double x, double y, double z);
 private:
+  void set_jangles_with_lik(const double* rec);
   inline visualizer* get_vis() const {return model->get_vis();}
   void test0();
   void test1();
@@ -100,8 +93,14 @@ private:
   void test3();
   void test4();
   void get_rec_str(string& rec_str, string fname, int rec_id);
+  void partial_setup_pergen(pergensetup& pergensu, const extvec* orientation, double step_duration);
+  void setup_pergen(pergensetup& pergensu, const pgsconfigparams& pcp);
+  void get_pgs_config_params(const string& rec_str, pgsconfigparams& confparams);
+  void prepare_per_traj_dyn(periodic& per, pergensetup* pgs, int n_t);
+  void pergensu_config_string(pergensetup* pgs, string& str);
   void play_pergensu_step();
   void make_play_rec();
+  void orient_torso(const extvec* orientation) const;
   void simulate_ode();
   void set_open_loop_torques();
   void init_play_config(pergensetup* pgs);
@@ -126,6 +125,7 @@ private:
   void set_ode_motor_torques(double* motor_torques);
   void clip_torque(double* motor_torques);
   void check_model_loaded();
+  void set_torque_limit(double torque);
 };
 
 #endif

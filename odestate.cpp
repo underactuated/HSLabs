@@ -1,6 +1,7 @@
 #include "odestate.h"
 
 
+// Stores all mutable values from ode-body.
 void odebodydata::read(){
   const dReal* odebody_pos = dBodyGetPosition(odebody);
   const dReal* odebody_vel = dBodyGetLinearVel(odebody);
@@ -15,6 +16,7 @@ void odebodydata::read(){
   }
 }
 
+// Sets all the stored values to ode-body.
 void odebodydata::write(){
   //float e = float(rand()%100-50)/100.;
   dBodySetPosition(odebody,pos[0],pos[1],pos[2]);
@@ -46,11 +48,13 @@ odestate::~odestate(){
   for(;it!=obodys.end();it++){delete *it;}
 }
 
+// Stores data from ode-bodies.
 void odestate::save(){
   list<odebodydata*>::iterator it = obodys.begin();
   for(;it!=obodys.end();it++){(*it)->read();}
 }
 
+// Sets data to ode-bodies.
 void odestate::load(){
   list<odebodydata*>::iterator it = obodys.begin();
   for(;it!=obodys.end();it++){(*it)->write();}
@@ -77,6 +81,7 @@ configtimedertrack::configtimedertrack(const configtimedertrack* tdertrack){
   copy(tdt);
 }
 
+// Sets parameters and allocate memmory.
 void configtimedertrack::construct(int max_der_, int config_dim_, double dt_){
   max_der = max_der_;
   config_dim = config_dim_;
@@ -94,6 +99,9 @@ configtimedertrack::~configtimedertrack(){
   delete [] old_der;
 }
 
+// Pushes new configurations and updates all derivtives,
+// by computing n+1 order from new and old n order derivative,
+// with 0 < n <= max_der.
 void configtimedertrack::push_config(double* config){
   ao.assign(old_der,ders[0]);
   ao.assign(ders[0],config);
@@ -101,7 +109,8 @@ void configtimedertrack::push_config(double* config){
   for(int i=0;i<max_der;i++){compute_dern(i+1);}
 }
 
-// use it for n > 0
+// Computes n-th order derivatives, for n > 0.
+// Must be called after computing (n-1)-th order.
 void configtimedertrack::compute_dern(int n){
   ao.subtract(new_der,old_der);
   ao.times(new_der,1./dt);
@@ -117,6 +126,7 @@ void configtimedertrack::print(){
   }
 }
 
+// Copies class object.
 void configtimedertrack::copy(const configtimedertrack* tdertrack){
   const configtimedertrack* tdt = tdertrack;
   for(int i=0;i<max_der;i++){ao.assign(ders[i],tdt->ders[i]);}
@@ -124,6 +134,8 @@ void configtimedertrack::copy(const configtimedertrack* tdertrack){
   ao.assign(old_der,tdt->old_der);
 }
 
+// Computes difference between the second derivative
+// of this and arg tdertrack.
 void configtimedertrack::del_second_der(configtimedertrack* tdertrack, double* del){
   ao.assign(del,ders[2]);
   ao.subtract(del,tdertrack->ders[2]);
