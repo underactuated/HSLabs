@@ -54,8 +54,6 @@ public:
   void print_trajectory();
   void print_trajectory(int i);
   void print_trajectory(int i, int m);
-  void new_dynrecs();
-  void delete_dynrecs();
   void compute_dynrecs();
   void print_dynrecs(int id);
   void print_dynrecs(int id, int i, int m);
@@ -78,6 +76,8 @@ public:
 private:
   void set_dynparts();
   void clear_traj();
+  void new_dynrecs();
+  void delete_dynrecs();
   void set_footset(set<modelnode*>& foot_set);
   void new_vel_traj();
   void delete_vel_traj();

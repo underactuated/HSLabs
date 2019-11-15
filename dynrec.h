@@ -1,3 +1,13 @@
+/////////////////////////////////////////////////
+// dynrec.c: declares classes that determine dynamic
+// properties of model parts and store various 
+// quantitites reflecting part's dynamics along
+// the trajectory. These classes are also used
+// to encode relationship between forces, torques
+// and accelerations of model's parts. We use
+// sparse matrix representaion for computational
+// efficiency.
+/////////////////////////////////////////////////
 #ifndef DYNREC_H
 #define DYNREC_H
 
@@ -13,14 +23,17 @@ using namespace Eigen;
 
 typedef SparseMatrix<double> SpMat; // column-major sparse matrix
 
+// Class dynpart ( = dynamics part) contains geometric, inertial
+// and contact properties of model's part. Includes access to
+// corresponding ode-part and model-node objects.
 class dynpart{
-  int id, parent_id;
+  int id, parent_id; // part and its parent's ids
   extvec com_pos, joint_pos, foot_pos;
-  const odepart* opart;
-  modelnode* mnode;
+  const odepart* opart; // corresponding ode-part
+  modelnode* mnode; // corresponding model node
   double mass;
   affine inertia; // TODO: maybe replace affine with dMatrix3?
-  bool foot_flag;
+  bool foot_flag; // part is a foot if foot_flag
 public:
   dynpart(const odepart* opart_){opart = opart_;}
   inline extvec* get_com_pos(){return &com_pos;}
@@ -43,13 +56,29 @@ private:
   void set_foot_pos();
 };
 
-// maybe replace it with more compact/efficient represention
+// Class dynrecord ( = dynamics record) computes and stores
+// various quantities of the model parts pertinent to dynamic
+// properties of the trajectory (for a single time moment).  
+// It also constructs a linear system of equations describing
+// relationship between the joint forces and torques and 
+// the model parts forces and torques.
+// We denote forces and torques applied at joints (including
+// free and fixed joints) and contacts x and call it joint-ft
+// vector; We denote forces and torques applied at part COMs
+// f and call it com-ft vector; we use B to denoted the matrix
+// that connects x and f, and we call if ft matrix ( = force-
+// torque matrix): B * x = f. If the model has n parts (each
+// part contains exactly one joint) and k contacts, then 
+// dimensions of x, f and B are: dim(x) = 6n + 3k, dim(f) = 6n
+// and dim(B) = 6n x (6n+3k). Note that a motor torque is
+// the projection of the full joint torque on the joint axis.
+// TODO: maybe store data in a more compact/efficient represention
 class dynrecord{
   int n; // number of parts
   int nf; // mumber of feet
-  extvec *pos, *jpos, *vel, *mom, *mom_rate, *acc, *ust, *ang_vel, *ang_mom, *ang_mom_rate, *fpos, *jzaxis; // ust stands for u*sin(theta) where u is the unit axis vector
-  affine *rot;
-  bool* contacts;
+  extvec *pos, *jpos, *vel, *mom, *mom_rate, *acc, *ust, *ang_vel, *ang_mom, *ang_mom_rate, *fpos, *jzaxis; // COM quantities: pos = position, vel = velocity, mom = momentum, mom_rate = time derivative of mom, acc = acceleration, ust = u*sin(theta) where u is the unit axis vectora, ang_vel = angular velocity, ang_mom = angular momentum, ang_mom_rate = time derivative of ang_mom; joint quantities: jpos = position, jzaxis = z component of joint axis; fpos = foot position.
+  affine *rot; // part rotations
+  bool* contacts; // foot contact states
 public:
   dynrecord(int n, int nf);
   ~dynrecord();

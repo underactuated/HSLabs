@@ -1,3 +1,9 @@
+/////////////////////////////////////////////////
+// cpc.h: declaration of CPC controller implementing
+// configuration path control (CPC) algorithm in general
+// 3D setting, as presented in "Configuration path
+// control" paper.
+/////////////////////////////////////////////////
 #ifndef CPC_H
 #define CPC_H
 

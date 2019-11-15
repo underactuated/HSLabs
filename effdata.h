@@ -1,3 +1,8 @@
+/////////////////////////////////////////////////
+// effdata.h: declaration of classes implementing
+// approximate search for efficient search of
+// target points in by CPC controller.
+/////////////////////////////////////////////////
 #ifndef EFFDATA_H
 #define EFFDATA_H
 

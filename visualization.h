@@ -62,10 +62,6 @@ public:
   inline viewpoint* get_view(){return view;}
   inline void set_model(kinematicmodel* model_){model = model_;}
   inline int get_speedup(){return speedup;}
-  void initialize_fn();
-  void setup_odeworld();
-  void unset_odeworld();
-  void start_loop();
   void draw();
   void draw_inloop();
   void step();
@@ -83,8 +79,11 @@ public:
   const odepart* get_torso_opart() const;
   void add_force(dBodyID odebody, const double* f);
 private:
+  void initialize_fn();
+  void setup_odeworld();
+  void unset_odeworld();
+  void start_loop();
   void draw_forces();
-  //void trimesh_test(); // temp
 };
 
 class modelnode;
@@ -105,7 +104,6 @@ public:
   inline modelnode* get_mnode() const {return mnode;}
   inline double get_rcap() const {return rcap;}
   void make(const xml_node<>* xnode, modelnode* mnode_, visualizer* vis);
-  void capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, const double* fromto);
   void get_odebody_posrot_from_body(dVector3& pos, dMatrix3& rot);
   void print(int detail_level);
   void print_ode();
@@ -114,12 +112,11 @@ public:
   void get_foot_pos(extvec& pos, bool from_body_flag) const;
   void make_fixed_joint(odepart* parent_part, visualizer* vis);
   void make_hinge_joint(odepart* parent_part, visualizer* vis);
-  //void get_frame_A_ground_from_body(affine& A_ground) const;
   void get_A_ground_body_from_odebody(affine& A_ground) const;
 private:
-  //void get_ode_body_A_ground(affine& A_ground) const;
-  void get_A_ground_odebody(affine& A_ground) const;
   void make_ccylinder(visualizer* vis, const xml_node<>* geom_node, bool capped_flag);
+  void capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, const double* fromto);
+  void get_A_ground_odebody(affine& A_ground) const;
 };
 
 // Class viewpoint positions camera and tracks a moving robot

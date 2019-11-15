@@ -1,14 +1,3 @@
-//#include <map>
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
-//#include "lik.h"
-//#include <Eigen/Dense>
-//#include <Eigen/Sparse>
-//#include "pergen.h"
-//#include "periodic.h"
-//#include "dynrec.h"
 #include "ftsolver.h"
 
 using namespace Eigen;
@@ -28,14 +17,20 @@ forcetorquesolver::~forcetorquesolver(){
   if(!jzaxis){delete [] jzaxis;}
 }
 
-void forcetorquesolver::solve_forcetorques(dynrecord* dynrec){
+// Solves ft system for given dynrec_, outputs joint-ft vector x.
+void forcetorquesolver::solve_forcetorques(dynrecord* dynrec_){
   VectorXd x, y;
-  solve_forcetorques(dynrec,x,y);
+  solve_forcetorques(dynrec_,x,y);
 
   cout << "x:" <<endl;
   cout << x.head(15) << endl;
 }
 
+// Checks perurbation theory result y1 for contact forces,
+// by directly solving for minimum cost at some large torso
+// penalty factor f. cfs y produced in this way should be
+// close to y1 for large f. (For very large f, due to loss
+// of precition, y diverges from y1). 
 void  check_contact_forces(const VectorXd& x0, const MatrixXd& N, const VectorXd& c, double f, const VectorXd& y1, list<pair<int,int> >& mask){
 
   VectorXd d = c;
@@ -78,17 +73,19 @@ void  check_contact_forces(const VectorXd& x0, const MatrixXd& N, const VectorXd
 
 }
 
+// Solves for joint forces and torques and for contact forces (cfs),
+// given dynamics record dynrec_.
 void forcetorquesolver::solve_forcetorques(dynrecord* dynrec_, VectorXd& x, VectorXd& z){
   set_dynrec(dynrec_);
-  VectorXd f; // part forces
-  SpMat B; // control coupling matrix
+  VectorXd f; // com-ft vector
+  SpMat B; // ft matrix
   MatrixXd N; // null space
   solve_forcetorques_particular(x,B,f); // x is solved for zero cfs
-  solve_forcetorques_null_space(B,N);
+  solve_forcetorques_null_space(B,N); // null space of B
 
   N.conservativeResize(x.size(),N.cols());
   VectorXd y; // null space coordinates
-  solve_contact_forces(x,y,N);
+  solve_contact_forces(x,y,N); // solves for optimal torques and cfs
 
   MatrixXd N_cont;
   extract_N_contact(N,N_cont);
@@ -104,7 +101,9 @@ void forcetorquesolver::solve_forcetorques(dynrecord* dynrec_, VectorXd& x, Vect
   cout<<fts.segment(n*3,3).transpose()<<endl;
 }
 
-// constructs B matrix (for zero cfs), f vector, solves Bx=f
+// Constructs ft matrix B (for zero cfs) and com-ft vector f,
+// solves for joint-ft vector x: B * x = f. Such a solution always
+// exists, because we turned system into a fully actuated one.
 void forcetorquesolver::solve_forcetorques_particular(VectorXd& x, SpMat& B, VectorXd& f){
   set_B_and_f_for_zero_cfs(B,f);
   //cout<<"f:"<<endl<<f.head(10)<<endl;
@@ -113,6 +112,7 @@ void forcetorquesolver::solve_forcetorques_particular(VectorXd& x, SpMat& B, Vec
   x = solver.solve(f);
 }
 
+// Gets null space N (of rank size) of matrix B.
 void get_null_space(SpMat& B, int size, MatrixXd& N){
   int m = B.cols();
   SpSolver solver;
@@ -130,8 +130,8 @@ void get_null_space(SpMat& B, int size, MatrixXd& N){
   }
 }
 
-// extends B to include nonzero cfs (from feet in contact)
-// solves null cpace N
+// Extends B to include nonzero cfs (from feet in contact),
+// solves null cpace of N.
 void forcetorquesolver::solve_forcetorques_null_space(SpMat& B, MatrixXd& N){
   int delm = 3*dynrec->get_ncontacts();
   int m = B.cols() + delm;
@@ -145,6 +145,8 @@ void forcetorquesolver::solve_forcetorques_null_space(SpMat& B, MatrixXd& N){
   //cout<<N_sp<<endl;
 }
 
+// Constructs submatrix subM out of rows of matrix M
+// indicated by ones in mask. 
 void submatrix_by_row_mask(MatrixXd& subM, MatrixXd& M, list<pair<int,int> >& mask, int mask_l){
   int w = M.cols();
   subM.resize(mask_l,w);
@@ -159,6 +161,8 @@ void submatrix_by_row_mask(MatrixXd& subM, MatrixXd& M, list<pair<int,int> >& ma
   }
 }
 
+// Constructs subvector subv out of components of vector v
+// indicated by ones in mask.
 void subvector_by_mask(VectorXd& subv, VectorXd& v, list<pair<int,int> >& mask, int mask_l){
   subv.resize(mask_l);
   list<pair<int,int> >::iterator it = mask.begin();
@@ -171,6 +175,13 @@ void subvector_by_mask(VectorXd& subv, VectorXd& v, list<pair<int,int> >& mask, 
   }
 }
 
+// Soves for null spates coordinates y, given
+// particular solution x and null space (of B) N.
+// Note, y is not contact forces, but can be 
+// easily converted to them. We use perturbation
+// theory approach. It ensures, that the constraint
+// of no-torso-actuations can be satisied exactly,
+// if that at all possible.
 void forcetorquesolver::solve_contact_forces(VectorXd& x, VectorXd& y, const MatrixXd& N){
   VectorXd c;
   set_action_penalties(c);
@@ -179,6 +190,7 @@ void forcetorquesolver::solve_contact_forces(VectorXd& x, VectorXd& y, const Mat
   MatrixXd cN = C*N;
   VectorXd cx = C*x;
 
+  // N and x are split into 0th and 1st order contributions
   MatrixXd N0, N1;
   submatrix_by_row_mask(N0,cN,penal_mask0,mask_l0);
   submatrix_by_row_mask(N1,cN,penal_mask1,mask_l1);
@@ -223,16 +235,21 @@ void forcetorquesolver::solve_contact_forces(VectorXd& x, VectorXd& y, const Mat
   check_contact_forces(x,N,c,1e-8,y,penal_mask1);
 }
 
-// cost matrix is diagonal with c squared as its diagonal
+// Cost matrix is diagonal with c squared as its diagonal
 void forcetorquesolver::set_action_penalties(VectorXd& c){
   c = VectorXd::Constant(6*n,1);
   c.segment(3,3*(n-1)).setZero();
 
   //for(int i=3;i<c.size();i++){c(i) *= (1.1+0*sin(i));}
-  for(int i=3;i<3*n;i++){c(3*n+i) = jzaxis[i];}
+  for(int i=3;i<3*n;i++){c(3*n+i) = jzaxis[i];} // motor torques penalties
   if(mask_l0 == 0){cout<<"ERROR: mask0 not set"<<endl;exit(1);}
 }
 
+// Computes number of 1s in the mask.
+// Mask is encoded by the list of pairs (i0,i1),
+// where i0 indicates a location of 1 preceeded by 0,
+// and i1 smallest (larger than i0) location of 0 preceeded by 1.
+// Example: mask 11100010011 is encoded as (0,3)(6,7)(9,11).
 int mask_length(list<pair<int,int> >& mask){
   list<pair<int,int> >::iterator it = mask.begin();
   int l = 0;
@@ -240,6 +257,8 @@ int mask_length(list<pair<int,int> >& mask){
   return l;
 }
 
+// Sets mask0 encoding 0th order penalty,
+// that (optionally) penalizes torso forces and torques.
 void forcetorquesolver::switch_torso_penalty(bool force_flag, bool torque_flag){
   penal_mask0.clear();
   vector<int> inds;
@@ -253,6 +272,7 @@ void forcetorquesolver::switch_torso_penalty(bool force_flag, bool torque_flag){
   set_penal_mask1();
 }
 
+// Extracts rows of N contributing to contact forces.
 void forcetorquesolver::extract_N_contact(const MatrixXd& N, MatrixXd& N_cont){
   N_cont.resize(nf*3,N.cols());
   int k = 0;
@@ -263,6 +283,7 @@ void forcetorquesolver::extract_N_contact(const MatrixXd& N, MatrixXd& N_cont){
   }
 }
 
+// Sets mask1 that is opposite of mask0.
 void forcetorquesolver::set_penal_mask1(){
   penal_mask1.clear();
   list<pair<int,int> >::iterator it = penal_mask0.begin();
@@ -291,6 +312,7 @@ void forcetorquesolver::set_jzaxis(){
   }
 }
 
+// Sets ft matrix B and com-ft vector f for zero contact forces.
 void forcetorquesolver::set_B_and_f_for_zero_cfs(SpMat& B, VectorXd& f){
   int m = 6*n;
   B.resize(m,m);
@@ -298,17 +320,20 @@ void forcetorquesolver::set_B_and_f_for_zero_cfs(SpMat& B, VectorXd& f){
   dynrec->set_forcetorque_system(B,f,parentis,masses);
 }
 
+// Sets dynamics record and joint axes
 void forcetorquesolver::set_dynrec(dynrecord* dynrec_){
   dynrec = dynrec_;
   set_jzaxis();
 }
 
+// Solves for forces given motor torques.
+// No torso actuations.
 void forcetorquesolver::solve_forces(dynrecord* dynrec_, VectorXd& z, VectorXd& y){
   set_dynrec(dynrec_);
 
   // construction of B and f
-  VectorXd f; // part forces
-  SpMat B; // control coupling matrix
+  VectorXd f; // com-ft vector
+  SpMat B; // ft matrix
   set_B_and_f_for_zero_cfs(B,f);
 
   // extention of B to include cfs from all feet
@@ -331,6 +356,8 @@ void forcetorquesolver::solve_forces(dynrecord* dynrec_, VectorXd& z, VectorXd& 
   y = x.tail(3*nf);
 }
 
+// Expands B and f to constraint motor torques
+// to given values (arg z).
 void forcetorquesolver::add_torque_constraints_to_B(SpMat& B, VectorXd& f, const VectorXd& z){
   int nj = z.size();
   int m = B.rows();

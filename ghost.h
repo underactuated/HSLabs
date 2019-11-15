@@ -1,3 +1,10 @@
+/////////////////////////////////////////////////
+// ghost.h: declaration of ghostmodel class
+// implementing the ghost walking method enabling
+// walking on various types of strongly uneven
+// terrains. This is a very low bandwidth method
+// in terms of computational and sensory demands.
+/////////////////////////////////////////////////
 #ifndef GHOST_H
 #define GHOST_H
 
@@ -8,6 +15,22 @@
 #include "odestate.h"
 #include "geom.h"
 
+// Ghost walking method summary: In ghost walking
+// approach the current state is mapped on to 
+// a ghost state, corresponding to walking on flat
+// surface. All the torques are then computed with
+// ordinary position control using a single walking
+// cycle (on flat terrain) as the target trajectory
+// for the ghost. No optimization or planning is
+// involved in this approach. The only information
+// used by the mapping function is the direction of
+// gravity and (instantaneous) clearance under
+// every foot.
+/////////////////////////////////////////////////
+// Class ghostmodel impements the ghost model
+// counterpart of the ghost model approach and
+// provides methods for mapping between the original
+// model and its ghost. 
 class ghostmodel{
   const visualizer* vis;
   const heightfield* hfield;

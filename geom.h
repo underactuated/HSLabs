@@ -1,3 +1,8 @@
+/////////////////////////////////////////////////
+// geom.h: declaration of classes levereging 
+// ODE trimesh structure to represent complex
+// surfaces needed for uneven terratin modeling.
+/////////////////////////////////////////////////
 #ifndef GEOM_H
 #define GEOM_H
 
