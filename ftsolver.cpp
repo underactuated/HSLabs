@@ -1,14 +1,3 @@
-//#include <map>
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
-//#include "lik.h"
-//#include <Eigen/Dense>
-//#include <Eigen/Sparse>
-//#include "pergen.h"
-//#include "periodic.h"
-//#include "dynrec.h"
 #include "ftsolver.h"
 
 using namespace Eigen;
@@ -28,14 +17,20 @@ forcetorquesolver::~forcetorquesolver(){
   if(!jzaxis){delete [] jzaxis;}
 }
 
-void forcetorquesolver::solve_forcetorques(dynrecord* dynrec){
+// Solves ft system for given dynrec_, outputs joint-ft vector x.
+void forcetorquesolver::solve_forcetorques(dynrecord* dynrec_){
   VectorXd x, y;
-  solve_forcetorques(dynrec,x,y);
+  solve_forcetorques(dynrec_,x,y);
 
   cout << "x:" <<endl;
   cout << x.head(15) << endl;
 }
 
+// Checks perurbation theory result y1 for contact forces,
+// by directly solving for minimum cost at some large torso
+// penalty factor f. cfs y produced in this way should be
+// close to y1 for large f. (For very large f, due to loss
+// of precition, y diverges from y1). 
 void  check_contact_forces(const VectorXd& x0, const MatrixXd& N, const VectorXd& c, double f, const VectorXd& y1, list<pair<int,int> >& mask){
 
   VectorXd d = c;
@@ -78,10 +73,12 @@ void  check_contact_forces(const VectorXd& x0, const MatrixXd& N, const VectorXd
 
 }
 
+// Solves for joint forces and torques and for contact forces (cfs),
+// given dynamics record dynrec_.
 void forcetorquesolver::solve_forcetorques(dynrecord* dynrec_, VectorXd& x, VectorXd& z){
   set_dynrec(dynrec_);
-  VectorXd f; // part forces
-  SpMat B; // control coupling matrix
+  VectorXd f; // com-ft vector
+  SpMat B; // ft matrix
   MatrixXd N; // null space
   solve_forcetorques_particular(x,B,f); // x is solved for zero cfs
   solve_forcetorques_null_space(B,N);
@@ -104,7 +101,9 @@ void forcetorquesolver::solve_forcetorques(dynrecord* dynrec_, VectorXd& x, Vect
   cout<<fts.segment(n*3,3).transpose()<<endl;
 }
 
-// constructs B matrix (for zero cfs), f vector, solves Bx=f
+// Constructs ft matrix B (for zero cfs) and com-ft vector f,
+// solves for joint-ft vector x: B * x = f. Such a solution always
+// exists, because we turned system into a fully actuated one.
 void forcetorquesolver::solve_forcetorques_particular(VectorXd& x, SpMat& B, VectorXd& f){
   set_B_and_f_for_zero_cfs(B,f);
   //cout<<"f:"<<endl<<f.head(10)<<endl;
@@ -233,6 +232,11 @@ void forcetorquesolver::set_action_penalties(VectorXd& c){
   if(mask_l0 == 0){cout<<"ERROR: mask0 not set"<<endl;exit(1);}
 }
 
+// Computes number of 1s in the mask.
+// Mask is encoded by the list of pairs (i0,i1),
+// where i0 indicates a location of 1 preceeded by 0,
+// and i1 smallest (larger than i0) location of 0 preceeded by 1.
+// Example: mask 11100010011 is encoded as (0,3)(6,7)(9,11).
 int mask_length(list<pair<int,int> >& mask){
   list<pair<int,int> >::iterator it = mask.begin();
   int l = 0;
@@ -240,6 +244,8 @@ int mask_length(list<pair<int,int> >& mask){
   return l;
 }
 
+// Sets mask0 encoding 0th order penalty,
+// that (optionally) penalizes torso forces and torques.
 void forcetorquesolver::switch_torso_penalty(bool force_flag, bool torque_flag){
   penal_mask0.clear();
   vector<int> inds;
@@ -263,6 +269,7 @@ void forcetorquesolver::extract_N_contact(const MatrixXd& N, MatrixXd& N_cont){
   }
 }
 
+// Sets mask1 that is inverse of mask0.
 void forcetorquesolver::set_penal_mask1(){
   penal_mask1.clear();
   list<pair<int,int> >::iterator it = penal_mask0.begin();

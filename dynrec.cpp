@@ -247,7 +247,7 @@ void ftsys_unit_elems(int i, int pi, SpMat& B){
 }
 
 // Sets entries corresponding to cross product of
-// a force and a positon vector (arg r). They descibe effect
+// a positon vector (arg r) and a force. They descibe effect
 // of the force applied at joint (id = j) on the torque
 // at COM of part (id = i).
 void ftsys_cross_elems(int i, int j, extvec& r, SpMat& B, int n){
@@ -335,8 +335,8 @@ void dynrecord::ftsys_contact_forces(int i, int ci, SpMat& B){
 
 // Sets entries arising from contact force torques.
 // Arg notations: i - foot part id,
-// fi - foot index (different from foot part id),
-// ci - contact index.
+// fi - foot id (different from foot part id),
+// ci - contact id.
 void dynrecord::ftsys_contact_torques(int fi, int i, int ci, SpMat& B){
   extvec r (fpos[fi]);
   r.subtract(pos[i]);
