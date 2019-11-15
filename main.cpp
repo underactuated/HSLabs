@@ -36,7 +36,7 @@ int main(int argc, char *argv[]){
   //pgs->print(2);
   //player0.print_hip_poss();exit(1);
   //extvec rec_eas (0,0,-1.571); pgs->set_rec_rotation(rec_eas);
-  //player0.test_dynamics(pgs);exit(1);
+player0.test_dynamics(pgs);exit(1);
   player0.speedup_draw(5);//(3);//5);
   player0.set_flag("manual_viewpoint",false);
   //player0.set_flag("texture",true);
