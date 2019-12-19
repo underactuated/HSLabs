@@ -45,6 +45,9 @@ private:
   void clear_buffs();
 };
 
+// Class heightfield serves two purposes:
+// 1) implements various types of uneven terrains,
+// 2) queries height of the terrain at given point
 class heightfield{
   int nx, ny;	// size of field in l units
   double l;	// length of (square) cell side

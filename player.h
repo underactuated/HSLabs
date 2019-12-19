@@ -44,7 +44,7 @@ struct pgsconfigparams;
 class modelplayer{
   kinematicmodel* model;
   int step_mode; // mode of modelplayer::step function, called from visualizer loop
-  bool manual_viewpoint_flag, contact_force_flag, open_loop_flag, position_control_flag, dynamics_from_simulation_flag, cpc_control_flag, record_traj_flag, torso_kicks_flag, ghost_walking_flag, clip_torque_flag;
+  bool manual_viewpoint_flag, contact_force_flag, open_loop_flag, position_control_flag, dynamics_from_simulation_flag, cpc_control_flag, record_traj_flag, torso_kicks_flag, ghost_walking_flag, clip_torque_flag, fall_check_flag;
   double play_t, play_dt; // playing time and time step size
   int config_dim, nmj; // nmj = number of motor joints
   double *play_rec, *last_motor_torques; // play_rec - for set_jangles_with_lik(rec) 
@@ -57,6 +57,7 @@ class modelplayer{
   double traj_t_limit, torque_limit; // recording limit, torque limit
   heightfield* hfield; // for uneven terrain
   ghostmodel* ghost; // for ghost walking
+  double fall_hc, fall_tmin, fall_tmax; // fall checking parameters
 public:
   modelplayer();
   ~modelplayer();
@@ -84,6 +85,8 @@ public:
   void uneven_ground_test();
   void test_lik_solvers();
   void shift_view(double x, double y, double z);
+  void set_fall_test(double hc, double tmin, double tmax);
+  void ignore_reach();
 private:
   void set_jangles_with_lik(const double* rec);
   inline visualizer* get_vis() const {return model->get_vis();}

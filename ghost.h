@@ -30,22 +30,22 @@
 // Class ghostmodel impements the ghost model
 // counterpart of the ghost model approach and
 // provides methods for mapping between the original
-// model and its ghost. 
+// model and its ghost.
 class ghostmodel{
-  const visualizer* vis;
-  const heightfield* hfield;
-  int config_dim, nmj, nfeet;
-  double dt, rcap, foot_min_z;
-  double *config, *gconfig, *lik_rec; // (g)config - (g)model config
-  const odepart* torso_opart;
-  vector<odepart*> foot_oparts;
+  const visualizer* vis; // visualizer (for accessing original model)
+  const heightfield* hfield; // uneven terrain
+  int config_dim, nmj, nfeet; // configuration dimension, number of motorized joints, number of feet
+  double dt, rcap, foot_min_z; // time step, foot cap radius, minimum foot height
+  double *config, *gconfig, *lik_rec; // (g)config = (g)model config
+  const odepart* torso_opart; // model (= original model) torso odepart
+  vector<odepart*> foot_oparts; // model foot odeparts
   kinematicmodel* gmodel; // gmodel = ghost model
   vector<extvec> limb_poss;
   configtimedertrack* tdertrack;
   int idle;
-  extvec torso_pos, torso_eas, torso_com, parent_pos; // maybe change func names to orient
-  extvec surf_normal, plane_zf;
-  affine surf_rot;
+  extvec torso_pos, torso_eas, torso_com, parent_pos; // torso orientaion (_pos + _eas); torso com position in ground frame; torso joint A_parent's translation 
+  extvec surf_normal, plane_zf; // estimated surface normal, ...?
+  affine surf_rot; // rotation around COM that takes surf_normal to (0,0,1)
   bool horizontal_flag, adaptive_orientation_flag;
   double** acd; // array of config_dim-sized elements
   const liksolver *lik, *glik; // (g)model LIK
@@ -58,7 +58,7 @@ public:
   void set_surf_rot(const extvec& eas);
   void rotate_surf();
 private:
-  void shift_limb_poss();
+  void transform_limb_poss();
   void set_lik_rec();
   void set_plane_zf();
   void surf_rotate_pos(extvec& pos);

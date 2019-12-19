@@ -26,6 +26,8 @@ modelplayer::modelplayer(){
   B_transp = NULL;
   hfield = NULL;
   ghost = NULL;
+  fall_tmin = 0;
+  fall_tmax = 1e10;
 }
 
 modelplayer::~modelplayer(){
@@ -105,6 +107,8 @@ void modelplayer::set_flag(string flag_name, bool value){
     ghost_walking_flag = value;
   } else if(flag_name == "clip_torque"){
     clip_torque_flag = value;
+  } else if(flag_name == "fall_check"){
+    fall_check_flag = value;
   } else {
     cout << "ERROR: unknown flag " << flag_name << " in modelplayer::set_flag" << endl; exit(1);
   }
@@ -183,7 +187,7 @@ void modelplayer::get_pgs_config_params(const string& rec_str, pgsconfigparams& 
     else if (key == "period") {ss >> period;} 
     else if (key == "step_length") {ss >> step_length;}
     else if (key == "step_height") {ss >> step_height;} 
-    else if (key == "curvature") {ss >> pcp.curvature;} 
+    else if (key == "curvature") {ss >> pcp.curvature;}
     else if (key == "lateral_foot_shift") {
       double shift;
       ss >> shift;
@@ -330,6 +334,7 @@ void modelplayer::simulate_ode(){
   //torso_velocity(); // experim
   //print_array<double>(last_motor_torques,nmj); // temp
   //if(int(play_t/play_dt)%50==0){fall_check(.4);}
+  if(fall_check_flag){fall_check(fall_hc);}
   get_vis()->simulate_odeworld(play_dt);
   play_t += play_dt;
 }
@@ -600,7 +605,7 @@ void modelplayer::kick_torso(){
 }
 
 void modelplayer::set_default_flags(){
-  manual_viewpoint_flag = true, contact_force_flag = false, open_loop_flag = false, position_control_flag = false, dynamics_from_simulation_flag = false, cpc_control_flag = false, record_traj_flag = false, torso_kicks_flag = false, ghost_walking_flag = false, clip_torque_flag = false;
+  manual_viewpoint_flag = true, contact_force_flag = false, open_loop_flag = false, position_control_flag = false, dynamics_from_simulation_flag = false, cpc_control_flag = false, record_traj_flag = false, torso_kicks_flag = false, ghost_walking_flag = false, clip_torque_flag = false, fall_check_flag = false;
 }
 
 // Loads and draws model as defined in xml file.
@@ -662,9 +667,17 @@ dBodyID modelplayer::get_torso_odebody(){
 
 // Detects model fall: if torso height gets < hc, program aborts.
 void modelplayer::fall_check(double hc){
+  if(play_t < fall_tmin){return;} else if (play_t > fall_tmax){
+    //cout<<"x="<<pos[0]<<" y="<<pos[1]<<" z="<<pos[2]<<" ";
+    cout << "No fall by t = " << play_t << endl; exit(1);
+  } 
   const dReal* pos = dBodyGetPosition(get_torso_odebody());
-  print_array<const dReal>(pos,2);
-  if(pos[2] < hc){cout << "Fall at t = " << play_t << endl; exit(1);}
+  //print_array<const dReal>(pos,2);
+  //cout<<"time = "<<play_t<<endl;
+  if(pos[2] < hc){
+    cout << "hc = " << hc << " h = " << pos[2] << endl;
+    cout << "Fall at t = " << play_t << endl; exit(1);
+  }
 }
 
 // Test for navigating various kinds of uneven ground. 
@@ -675,12 +688,14 @@ void modelplayer::uneven_ground_test(){
   hfield = new heightfield (n,5*1/f+2,l);
   //hfield->random_field(0.01,.3+.4,false);
   //hfield->random_field(0.01,.3,false);
+  //hfield->random_field(0.01,1.0,false);
   //hfield->random_field(0.01,.01,false);
   //hfield->slope_field(0,6.5);
   //hfield->tan_field(1.5,4);
   //hfield->tanh_field(5);
+  hfield->tanh_field(6);
   //hfield->gauss_field(4);
-  hfield->ridge_field(0,2.0);
+  //hfield->ridge_field(0,2.0);
   /* hfield->slope_field(0,4);
      hfield->ripple_field(0.01,.4*f,true); */
   //hfield->random_field(0.01,.2,true);
@@ -758,11 +773,23 @@ void modelplayer::check_model_loaded(){
   if(!model->if_loaded()){cout<<"ERROR: model not loaded"<<endl;exit(1);}
 }
 
+// Sets fall checking paramaters and flag.
+void modelplayer::set_fall_test(double hc, double tmin, double tmax){
+  speedup_draw(1000);
+  fall_hc = hc;
+  fall_tmin = tmin;
+  fall_tmax = tmax;
+  set_flag("fall_check",true);
+  ignore_reach();
+}
+
+void modelplayer::ignore_reach(){
+  model->get_lik()->set_ignore_reach_flag(true);
+}
+
 
 /*
-
 //euler angles check, from player:
 affine* A = get_vis()->get_torso_opart()->get_mnode()->get_A_ground(); double as[3]; euler_angles_from_affine(*A, as); print_array<double>(as,3); exit(1);
-
 */
 
