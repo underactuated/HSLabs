@@ -15,8 +15,8 @@
 
 int main(int argc, char *argv[]){
 
-  srand(time(NULL));
-  //srand(4);
+  //srand(time(NULL));
+  //srand(2);
   //srand(3);// 4
 
   /*modelplayer player1;
@@ -32,20 +32,22 @@ int main(int argc, char *argv[]){
   //pergensetup* pgs0 = player0.make_pergensu("pgs_config.txt",1);
   //player0.test(4);exit(1);
   //pergensetup* pgs = player0.make_pergensu("pgs_config.txt",2);
-  pergensetup* pgs = player0.make_pergensu("pgs_config.txt",26);
+  pergensetup* pgs = player0.make_pergensu("pgs_config.txt",0*17+1*8+0*26);
   //pgs->print(2);
   //player0.print_hip_poss();exit(1);
   //extvec rec_eas (0,0,-1.571); pgs->set_rec_rotation(rec_eas);
-player0.test_dynamics(pgs);exit(1);
+  //player0.test_dynamics(pgs);exit(1);
   player0.speedup_draw(5);//(3);//5);
+  player0.ignore_reach();
   player0.set_flag("manual_viewpoint",false);
   //player0.set_flag("texture",true);
   player0.set_flag("smooth_view",true);
-  //player0.shift_view(-2,.5,0);
+  player0.shift_view(-2,.5,0);
   //player0.shift_view(-1,.5,0);
   //player0.shift_view(0,1,0);
   //player0.set_flag("torso_kicks",true);
   //player0.set_flag("dynamics_from_simulation",true);
+  //player0.set_fall_test(.7,.1,100);
   player0.uneven_ground_test();
   //player0.test_lik_solvers();exit(1);
   //player0.play_pergensu(pgs);exit(1);

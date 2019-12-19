@@ -91,8 +91,7 @@ void modelplayer::orient_torso(const extvec* orientation) const {
   model->orient_torso(orientation);
 }
 
-// old open loop control test. 
-// (old experiments)
+// tests consistency of contact force computation
 void modelplayer::test_dynamics(pergensetup* pgs){
   // preparing per
   periodic per (model);

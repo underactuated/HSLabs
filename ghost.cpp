@@ -6,7 +6,7 @@ ghostmodel::ghostmodel(const visualizer* vis_, const heightfield* hfield_, doubl
   vis = vis_;
   hfield = hfield_;
   dt = dt_;
-  const kinematicmodel* model = vis->get_model();
+  const kinematicmodel* model = vis->get_model(); // orininal model
   config_dim = model->get_config_dim();
   nmj = model->number_of_motor_joints();
   //ao.set_n(config_dim);
@@ -35,18 +35,21 @@ ghostmodel::~ghostmodel(){
   delete tdertrack;
 }
 
-// clones a model without ode representation in visualizer
+// Clones a model without ode representation in visualizer
 kinematicmodel* ghostmodel::nonvis_clone(const kinematicmodel* model){
   kinematicmodel* clone = new kinematicmodel (false);
   clone->load_fromxml(model->get_xmlfname());
   return clone;
 }
 
-// motor adas of the ghost model
+// Gets motor angles (as) and rates of angles (das) of the ghost model.
+// They are computed from tdertrack, that tracks time derivatives 
+// of gmodel config.
 void ghostmodel::get_motor_adas(double* as, double* das){
   rotate_surf();
-  shift_limb_poss();
-  set_lik_rec(); //print_array<double>(lik_rec,config_dim);cout<<endl;
+  transform_limb_poss();
+  set_lik_rec(); // sets lik_rec for the ghost using transformed limb_poss
+  //print_array<double>(lik_rec,config_dim);cout<<endl;
   gmodel->set_jvalues_with_lik(lik_rec);
   gmodel->get_jvalues(gconfig);
   tdertrack->push_config(gconfig);
@@ -57,11 +60,10 @@ void ghostmodel::get_motor_adas(double* as, double* das){
   ao.assign(das,ders[1]+6);
 }
 
-// gets torso and feet odeparts from model
+// Sets torso and feet odeparts (model odeparts)
 void ghostmodel::set_torso_feet_oparts(const kinematicmodel* model){
   torso_opart = model->get_vis()->get_torso_opart();
   torso_opart->get_mnode()->get_joint()->get_A_parent()->get_translation(parent_pos);
-
   set<modelnode*> foot_mnodes;
   model->get_foot_mnodes(foot_mnodes);
   const vector<odepart*>* oparts = model->get_odeparts();
@@ -75,10 +77,12 @@ void ghostmodel::set_torso_feet_oparts(const kinematicmodel* model){
   nfeet = foot_oparts.size();
 }
 
-// transforms model foot positions into ghost foor positions
-void ghostmodel::shift_limb_poss(){
+// Transforms model foot positions into ghost foot positions.
+// Foot positions are read from model, transformed and
+// stored in limb_poss.
+void ghostmodel::transform_limb_poss(){
   double zmin = 1e10;
-  list<extvec> points;
+  list<extvec> points; // surface points (under feet)
   limb_poss.resize(nfeet);
   for(int i=0;i<nfeet;i++){
     extvec* lp = &(limb_poss[i]);
@@ -91,8 +95,8 @@ void ghostmodel::shift_limb_poss(){
     double h = hfield->get_h(x,y);
     h += rcap*(1./surf_normal.get_v(2)-1.);
     lp->set_v(2,z-h);
-    extvec point (x,y,h+1.);
-    point.subtract(torso_com);
+    extvec point (x,y,h+1.); // points are offset by (0,0,1) to ensure that surface normal points up
+    point.subtract(torso_com); // points are recentered near (0,0,0) for fit_plane() to work properly
     points.push_back(point);
   }
   foot_min_z = zmin;
@@ -104,10 +108,10 @@ void ghostmodel::shift_limb_poss(){
   //cout<<acos(surf_normal.get_v(2))*180/M_PI<<endl;
 }
 
-// sets lik_rec for the ghost
+// Sets lik_rec for the ghost.
 void ghostmodel::set_lik_rec(){
   vis->get_ode_config(config);
-  set_gmodel_limb_bends();
+  set_gmodel_limb_bends(); // sets bends of gmodel to bends of model
   surf_rotate_torso_pos();
   torso_pos.get_components(lik_rec); //torso_pos.print();
   double* p = lik_rec+6;
@@ -120,8 +124,8 @@ void ghostmodel::set_lik_rec(){
   //print_array(lik_rec,config_dim);exit(1);
 }
 
-// orients surface (specified by surf_normal)
-// is only used externaly, for testing
+// Orients surface (specified by surf_normal).
+// It is only used externaly, for testing.
 void ghostmodel::set_surf_rot(const extvec& eas){
   const extvec transl (0,0,0);
   const extvec orient[] = {transl, eas};
@@ -133,10 +137,10 @@ void ghostmodel::set_surf_rot(const extvec& eas){
   horizontal_flag = false;
 }
 
-// rotates torso (by surf_rot that takes surface to horizontal ground)
+// Rotates torso (by surf_rot that takes estimated surface
+// to horizontal (ground) plane).
 void ghostmodel::rotate_surf(){
   affine A, B;
-  //torso_opart->get_frame_A_ground_from_body(A);
   torso_opart->get_A_ground_body_from_odebody(A);
   A.get_translation(torso_com);
   set_torso_pos();
@@ -151,7 +155,7 @@ void ghostmodel::set_plane_zf(){
   plane_zf.set(-nx/nz,-ny/nz,surf_normal.dot(torso_com)/nz);
 }
 
-// transforms points according to rotation 
+// Transforms points according to rotation 
 // of their (vertical) projection onto surface
 void ghostmodel::surf_rotate_pos(extvec& pos){
   if(horizontal_flag){return;}
@@ -166,8 +170,8 @@ void ghostmodel::surf_rotate_pos(extvec& pos){
   //cout<<"pos1: ";pos1.print();cout<<"pos2: ";pos2.print();surf_rot.print();
 }
 
-// transforms torso_pos according to torso_com rotation
-// note: torso_com is global coord, torso_pos is relative (from free6)
+// Transforms torso_pos according to torso_com rotation.
+// Note: torso_com is global coord, torso_pos is relative (from free6).
 void ghostmodel::surf_rotate_torso_pos(){
   extvec del (torso_com);
   surf_rotate_pos(del);
@@ -175,7 +179,7 @@ void ghostmodel::surf_rotate_torso_pos(){
   torso_pos.add(del);
 }
 
-// sets torso_pos from torso_com
+// Sets torso_pos from torso_com.
 void ghostmodel::set_torso_pos(){
   //torso_pos.copy(torso_com);
   torso_pos = torso_com;
@@ -204,12 +208,14 @@ void ghostmodel::set_surf_rot_from_normal(){
   horizontal_flag = false;
 }
 
+// Enforces correspondence of LIK solution branches,
+// by setting the bends of gmodel to the bends of model. 
 void ghostmodel::set_gmodel_limb_bends(){
   extvec angles;
   double *p = config+6;
   const vector<liklimb*> *limbs, *glimbs;
-  limbs = lik->get_limbs();
-  glimbs = glik->get_limbs();
+  limbs = lik->get_limbs(); // model limbs
+  glimbs = glik->get_limbs(); // gmodel limbs
   vector<liklimb*>::const_iterator it, it1;
   it = limbs->begin();
   it1 = glimbs->begin();

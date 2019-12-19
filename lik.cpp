@@ -139,6 +139,11 @@ void liksolver::set_rcap(const kinematicmodel* model, const vector<int>& limb_in
   }
 }
 
+bool ignore_reach_flag = false;
+
+void liksolver::set_ignore_reach_flag(bool value) const {
+  ignore_reach_flag = value;
+}
 
 // Solves 3-link limb with hinge axis y-x-x, (quadruped/hexapod configuration).
 // Foot position pos_limb is in the hip joint's frame.
@@ -153,7 +158,10 @@ bool limb_solver_yxx(int limbi, const extvec& pos_limb, extvec& joint_angles, co
   extvec pos1 (pos_limb);
   pos1.subtract(pos0);
   double l = pos1.norm();
-  if(l1+l2-l<0){cout<<"LIK ERROR: limb position is unreachable"<<endl;return false;}
+  if(l1+l2-l<0){
+    if(ignore_reach_flag){l=l1+l2;}
+    else {cout<<"LIK ERROR: limb position is unreachable"<<endl;return false;}
+  }
 
   double x1, y1, z1; // rotated frame, x->x1, y->z1, z->-y1 (?)  
   pos_limb.get_components(x1,y1,z1);
@@ -188,7 +196,11 @@ bool limb_solver_zxx(int limbi, const extvec& pos_limb, extvec& joint_angles, co
   extvec pos1 (pos_limb);
   pos1.add(pos0);
   double l = pos1.norm();
-  if(l1+l2-l<0){cout<<"LIK ERROR: limb position is unreachable"<<endl;return false;}
+  //if(l1+l2-l<0){cout<<"LIK ERROR: limb position is unreachable"<<endl;return false;}
+  if(l1+l2-l<0){
+    if(ignore_reach_flag){l=l1+l2;}
+    else {cout<<"LIK ERROR: limb position is unreachable"<<endl;return false;}
+  }
 
   double x, y, z;
   pos_limb.get_components(x,y,z);

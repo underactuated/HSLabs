@@ -53,6 +53,7 @@ public:
   void get_limb_hip_pos(int limbi, extvec& pos) const;
   void print_hip_poss() const;
   void solver_test(int n) const;
+  void set_ignore_reach_flag(bool value) const;
 private:
   void set_limbs(const kinematicmodel* model);
   void set_rcap(const kinematicmodel* model, const vector<int>& limb_inds);
