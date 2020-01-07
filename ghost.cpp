@@ -95,15 +95,24 @@ void ghostmodel::transform_limb_poss(){
     double h = hfield->get_h(x,y);
     h += rcap*(1./surf_normal.get_v(2)-1.);
     lp->set_v(2,z-h);
-    extvec point (x,y,h+1.); // points are offset by (0,0,1) to ensure that surface normal points up
-    point.subtract(torso_com); // points are recentered near (0,0,0) for fit_plane() to work properly
+    extvec point (x,y,h);
+    //extvec point (x,y,h+1); // points are offset by (0,0,1) to ensure that surface normal points up
+    //point.subtract(torso_com); // points are recentered near (0,0,0) for fit_plane() to work properly
+    //extvec delp (20,20,0);point.subtract(delp);// to remove
     points.push_back(point);
   }
   foot_min_z = zmin;
-  if(adaptive_orientation_flag){
+  /*if(adaptive_orientation_flag){
     fit_plane(surf_normal,points);
+    }*/
+  if(adaptive_orientation_flag){
+    extvec plane;
+    fit_plane(plane,points);
+    double c0 = plane.get_v(0), c1 = plane.get_v(1);
+    double c = sqrt(c0*c0+c1*c1+1.);
+    surf_normal.set(-c0/c,-c1/c,1./c);
   }
-  surf_normal.normalize();
+  //surf_normal.normalize();
   set_surf_rot_from_normal();
   //cout<<acos(surf_normal.get_v(2))*180/M_PI<<endl;
 }
