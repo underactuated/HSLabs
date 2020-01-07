@@ -493,8 +493,34 @@ void cpccontroller::tp_dist_check(){
   //exit(1);
 } 
 
-
+// Fits a plane to points my minimizing square error of z components.
+// Arg plane is set to (c0,c1,c2), so it defines the fitted plane by
+// defining its z component as z = c0*x+c1*y+c2.
 void fit_plane(extvec& plane, list<extvec>& points){
+  int n = points.size();
+  //cout<<"n="<<n<<endl;
+  MatrixXd m (n,3);
+  VectorXd b (n);
+  list<extvec>::iterator it = points.begin();
+  for(int i=0;i<n;i++){
+    extvec* point = &(*it++);
+    double* p = point->get_data();
+    m(i,0) = *p++;
+    m(i,1) = *p++;
+    m(i,2) = 1;
+    b(i) = *p;
+  }
+  VectorXd x = m.colPivHouseholderQr().solve(b);
+  /*cout << m << endl;
+  cout << b.transpose() << endl;
+  cout << x.transpose() << endl;*/
+  plane.set(x(0),x(1),x(2));
+  //plane.print();exit(1);
+}
+
+// TODO: old version, to remove
+void fit_plane1(extvec& plane, list<extvec>& points){
+  //return fit_plane1(plane,points);
   int n = points.size();
   //cout<<"n="<<n<<endl;
   MatrixXd m (n,3);

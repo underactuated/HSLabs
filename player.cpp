@@ -686,18 +686,20 @@ void modelplayer::uneven_ground_test(){
   double l = 1*f;
   int n = 10/f;
   hfield = new heightfield (n,5*1/f+2,l);
-  //hfield->random_field(0.01,.3+.4,false);
+  hfield->random_field(0.01,.3+.4,false);
   //hfield->random_field(0.01,.3,false);
   //hfield->random_field(0.01,1.0,false);
   //hfield->random_field(0.01,.01,false);
   //hfield->slope_field(0,6.5);
   //hfield->tan_field(1.5,4);
   //hfield->tanh_field(5);
-  hfield->tanh_field(6);
+  //hfield->tanh_field(6);
   //hfield->gauss_field(4);
   //hfield->ridge_field(0,2.0);
+  //hfield->ridge_field(0,4);
   /* hfield->slope_field(0,4);
      hfield->ripple_field(0.01,.4*f,true); */
+  //hfield->ripple_field(0.01,.2*f,true);
   //hfield->random_field(0.01,.2,true);
   //hfield->make_geom(n*l/2+3,0,get_vis());
   visualizer* vis = get_vis();

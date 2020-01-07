@@ -15,7 +15,7 @@
 
 int main(int argc, char *argv[]){
 
-  //srand(time(NULL));
+  srand(time(NULL));
   //srand(2);
   //srand(3);// 4
 
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
   player0.set_flag("manual_viewpoint",false);
   //player0.set_flag("texture",true);
   player0.set_flag("smooth_view",true);
-  player0.shift_view(-2,.5,0);
+  //player0.shift_view(-2,.5,0);
   //player0.shift_view(-1,.5,0);
   //player0.shift_view(0,1,0);
   //player0.set_flag("torso_kicks",true);
