@@ -1,12 +1,12 @@
 #include "ghost.h"
 
-void fit_plane(extvec& plane, list<extvec>& points);
+void fit_plane(extvec& plane, list<extvec>& points); // defined in cpc.cpp
 
 ghostmodel::ghostmodel(const visualizer* vis_, const heightfield* hfield_, double dt_){
   vis = vis_;
   hfield = hfield_;
   dt = dt_;
-  const kinematicmodel* model = vis->get_model(); // orininal model
+  const kinematicmodel* model = vis->get_model(); // original model
   config_dim = model->get_config_dim();
   nmj = model->number_of_motor_joints();
   //ao.set_n(config_dim);
@@ -21,7 +21,7 @@ ghostmodel::ghostmodel(const visualizer* vis_, const heightfield* hfield_, doubl
   surf_normal.set(0,0,1);
   surf_rot.set_unity();
   rotate_surf();
-  set_plane_zf();
+  set_torso_plane();
   horizontal_flag = true;
   adaptive_orientation_flag = true;//false;
   lik = model->get_lik();
@@ -95,24 +95,14 @@ void ghostmodel::transform_limb_poss(){
     double h = hfield->get_h(x,y);
     h += rcap*(1./surf_normal.get_v(2)-1.);
     lp->set_v(2,z-h);
+    //extvec pos (x,y,z);double h0 = get_plane_z(fitted_plane,pos);h0 += rcap*(1./surf_normal.get_v(2)-1.);lp->set_v(2,z-h0);
     extvec point (x,y,h);
-    //extvec point (x,y,h+1); // points are offset by (0,0,1) to ensure that surface normal points up
-    //point.subtract(torso_com); // points are recentered near (0,0,0) for fit_plane() to work properly
-    //extvec delp (20,20,0);point.subtract(delp);// to remove
     points.push_back(point);
   }
   foot_min_z = zmin;
-  /*if(adaptive_orientation_flag){
-    fit_plane(surf_normal,points);
-    }*/
   if(adaptive_orientation_flag){
-    extvec plane;
-    fit_plane(plane,points);
-    double c0 = plane.get_v(0), c1 = plane.get_v(1);
-    double c = sqrt(c0*c0+c1*c1+1.);
-    surf_normal.set(-c0/c,-c1/c,1./c);
+    compute_surf_normal(points);
   }
-  //surf_normal.normalize();
   set_surf_rot_from_normal();
   //cout<<acos(surf_normal.get_v(2))*180/M_PI<<endl;
 }
@@ -157,21 +147,22 @@ void ghostmodel::rotate_surf(){
   euler_angles_from_affine(B,lik_rec+3);
 }
 
-// (x,y,1).dot(plane_zf) produces torso com plane's z component at (x,y) 
-void ghostmodel::set_plane_zf(){
-  double nx, ny, nz;
-  surf_normal.get_components(nx,ny,nz);
-  plane_zf.set(-nx/nz,-ny/nz,surf_normal.dot(torso_com)/nz);
+// Sets torso_plane from fitted_plane and torso_com.
+// (x,y,1).dot(plane) produces plane's z component at (x,y),
+// where plane = fitted_plane or torso_plane
+void ghostmodel::set_torso_plane(){
+  extvec f (fitted_plane);
+  f.set_v(2,-1);
+  f.set_v(2,-f.dot(torso_com));
+  torso_plane.copy(f);
 }
 
 // Transforms points according to rotation 
 // of their (vertical) projection onto surface
 void ghostmodel::surf_rotate_pos(extvec& pos){
   if(horizontal_flag){return;}
-  extvec xy1 (pos);
-  xy1.set_v(2,1);
   extvec pos1 (pos);
-  pos1.set_v(2,xy1.dot(plane_zf));
+  pos1.set_v(2,get_plane_z(torso_plane,pos));
   extvec pos2;
   surf_rot.mult(pos1,pos2);
   pos2.subtract(pos1);
@@ -197,7 +188,7 @@ void ghostmodel::set_torso_pos(){
   //exit(1);
 }
 
-//float th=0;
+// Sets surf_rot from surf_normal.
 void ghostmodel::set_surf_rot_from_normal(){
   //if(th<1.){th+=.01;} extvec eas (0,-.2*sin(th),0); set_surf_rot(eas);
 
@@ -213,7 +204,7 @@ void ghostmodel::set_surf_rot_from_normal(){
   tc1.times(-1);
   surf_rot.translate(tc1);
 
-  set_plane_zf();//plane_zf.print();
+  set_torso_plane();//torso_plane.print();
   horizontal_flag = false;
 }
 
@@ -235,4 +226,22 @@ void ghostmodel::set_gmodel_limb_bends(){
     //bool bend = (*it)->bend_from_angles(angles);cout << bend << " ";
   }
   //cout<<endl;
+}
+
+// Fits a plane to points and sets surf_normal from the fitted_plane.
+// fitted_plane = (c0,c1,c2), which means f(r) = z-c0*x-c1*y-c2 = 0 is
+// the plane equation. So, surf_normal = grad(f(r)) = (-c0,-c1,1).
+void ghostmodel::compute_surf_normal(list<extvec>& points){
+  fit_plane(fitted_plane,points); // (c0,c1,c2) = fitted_plane
+  surf_normal.copy(fitted_plane);
+  surf_normal.times(-1);
+  surf_normal.set_v(2,1); // grad(f(r)) = (-c0,-c1,1)
+  surf_normal.normalize();
+}
+
+// Computes plane's z component as (x,y,1).dot(plane)  
+double ghostmodel::get_plane_z(extvec& plane, extvec& pos){
+  extvec pos1 (pos);
+  pos1.set_v(2,1);
+  return pos1.dot(plane);
 }

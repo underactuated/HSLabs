@@ -1,10 +1,8 @@
-//#include "core.h"
 #include "geom.h"
 #include <drawstuff/drawstuff.h>
 
 trimesh::trimesh(int n_vert, int n_tri_, const float rgb_[3]){
   n_tri = n_tri_;
-  //vertices = new dReal [3*n_vert];
   vertices = new dReal [4*n_vert];
   indices = new dTriIndex [3*n_tri];
   std::copy(rgb_,rgb_+3,rgb);
@@ -21,24 +19,32 @@ trimeshmanager::trimeshmanager(dSpaceID space_){
   clear_buffs();
 }
 
+// Pushes vertex to vertex buffer.
+// Vertex is defined by its coordinates x,y,z.
 void trimeshmanager::push_vertex(dReal x, dReal y, dReal z){
   dReal a[] = {x,y,z,0};
   for(int i=0;i<4;i++){vertex_buffer.push_back(a[i]);}
   vert_buff_size++;
 }
 
+// Pushes triangle to triangle buffer.
+// Triangle is defined by indices (vi0,vi1,vi2) of its vertices.
 void trimeshmanager::push_triangle(int vi0, int vi1, int vi2){
   int a[] = {vi0,vi1,vi2};
   for(int i=0;i<3;i++){triangle_buffer.push_back(a[i]);}
   tri_buff_size++;
 }
 
+// Sets trimesh color (to be used in new_trimesh()).
 void trimeshmanager::set_color(float r, float g, float b){
   rgb[0] = r;
   rgb[1] = g;
   rgb[2] = b;
 }
 
+// Creates an ODE trimesh geom out of vertex and triangles
+// buffers, trimesh color. Clears the buffers, returns
+// the created trimesh geom.
 dGeomID trimeshmanager::new_trimesh(){
   trimesh* tm = new trimesh (vert_buff_size, tri_buff_size, rgb);
   dReal *p = tm->vertices;
@@ -55,14 +61,15 @@ dGeomID trimeshmanager::new_trimesh(){
   return geom;
 }
 
-// destructor is untested
+// Destroys trimesh data. (destructor is untested?)
 void trimeshmanager::delete_trimesh(dGeomID geom){
   dTriMeshDataID tmdata = dGeomTriMeshGetData(geom);
   dGeomTriMeshDataDestroy (tmdata);
-  delete geom_trimesh[geom]; // do we need to destroy geom?
+  delete geom_trimesh[geom];
   geom_trimesh.erase(geom);
 }
 
+// Clears vertex and triangle buffers.
 void trimeshmanager::clear_buffs(){
   vertex_buffer.clear();
   triangle_buffer.clear();
@@ -71,6 +78,7 @@ void trimeshmanager::clear_buffs(){
   set_color(1,1,1);
 }
 
+// Destroys trimeshes.
 void trimeshmanager::clear(){
   list<dGeomID> geoms;
   map<dGeomID,trimesh*>::iterator it = geom_trimesh.begin();
@@ -81,6 +89,7 @@ void trimeshmanager::clear(){
   for(;it1!=geoms.end();it1++){delete_trimesh(*it1);}
 }
 
+// Draws a trimesh geom.
 void trimeshmanager::draw(dGeomID geom){
   if(!geom_trimesh.count(geom)){cout<<"ERROR: geom is not registered"<<endl;exit(1);}
   trimesh* tm = geom_trimesh[geom];
@@ -105,7 +114,9 @@ void trimeshmanager::print(){
   cout << "triangle buffer: " << tri_buff_size << endl;
 }
 
-
+// heightfield size is nx*l by ny*l.
+// It has: nx*ny cells, nx*ny cell centers,
+// (nx+1)*(ny+1) grid points.
 heightfield::heightfield(int nx_, int ny_, double l_){
   nx = nx_;
   ny = ny_;
@@ -120,6 +131,8 @@ heightfield::~heightfield(){
   delete [] heightcs;
 }
 
+// Creates a random field, by sampling grid point heights from (lb,ub).
+// If add_flag, increments height, instead of setting it.
 void heightfield::random_field(double lb, double ub, bool add_flag){
   double *p = heights;
   for(int i=0;i<(nx+1)*(ny+1);i++){
@@ -131,6 +144,8 @@ void heightfield::random_field(double lb, double ub, bool add_flag){
   compute_heightcs();
 }
 
+// Uses trimeshmanager to makes trimesh geom from heightfield.
+// Geom is centered at (x0_,y0_).
 dGeomID heightfield::make_geom(double x0_, double y0_, trimeshmanager* trimeshman){
   x0 = x0_;
   y0 = y0_;
@@ -174,6 +189,9 @@ dGeomID heightfield::make_geom(double x0_, double y0_, trimeshmanager* trimeshma
   return trimeshman->new_trimesh();
 }
 
+// Computes cell center heights.
+// First, sets perimeter to 0. Then, for each cell,
+// sets cell's center height to mean of cell's corner heights.
 void heightfield::compute_heightcs(){
   double *p = heights, *p1 = heights + nx*(ny+1);
   for(int i=0;i<=ny;i++){*p++ = 0; *p1++ = 0;}
@@ -190,6 +208,8 @@ void heightfield::compute_heightcs(){
   }
 }
 
+// Returns pointer to (ix,iy) vertex or,
+// if c_flag, (ix,iy) cell center.
 double* heightfield::hpointer(int ix, int iy, bool c_flag) const {
   int n = ny + 1;
   double* p = heights;
@@ -197,6 +217,8 @@ double* heightfield::hpointer(int ix, int iy, bool c_flag) const {
   return p + ix*n + iy;
 }
 
+// Creats a slope field, 
+// (height changes from h0 to h1 in x direction).
 void heightfield::slope_field(double h0, double h1){
   for(int ix=0;ix<=nx;ix++){
     double h = h0 + (h1-h0)*double(ix)/nx;
@@ -207,6 +229,8 @@ void heightfield::slope_field(double h0, double h1){
   compute_heightcs();
 }
 
+// Gets height of trimesh at (x,y).
+// Outside heightfield support returns 0.
 double heightfield::get_h(double x, double y) const {
   int ix = -1, iy = -1;
   double dx, dy;
@@ -231,6 +255,9 @@ double heightfield::get_h(double x, double y) const {
   return h;
 }
 
+// Computes (ix,iy) of the cell containing (x,y).
+// Also computes displacement (dx,dy) of (x,y),
+// relative to the cell center. 
 void heightfield::nearby_cell_coords(double x, double y, int& ix, int& iy, double& dx, double& dy) const {
   x -= x0;
   y -= y0;
@@ -242,6 +269,10 @@ void heightfield::nearby_cell_coords(double x, double y, int& ix, int& iy, doubl
   dy = y-yc;
 }
 
+// Gets heights z01c of triangle corners, given (ix,iy,iq),
+// where iq is triangle index (inside a cell (ix,iy)).
+// Sets heights to z01c in order: cell corner, another cell corner
+// in clockwize direction, cell center.
 void heightfield::ixyq_to_z01c(int ix, int iy, int iq, double* z01c) const {
   int ix0 = -1, iy0 = -1, ix1 = -1, iy1 = -1;
   switch (iq) {
@@ -256,6 +287,9 @@ void heightfield::ixyq_to_z01c(int ix, int iy, int iq, double* z01c) const {
   z01c[2] = *hpointer(ix,iy,true);
 }
 
+// Creates a ripple field, 
+// (height alternates between h0 and h1, in x direction).
+// If add_flag, increments height, instead of setting it.
 void heightfield::ripple_field(double h0, double h1, bool add_flag){
   for(int ix=0;ix<=nx;ix++){
     double h = h0 + (h1-h0)*(ix % 2);
@@ -268,6 +302,8 @@ void heightfield::ripple_field(double h0, double h1, bool add_flag){
   compute_heightcs();
 }
 
+// Creates a righe field,
+// (ridge in the midle, h0-to-h1 slopes on both sides).
 void heightfield::ridge_field(double h0, double h1){
   for(int ix=0;ix<=nx;ix++){
     double h = h0 + (h1-h0)*double(nx-abs(2*ix-nx))/nx;
@@ -278,6 +314,8 @@ void heightfield::ridge_field(double h0, double h1){
   compute_heightcs();
 }
 
+// Creates tan field, h = f*tan(phi*xr), where xr = ix/nx,
+// so it changes from 0 to 1 along x direction.
 void heightfield::tan_field(double phi, double f){
   for(int ix=0;ix<=nx;ix++){
     double h = f*tan(phi*double(ix)/nx);
@@ -288,6 +326,7 @@ void heightfield::tan_field(double phi, double f){
   compute_heightcs();
 }
 
+// Creates tanh field of max height h1.
 void heightfield::tanh_field(double h1){
   for(int ix=0;ix<=nx;ix++){
     double h = h1*(tanh(3*double(2*ix-nx)/nx)+1)/2;
@@ -298,6 +337,7 @@ void heightfield::tanh_field(double h1){
   compute_heightcs();
 }
 
+// Creates gauss curve shaped field of max height h1.
 void heightfield::gauss_field(double h1){
   for(int ix=0;ix<=nx;ix++){
     double a = double(2*ix-nx)/nx;

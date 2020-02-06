@@ -12,6 +12,7 @@
 
 #include "core.h"
 
+// structure trimesh stores ODE trimesh data
 struct trimesh{
   dReal* vertices;
   dTriIndex* indices;
@@ -23,6 +24,8 @@ struct trimesh{
   inline float* get_color(){return rgb;}
 };
 
+// class trimeshmanager facilitates construction and visualization
+// of trimeshes associated with trimesh geoms.
 class trimeshmanager{
   dSpaceID space;
   list<dReal> vertex_buffer;
@@ -47,11 +50,12 @@ private:
 
 // Class heightfield serves two purposes:
 // 1) implements various types of uneven terrains,
-// 2) queries height of the terrain at given point
+// 2) queries height of the terrain at given point.
+// heightfield has rectangular support.
 class heightfield{
   int nx, ny;	// size of field in l units
   double l;	// length of (square) cell side
-  double *heights, *heightcs;	// y-wise ordering
+  double *heights, *heightcs;	// heights of grid points and cell centers; y-wise ordering
   double x0, y0;
 public:
   heightfield(int nx, int ny, double l);
