@@ -84,6 +84,7 @@ public:
   double dot(const extvec& u) const;
   void to_dvec(dVector3& u) const;
   void add(const extvec& u);
+  double distance(const extvec& u) const;
 };
 
 #endif

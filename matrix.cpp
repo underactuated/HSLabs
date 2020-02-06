@@ -321,3 +321,10 @@ void extvec::add(const extvec& u){
   const double *p1 = u.v;
   for(int i=0;i<3;i++){*p++ += *p1++;}
 }
+
+// norm(v-u)
+double extvec::distance(const extvec& u) const {
+  extvec d (*this);
+  d.subtract(u);
+  return d.norm();
+}

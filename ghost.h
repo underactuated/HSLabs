@@ -44,7 +44,8 @@ class ghostmodel{
   configtimedertrack* tdertrack;
   int idle;
   extvec torso_pos, torso_eas, torso_com, parent_pos; // torso orientaion (_pos + _eas); torso com position in ground frame; torso joint A_parent's translation 
-  extvec surf_normal, plane_zf; // estimated surface normal, ...?
+  extvec surf_normal; // surface normal = fitted plane normal
+  extvec fitted_plane, torso_plane; // fitted plane, torso plane (parallel to fitted plane, contains COM)
   affine surf_rot; // rotation around COM that takes surf_normal to (0,0,1)
   bool horizontal_flag, adaptive_orientation_flag;
   double** acd; // array of config_dim-sized elements
@@ -60,12 +61,14 @@ public:
 private:
   void transform_limb_poss();
   void set_lik_rec();
-  void set_plane_zf();
+  void set_torso_plane();
   void surf_rotate_pos(extvec& pos);
   void surf_rotate_torso_pos();
   void set_torso_pos();
   void set_surf_rot_from_normal();
   void set_gmodel_limb_bends();
+  void compute_surf_normal(list<extvec>& points);
+  double get_plane_z(extvec& plane, extvec& pos);
 };
 
 #endif
