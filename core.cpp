@@ -172,3 +172,13 @@ double** arrayops::new_2d_array(int m) const {
 void arrayops::delete_2d_array(double** array, int m) const {
   ::delete_2d_array(array, m);
 }
+
+
+bool if_can_open_file(string& fname){
+  ifstream file;
+  file.open(fname.c_str());
+  if (file.is_open()) {
+    file.close();
+    return true;
+  } else {return false;}
+}

@@ -35,7 +35,7 @@ model->recompute_modelnodes();
 // hexapod
 void modelplayer::test2(){
   if(play_t==0){
-    play_pgs = new pergensetup (6);
+    play_pgs = new pergensetup (6,3);
     extvec torso_pos (0,0,-0.1);
     extvec euler_angles (0,0,0*M_PI/2);
     extvec orientation[] = {torso_pos,euler_angles};
@@ -50,7 +50,7 @@ void modelplayer::test2(){
 // quadruped 2-leg walking
 void modelplayer::test3(){
   if(play_t==0){
-    play_pgs = new pergensetup (4);
+    play_pgs = new pergensetup (4,3);
     //extvec torso_pos (0,0,-.5);
     //extvec euler_angles (0,0,0);
     extvec torso_pos (0,0,.35);
@@ -71,7 +71,7 @@ void modelplayer::test3(){
 // quadruped
 void modelplayer::test4(){
   if(play_t==0){
-    play_pgs = new pergensetup (4);
+    play_pgs = new pergensetup (4,3);
     //extvec torso_pos (0,0,-.1);
     //extvec euler_angles (0,0,0);
     extvec torso_pos (0,0,-.07);

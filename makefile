@@ -1,7 +1,7 @@
 COMP_ATTRS = -O2 -Wall
 #COMP_ATTRS = -O2 -Wall -I /usr/include/eigen3
 
-O_FILES = main.o core.o matrix.o model.o visualization.o lik.o player.o playerexperim.o pergen.o periodic.o dynrec.o ftsolver.o odestate.o cpc.o effdata.o geom.o ghost.o
+O_FILES = main.o core.o matrix.o model.o visualization.o lik.o player.o playerexperim.o pergen.o periodic.o dynrec.o ftsolver.o odestate.o cpc.o effdata.o geom.o ghost.o likredund.o
 
 #LINK_ATTRS = -L /usr/local/lib -lode -ldrawstuff -lm -lstdc++ -lGL -lGLU -lglut -lX11 -pthread -Lballtreelib/ -lballtree
 LINK_ATTRS = -L /usr/local/lib -lode -ldrawstuff -lm -lstdc++ -lGL -lGLU -lglut -lX11 -pthread -Lballtreelib1/ -lballtree
@@ -30,7 +30,7 @@ model.o: model.h model.cpp
 visualization.o: visualization.h visualization.cpp
 	g++ -c visualization.cpp $(COMP_ATTRS)
 
-lik.o: lik.h lik.cpp
+lik.o: lik.h lik.cpp likredund.h
 	g++ -c lik.cpp $(COMP_ATTRS)
 
 player.o: player.h player.cpp
@@ -65,6 +65,9 @@ geom.o: geom.h geom.cpp
 
 ghost.o: ghost.h ghost.cpp
 	g++ -c ghost.cpp $(COMP_ATTRS)
+
+likredund.o: likredund.h likredund.cpp
+	g++ -c likredund.cpp $(COMP_ATTRS)
 
 
 clean:

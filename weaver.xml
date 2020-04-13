@@ -1,0 +1,123 @@
+<xsl:variable name="hW_A">0.09</xsl:variable>
+<xsl:variable name="hW_B">0.14</xsl:variable>
+<xsl:variable name="hL_B">0.175</xsl:variable>
+<xsl:variable name="L_C">0.0665</xsl:variable>
+<xsl:variable name="L_CT">0.062</xsl:variable>
+<xsl:variable name="L_F">0.1065</xsl:variable>
+<xsl:variable name="L_TI">0.088</xsl:variable>
+<xsl:variable name="L_TA">0.135</xsl:variable>
+<xsl:variable name="tor_size">0.06</xsl:variable>
+<xsl:variable name="leg_size">0.03</xsl:variable>
+<mujoco model="ant">
+  <compiler angle="degree" coordinate="local" inertiafromgeom="true"/>
+  <option integrator="RK4" timestep="0.01"/>
+  <custom>
+    <numeric data="0.0 0.0 0.55 1.0 0.0 0.0 0.0 0.0 1.0 0.0 -1.0 0.0 -1.0 0.0 1.0" name="init_qpos"/>
+  </custom>
+  <default>
+    <joint armature="1" damping="1" limited="true"/>
+    <geom conaffinity="0" condim="3" density="5.0" friction="1.5 0.1 0.1" margin="0.01" rgba="0.8 0.6 0.4 1"/>
+  </default>
+  <worldbody>
+    <body name="torso" pos="0 0 .5">
+      <geom name="torso_geom" fromto="-0.175 0 0 0.175 0 0" size="0.06" type="capsule"/>
+      <joint armature="0" damping="0" limited="false" margin="0.01" name="root" pos="0 0 0" type="free"/>
+
+      <body name="front_legs" pos="0.175 0 0">
+        <geom fromto="0.0 -0.09 0.0 0.0 0.09 0.0" name="front_legs_geom" size="0.06" type="capsule" rgba=".8 .5 .3 1"/>
+        <body name="front_left_coxat" pos="0.0 0.09 0.0">
+          <joint axis="0 1 0" name="left_coxat_joint" pos="0.0 0.0 0.0" type="hinge"/>
+          <geom fromto="0.0 0.0 0.0 0.0 0.062 0.0" name="front_left_coxat_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+          <body pos="0 0.062 0" name="front_left_femur">
+            <joint axis="1 0 0" name="left_femur_joint" pos="0.0 0.0 0.0" type="hinge"/>
+            <geom fromto="0.0 0.0 0.0 0.0 0.1065 0.0" name="front_left_femur_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+	    <body pos="0 0.1065 0" name="front_left_tibia">
+              <joint axis="1 0 0" name="left_tibia_joint" pos="0.0 0.0 0.0" type="hinge"/>
+              <geom fromto="0.0 0.0 0.0 0 0.088 0.0" name="front_left_tibia_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+            </body>
+          </body>
+        </body>
+        <body name="front_right_coxat" pos="0.0 -0.09 0.0">
+          <joint axis="0 1 0" name="right_coxat_joint" pos="0.0 0.0 0.0" type="hinge"/>
+          <geom fromto="0.0 0.0 0.0 0.0 -0.062 0.0" name="front_right_coxat_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+          <body pos="0 -0.062 0" name="front_right_femur">
+            <joint axis="1 0 0" name="right_femur_joint" pos="0.0 0.0 0.0" type="hinge"/>
+            <geom fromto="0.0 0.0 0.0 0.0 -0.1065 0.0" name="front_right_femur_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+	    <body pos="0 -0.1065 0" name="front_right_tibia">
+              <joint axis="1 0 0" name="right_tibia_joint" pos="0.0 0.0 0.0" type="hinge"/>
+              <geom fromto="0.0 0.0 0.0 0 -0.088 0.0" name="front_right_tibia_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <body name="mid_legs" pos="0 0 0">
+        <geom fromto="0.0 -0.14 0.0 0.0 0.14 0.0" name="mid_legs_geom" size="0.06" type="capsule" rgba=".8 .5 .3 1"/>
+        <body name="mid_left_coxat" pos="0.0 0.14 0.0">
+          <joint axis="0 1 0" name="left_coxat_joint" pos="0.0 0.0 0.0" type="hinge"/>
+          <geom fromto="0.0 0.0 0.0 0.0 0.062 0.0" name="mid_left_coxat_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+          <body pos="0 0.062 0" name="mid_left_femur">
+            <joint axis="1 0 0" name="left_femur_joint" pos="0.0 0.0 0.0" type="hinge"/>
+            <geom fromto="0.0 0.0 0.0 0.0 0.1065 0.0" name="mid_left_femur_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+	    <body pos="0 0.1065 0" name="mid_left_tibia">
+              <joint axis="1 0 0" name="left_tibia_joint" pos="0.0 0.0 0.0" type="hinge"/>
+              <geom fromto="0.0 0.0 0.0 0 0.088 0.0" name="mid_left_tibia_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+            </body>
+          </body>
+        </body>
+        <body name="mid_right_coxat" pos="0.0 -0.14 0.0">
+          <joint axis="0 1 0" name="right_coxat_joint" pos="0.0 0.0 0.0" type="hinge"/>
+          <geom fromto="0.0 0.0 0.0 0.0 -0.062 0.0" name="mid_right_coxat_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+          <body pos="0 -0.062 0" name="mid_right_femur">
+            <joint axis="1 0 0" name="right_femur_joint" pos="0.0 0.0 0.0" type="hinge"/>
+            <geom fromto="0.0 0.0 0.0 0.0 -0.1065 0.0" name="mid_right_femur_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+	    <body pos="0 -0.1065 0" name="mid_right_tibia">
+              <joint axis="1 0 0" name="right_tibia_joint" pos="0.0 0.0 0.0" type="hinge"/>
+              <geom fromto="0.0 0.0 0.0 0 -0.088 0.0" name="mid_right_tibia_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <body name="back_legs" pos="-0.175 0 0">
+        <geom fromto="0.0 -0.09 0.0 0.0 0.09 0.0" name="back_legs_geom" size="0.06" type="capsule" rgba=".8 .5 .3 1"/>
+        <body name="back_left_coxat" pos="0.0 0.09 0.0">
+          <joint axis="0 1 0" name="left_coxat_joint" pos="0.0 0.0 0.0" type="hinge"/>
+          <geom fromto="0.0 0.0 0.0 0.0 0.062 0.0" name="back_left_coxat_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+          <body pos="0 0.062 0" name="back_left_femur">
+            <joint axis="1 0 0" name="left_femur_joint" pos="0.0 0.0 0.0" type="hinge"/>
+            <geom fromto="0.0 0.0 0.0 0.0 0.1065 0.0" name="back_left_femur_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+	    <body pos="0 0.1065 0" name="back_left_tibia">
+              <joint axis="1 0 0" name="left_tibia_joint" pos="0.0 0.0 0.0" type="hinge"/>
+              <geom fromto="0.0 0.0 0.0 0 0.088 0.0" name="back_left_tibia_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+            </body>
+          </body>
+        </body>
+        <body name="back_right_coxat" pos="0.0 -0.09 0.0">
+          <joint axis="0 1 0" name="right_coxat_joint" pos="0.0 0.0 0.0" type="hinge"/>
+          <geom fromto="0.0 0.0 0.0 0.0 -0.062 0.0" name="back_right_coxat_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+          <body pos="0 -0.062 0" name="back_right_femur">
+            <joint axis="1 0 0" name="right_femur_joint" pos="0.0 0.0 0.0" type="hinge"/>
+            <geom fromto="0.0 0.0 0.0 0.0 -0.1065 0.0" name="back_right_femur_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+	    <body pos="0 -0.1065 0" name="back_right_tibia">
+              <joint axis="1 0 0" name="right_tibia_joint" pos="0.0 0.0 0.0" type="hinge"/>
+              <geom fromto="0.0 0.0 0.0 0 -0.088 0.0" name="back_right_tibia_geom" size="0.03" type="capsule" rgba=".8 .5 .3 1"/>
+            </body>
+          </body>
+        </body>
+      </body>
+
+    </body>
+  </worldbody>
+  <actuator>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" joint="hip_4" gear="150"/>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" joint="ankle_4" gear="150"/>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" joint="left_coxat_joint" gear="150"/>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" joint="left_femur_joint" gear="150"/>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" joint="right_coxat_joint" gear="150"/>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" joint="right_femur_joint" gear="150"/>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" joint="hip_3" gear="150"/>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" joint="ankle_3" gear="150"/>
+    <motor ctrllimited="true" ctrlrange="-1.0 1.0" joint="left_tibia_joint" gear="150"/>
+  </actuator>
+</mujoco>

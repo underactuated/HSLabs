@@ -76,8 +76,8 @@ public:
   inline modelnode* get_first_child() const {return child_nodes.front();}
   inline modelnode* get_parent() const {return parent;}
   void add_child(modelnode* child);
-  void print(int detail_level);
-  void print(){print(0);}
+  void print(int detail_level) const;
+  void print() const {print(0);}
   list<double*> make_joint(joint_type type, const double* pos, const double* axis);
   list<double*> make_joint(joint_type type, const double* pos_);
   void recompute_A_ground(const affine& A);
@@ -120,8 +120,8 @@ public:
   void orient_odebodys();
   void draw();
   void recompute_modelnodes() const;
-  void print();
-  void print(int detail_level);
+  void print() const;
+  void print(int detail_level) const;
   int get_config_dim() const;
   void set_jvalues_with_lik(const double* rec) const;
   void set_jvalues(const double* values) const;

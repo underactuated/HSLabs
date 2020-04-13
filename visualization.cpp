@@ -312,7 +312,7 @@ void nearCallback(void *data, dGeomID o1, dGeomID o2) {
   contact.surface.mu = dInfinity; // experim
   //contact.surface.mu = 1;//10;//0;
   // bounce is the amount of "bouncyness".
-  contact.surface.bounce = .5;//0.9;
+  contact.surface.bounce = 0.5;//0.9;
   // bounce_vel is the minimum incoming velocity to cause a bounce
   contact.surface.bounce_vel = 0.1;
   // constraint force mixing parameter
@@ -633,6 +633,16 @@ void odepart::get_A_ground_body_from_odebody(affine& A_ground) const {
   //affine A; A=A_ground; A.subtract(*mnode->get_A_ground()); float norm = A.norm(); if(norm>1e-5){cout << "ERROR: norm = " << norm << endl; exit(1);}
 }
 
+// Computes foot vector (capsule_to_pos with ext component = 0)
+// in the ground frame, using foot ODE body.
+void odepart::get_foot_vec_ground(extvec& vec) const {
+  affine A;
+  get_A_ground_body_from_odebody(A);
+  extvec vec0 (capsule_to_pos);
+  vec0.set_v(3,0);
+  A.mult(vec0,vec);
+}
+
 
 // Camera position is either adjusted manually if manual_viewpoint_flag
 // (then viewpoint plays no role), or it is adjusted automatically
@@ -654,6 +664,7 @@ viewpoint::viewpoint(){
   }
   smooth_flag = false;
   speedup = 1;
+  scale = 1;
 }
 
 // Sets initial reference point xyz and camera position relative
@@ -678,7 +689,8 @@ void viewpoint::adjust(const dReal* xyz){
   else {hard_xyzref_update(xyz);}
   float xyz_cam[3];
   for(int i=0;i<3;i++){
-    xyz_cam[i] = xyz_ref[i] + xyz_cam_rel[i];
+    //xyz_cam[i] = xyz_ref[i] + xyz_cam_rel[i];
+    xyz_cam[i] = xyz_ref[i] + xyz_cam_rel[i]*scale;
   }
   dsSetViewpoint(xyz_cam,hpr);
 }

@@ -42,7 +42,7 @@ class ghostmodel{
   kinematicmodel* gmodel; // gmodel = ghost model
   vector<extvec> limb_poss;
   configtimedertrack* tdertrack;
-  int idle;
+  int idle, dof;
   extvec torso_pos, torso_eas, torso_com, parent_pos; // torso orientaion (_pos + _eas); torso com position in ground frame; torso joint A_parent's translation 
   extvec surf_normal; // surface normal = fitted plane normal
   extvec fitted_plane, torso_plane; // fitted plane, torso plane (parallel to fitted plane, contains COM)

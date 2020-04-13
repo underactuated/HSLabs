@@ -15,10 +15,12 @@
 
 #include "matrix.h"
 #include "model.h"
+#include "likredund.h"
 
-typedef bool(*SolverFuncType)(int, extvec&, extvec&, bool);
+typedef bool(*SolverFuncType)(int, double*, double*, bool);
 
 class liklimb;
+class redundof;
 
 // Class liksolver (for Limb inverse kinematics solver,
 // or LIK solver) solves IK by setting up and calling
@@ -42,12 +44,14 @@ class liksolver{
   vector<liklimb*> limbs;
   SolverFuncType* solver_func;
   double rcap; // foot capsule cap radius
+  redundof* redund;
 public:
   liksolver(const kinematicmodel* model);
   ~liksolver();
   inline int get_number_of_limbs() const {return limbs.size();}
   inline const vector<liklimb*>* get_limbs() const {return &limbs;}
   inline double get_rcap() const {return rcap;}
+  inline const redundof* get_redund() const {return redund;}
   void place_limb(int limbi, double x, double y, double z) const;
   void place_limbs(const double* rec) const;
   void get_limb_hip_pos(int limbi, extvec& pos) const;
@@ -66,24 +70,34 @@ private:
 // values and limb_ and bend_ solver functions.
 //////////////////////////////////////////////////////
 class liklimb{
-  int limbi;
+  int limbi, dof;
   const modelnode *parent, *child;
-  double* values[3];
+  double** values; //values[3];
   SolverFuncType* solver_func;
   bool limb_bend;
 public:
-  liklimb(int limbi_, const modelnode* child_);
+  liklimb(int limbi_, const modelnode* child_, int dof_);
+  ~liklimb();
   inline void set_bend(bool bend){limb_bend = bend;}
   inline void set_solver_func(SolverFuncType* f){solver_func = f;}
   void place_limb(const extvec& pos_ground);
-  void set_joint_values(const extvec& joint_values);
+  //void set_joint_values(const extvec& joint_values);
+  void set_joint_values(const double* joint_values);
   void get_hip_pos(extvec& pos);
   modelnode* get_foot();
   void solver_test_yxx(int n);
   bool bend_from_angles(extvec& angles);
+  bool bend_from_angles(double* angles);
+  void place_limb_redund(const double* limb_rec, redundof* redund);
 private:
   void setup_joint_values();
   void poslimb(const extvec& pos_ground, extvec& pos_limb);
+  void poslimb_redund(const double* limb_rec, double* constrs, redundof* redund);
 };
+
+extern bool ignore_reach_flag;
+
+bool limb_solver_yxx(const double* constrs, double* jangles, const double* ls, int ysign, bool bend);
+bool limb_solver_zxx(const double* constrs, double* jangles, const double* ls, int ysign, bool bend);
 
 #endif

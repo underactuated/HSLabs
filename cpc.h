@@ -16,9 +16,10 @@
 
 using namespace Eigen;
 
+// Structure cand contains data relevant to a target point candidate
 struct cand{
-  int tpi;
-  double t0, s, loss;
+  int tpi; // tpi = target point index
+  double t0, s, loss; // t0 and s are CPC parameters (see paper)
   cand(int tpi, double t0, double s, double loss);
   cand(){};
   void print();
@@ -26,14 +27,15 @@ struct cand{
 
 class efficientdata;
 
+// Class cpccontroller implements a controller based on CPC approach
 class cpccontroller{
   int q_dim, chi_dim, psi_dim; // q_dim = config_dim, chi_dim = nmj = actuated dim, psi_dim = q_dim - chi_dim = unactuated dim
-  MatrixXd B, Bt, B_chi, b, bbt, btil0; // Bt = B transposed
-  double** target_points;
+  MatrixXd B, Bt, B_chi, b, bbt, btil0; // Bt = B transposed, _chi means actuated components, bbt = b * bt
+  double** target_points; // target point set
   int tps_size; // tps = target point set
   double* current_state;
-  double w, sg, k0, kc, tauc;
-  int n_cand;
+  double w, sg, k0, kc, tauc; // CPC algorithm parameters (see paper)
+  int n_cand; // number of candidates
   ColPivHouseholderQR<MatrixXd> B_chi_dec;
   cand last_cand;
   bool poscontrol_flag, goal_t0s_flag, tpdist_switch_flag;

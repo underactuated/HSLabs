@@ -198,8 +198,9 @@ void periodicgenerator::get_turn_orientation(double dx, extvec* orientation){
 }
 
 
-pergensetup::pergensetup(int n_){
+pergensetup::pergensetup(int n_, int dof_){
   n = n_;
+  dof = dof_;
   pergen = new periodicgenerator(n);
   set_likpergen_map(n);
   limb_poss.resize(n);
@@ -224,8 +225,6 @@ void pergensetup::set_TLh(double T, double L, double h){
 // Additionally transforms rec if rec_transform_flag.
 void pergensetup::set_rec(double* rec, double t){
   extvec orientation[2];
-  //orientation[0].copy(torso_pos0);
-  //orientation[1].copy(euler_angles);
   orientation[0] = torso_pos0;
   orientation[1] = euler_angles;
   turn_torso(t, orientation);
@@ -233,7 +232,8 @@ void pergensetup::set_rec(double* rec, double t){
   pergen->limb_positions(t,limb_poss);
   for(int i=0;i<n;i++){
     int j = likpergen_map[i];
-    limb_poss[j].get_components(rec+6+i*3);
+    //limb_poss[j].get_components(rec+6+i*3);
+    limb_poss[j].get_components(rec+6+i*dof);
   }
   if(rec_transform_flag){transform_rec(rec);}
 }
@@ -344,6 +344,7 @@ void pergensetup::copy_rec_transform(const pergensetup* pgs){
 void pergensetup::print(int detail_level){
   cout << "---  pergen setup ---" << endl;
   cout << "number of limbs = " << n << endl;
+  cout << "limb DoF = " << dof << endl;
   cout << "torso position: ";
   torso_pos0.print();
   cout << "euler angles: ";
@@ -438,9 +439,10 @@ bool pgssweeper::next(){
   if(pgs){delete pgs; pgs = NULL;}
   pgs0->get_config_params(pcp);
   int n = pgs0->get_limb_number();
+  int dof = pgs0->get_limb_dof();
   if(parami == 0){pcp->step_duration = val;}
   else if (parami > 0 && parami < 4){pcp->TLh[parami-1] = val;}
-  pgs = new pergensetup (n);
+  pgs = new pergensetup (n, dof);
   setup_pergen(*pgs, pcp);
   pgs->set_TLh(pcp->TLh);
   pgs->copy_rec_transform(pgs0);

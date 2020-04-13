@@ -66,7 +66,7 @@ struct pgsconfigparams;
 // direction. (recall that pergen only generate motion
 // in x direction)
 class pergensetup{
-  int n; // number of limbs
+  int n, dof; // number of limbs, limb DoF
   periodicgenerator* pergen;
   map<int,int> likpergen_map; // LIK-pergen correspondence 
   vector<extvec> limb_poss; // limb positions = foot positions (pergen ordering)
@@ -76,15 +76,16 @@ class pergensetup{
   bool rec_transform_flag;
   pair<int,double> foot_shift; // foot shift parameter = pair<type,value>
 public:
-  pergensetup(int n);
+  pergensetup(int n, int dof);
   ~pergensetup();
   inline periodicgenerator* get_pergen() const {return pergen;}
   inline int get_limb_number() const {return n;}
-  inline int get_config_dim() const {return 6+3*n;}
+  inline int get_config_dim() const {return 6+dof*n;}
   inline double get_period() const {return get_pergen()->get_period();}
   inline pair<int,double> get_foot_shift(){return foot_shift;}
   inline void set_TLh(const double TLh[3]) {set_TLh(TLh[0],TLh[1],TLh[2]);}
   inline void set_foot_shift(const pair<int,double> foot_shift_){foot_shift = foot_shift_;}
+  inline int get_limb_dof() const {return dof;}
   void set_TLh(double T, double L, double h);
   void set_rec(double* rec, double t);
   void set_limb_poss(int limbi, const extvec& pos, double rcap);

@@ -63,6 +63,7 @@ public:
   ~modelplayer();
   inline kinematicmodel* get_model() const {return model;}
   inline void set_play_dt(double dt){play_dt = dt;}
+  inline const liksolver* get_lik() const {return model->get_lik();}
   void load_model(string fname);
   void step();
   void test(int testi);
@@ -87,6 +88,8 @@ public:
   void shift_view(double x, double y, double z);
   void set_fall_test(double hc, double tmin, double tmax);
   void ignore_reach();
+  void scale_view(double scale);
+  void scale_view_by_model();
 private:
   void set_jangles_with_lik(const double* rec);
   inline visualizer* get_vis() const {return model->get_vis();}
@@ -129,6 +132,7 @@ private:
   void clip_torque(double* motor_torques);
   void check_model_loaded();
   void set_torque_limit(double torque);
+  void set_play_rec(pergensetup* pgs);
 };
 
 #endif

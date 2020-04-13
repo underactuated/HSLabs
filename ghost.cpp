@@ -27,6 +27,7 @@ ghostmodel::ghostmodel(const visualizer* vis_, const heightfield* hfield_, doubl
   lik = model->get_lik();
   glik = gmodel->get_lik();
   rcap = lik->get_rcap();
+  dof = lik->get_redund()->get_dof();
 }
 
 ghostmodel::~ghostmodel(){
@@ -117,10 +118,12 @@ void ghostmodel::set_lik_rec(){
   vector<extvec>::iterator it = limb_poss.begin();
   for(;it!=limb_poss.end();it++){
     (*it).get_components(p);
-    p += 3;
+    //p += 3;
+    p += dof;
   }
   lik_rec[2] -= (foot_min_z-rcap);
-  //print_array(lik_rec,config_dim);exit(1);
+  lik->get_redund()->set_rec_redundof_gost(lik_rec,foot_oparts);
+  //print_array(lik_rec,config_dim);//exit(1);
 }
 
 // Orients surface (specified by surf_normal).
@@ -211,6 +214,7 @@ void ghostmodel::set_surf_rot_from_normal(){
 // Enforces correspondence of LIK solution branches,
 // by setting the bends of gmodel to the bends of model. 
 void ghostmodel::set_gmodel_limb_bends(){
+  //print_array(config,config_dim);
   extvec angles;
   double *p = config+6;
   const vector<liklimb*> *limbs, *glimbs;
@@ -221,8 +225,10 @@ void ghostmodel::set_gmodel_limb_bends(){
   it1 = glimbs->begin();
   for(;it!=limbs->end();it++){
     angles.set(p);
-    p += 3;
-    (*it1++)->set_bend((*it)->bend_from_angles(angles));
+    //p += 3;
+    (*it1++)->set_bend((*it)->bend_from_angles(p));
+    p += dof;
+    //(*it1++)->set_bend((*it)->bend_from_angles(angles));
     //bool bend = (*it)->bend_from_angles(angles);cout << bend << " ";
   }
   //cout<<endl;

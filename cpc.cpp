@@ -1,12 +1,3 @@
-//#include "core.h"
-//#include "matrix.h"
-//#include "visualization.h"
-//#include "model.h"
-//#include "pergen.h"
-//#include <Eigen/Dense>
-//#include <Eigen/Sparse>
-//#include "periodic.h"
-//#include "dynrec.h"
 #include "cpc.h"
 #include "effdata.h"
 
@@ -48,6 +39,7 @@ cpccontroller::~cpccontroller(){
   if(effdata){delete effdata;}
 }
 
+// Sets target_points using a per (periodic object) trajectory 
 void cpccontroller::set_target_points_by_per(periodic* per){
   //per->print();exit(1);
   if(target_points){cout<<"ERROR: target points are present"<<endl;exit(1);}
@@ -62,6 +54,7 @@ void cpccontroller::set_target_points_by_per(periodic* per){
   //print_target_points();exit(1);
 }
 
+// Sets B using data from 2D array B_transp
 // we probably do not need B, only Bt
 void cpccontroller::set_B_by_player(double** B_transp){
   for(int i=0;i<chi_dim;i++){
@@ -73,6 +66,7 @@ void cpccontroller::set_B_by_player(double** B_transp){
 
 void cpccontroller::print(){print(0);}
 
+// Prints info at required level of detail
 void cpccontroller::print(int detail_level){
   cout << "----- CPC controller -----" << endl;
   cout << "w = " << w << ", sg = " << sg;
@@ -83,11 +77,6 @@ void cpccontroller::print(int detail_level){
   cout << "tps_size = " << tps_size << endl;
 
   if(detail_level>0){
-    /*cout << "target points:" << endl;
-    int rec_len = 2*q_dim+chi_dim;
-    for(int i=0;i<tps_size;i++){
-      print_array<double>(target_points[i],rec_len);
-      }*/
     print_target_points();
   }
 }

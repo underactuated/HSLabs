@@ -102,7 +102,7 @@ void modelnode::compute_A_ground(const affine* A){
   A_ground.mult(A_pj_body);
 }
 
-void modelnode::print(int detail_level){
+void modelnode::print(int detail_level) const {
   cout << "--- model node ---" << endl;
   cout << "A_pj_body:" << endl;
   A_pj_body.print();
@@ -317,11 +317,11 @@ void kinematicmodel::recompute_modelnodes() const {
   mrootnode->recompute_A_ground(A);
 }
 
-void kinematicmodel::print(){
+void kinematicmodel::print() const {
   print(0);
 }
 
-void kinematicmodel::print(int detail_level){
+void kinematicmodel::print(int detail_level) const {
   cout << "--- kinematic model ---" << endl;
   cout << "loaded from " << xmlfname << endl;
   int config_dim = get_config_dim();

@@ -113,6 +113,7 @@ public:
   void make_fixed_joint(odepart* parent_part, visualizer* vis);
   void make_hinge_joint(odepart* parent_part, visualizer* vis);
   void get_A_ground_body_from_odebody(affine& A_ground) const;
+  void get_foot_vec_ground(extvec& vec) const;
 private:
   void make_ccylinder(visualizer* vis, const xml_node<>* geom_node, bool capped_flag);
   void capsule_lenposrot_from_fromto(double& len, dVector3& pos, dMatrix3& rot, const double* fromto);
@@ -128,6 +129,7 @@ class viewpoint{
   double k0;
   bool smooth_flag; // enables PD controller
   int speedup; // visualization speedup factor
+  double scale; // relative camera position scale
 public:
   viewpoint();
   inline void set_smooth(bool flag_val){smooth_flag = flag_val;}
@@ -137,6 +139,7 @@ public:
   void adjust(const dReal* xyz);
   void print();
   void shift_cam(float x, float y, float z);
+  void set_scale(double scale_){scale = scale_;}
 private:
   void hard_xyzref_update(const dReal* xyz);
   void smooth_xyzref_update(const dReal* xyz);

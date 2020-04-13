@@ -55,6 +55,7 @@ void periodic::set_dynparts(){
     masses[id] = dpart->get_mass();
     id++;
   }
+  //print();exit(1);
 }
 
 void periodic::print(){
@@ -84,15 +85,18 @@ void periodic::record_trajectory(pergensetup* pgs, int n_t_){
   double* rec = new double [config_dim];
   traj = new_2d_array(traj_size,config_dim);
   double** p = traj;
+  const liksolver* lik = model->get_lik();
   for(int i=0;i<traj_size;i++){
     pgs->set_rec(rec,t);
+    lik->get_redund()->set_rec_redundof(rec);
     model->set_jvalues_with_lik(rec);
     model->get_jvalues(*p++);
     t += dt;
   }
   delete rec;
   dt_traj = dt;
-  rcap = model->get_lik()->get_rcap();
+  //rcap = model->get_lik()->get_rcap();
+  rcap = lik->get_rcap();
 }
 
 // Prints whole trajectory.

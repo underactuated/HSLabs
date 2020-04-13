@@ -20,7 +20,9 @@ int main(int argc, char *argv[]){
   //srand(3);// 4
 
   /*modelplayer player1;
-  player1.load_draw_model("spider.xml");
+  player1.load_draw_model("weaver2.xml");
+  //player1.load_draw_model("weaver1.xml");
+  //player1.load_draw_model("spider.xml");
   //player1.load_draw_model("walker2d5l.xml");
   //player1.load_draw_model("ant.xml");
   //player1.load_draw_model("myant.xml"); 
@@ -31,7 +33,7 @@ int main(int argc, char *argv[]){
   player0.set_play_dt(.02);
   //pergensetup* pgs0 = player0.make_pergensu("pgs_config.txt",1);
   //player0.test(4);exit(1);
-  //pergensetup* pgs = player0.make_pergensu("pgs_config.txt",2);
+  //pergensetup* pgs = player0.make_pergensu("pgs_config.txt",28+1*0+2*0+3*1);
   pergensetup* pgs = player0.make_pergensu("pgs_config.txt",0*17+1*8+0*26);
   //pgs->print(2);
   //player0.print_hip_poss();exit(1);
@@ -40,14 +42,18 @@ int main(int argc, char *argv[]){
   player0.speedup_draw(5);//(3);//5);
   player0.ignore_reach();
   player0.set_flag("manual_viewpoint",false);
-  //player0.set_flag("texture",true);
+  player0.set_flag("texture",true);
   player0.set_flag("smooth_view",true);
   //player0.shift_view(-2,.5,0);
   //player0.shift_view(-1,.5,0);
   //player0.shift_view(0,1,0);
+  //player0.shift_view(-2,0,0);
+  //player0.scale_view(0.5);
+  player0.scale_view_by_model();
   //player0.set_flag("torso_kicks",true);
   //player0.set_flag("dynamics_from_simulation",true);
   //player0.set_fall_test(.7,.1,100);
+  //player0.simulate_pergensu(pgs,0);exit(1);
   player0.uneven_ground_test();
   //player0.test_lik_solvers();exit(1);
   //player0.play_pergensu(pgs);exit(1);

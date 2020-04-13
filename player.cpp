@@ -41,6 +41,7 @@ modelplayer::~modelplayer(){
 }
 
 void modelplayer::load_model(string fname){
+  if(!if_can_open_file(fname)){cout<<"ERROR: could not find '"<<fname<<"'"<<endl;exit(1);}
   model->load_fromxml(fname);
   model->orient_odebodys(); 
   // ode-bodies must be oriented before setting ode-joints.
@@ -160,7 +161,8 @@ pergensetup* modelplayer::make_pergensu(string config_fname, int setup_id){
     }
   }
   int n = model->get_lik()->get_number_of_limbs();
-  pergensetup* pergensu = new pergensetup (n);
+  int dof = get_lik()->get_redund()->get_dof();
+  pergensetup* pergensu = new pergensetup (n, dof);
   setup_pergen(*pergensu, pcp);
   return pergensu;
 }
@@ -220,7 +222,8 @@ void modelplayer::play_pergensu(pergensetup* pgs){
 
 // one step updates to play play_pgs
 void modelplayer::play_pergensu_step(){
-  play_pgs->set_rec(play_rec,play_t);
+  //play_pgs->set_rec(play_rec,play_t);
+  set_play_rec(play_pgs);
   set_jangles_with_lik(play_rec);
   play_t += play_dt;
 }
@@ -349,7 +352,8 @@ void modelplayer::speedup_draw(int f){
 // from pgs trajectory at time play_t, but with
 // all velocities = 0.
 void modelplayer::init_play_config(pergensetup* pgs){
-  pgs->set_rec(play_rec,play_t);
+  //pgs->set_rec(play_rec,play_t);
+  set_play_rec(pgs);
   set_jangles_with_lik(play_rec);
   model->recompute_modelnodes();
   model->orient_odebodys();
@@ -687,15 +691,19 @@ void modelplayer::uneven_ground_test(){
   int n = 10/f;
   hfield = new heightfield (n,5*1/f+2,l);
   //hfield->random_field(0.01,.3+.4,false);
-  //hfield->random_field(0.01,.3,false);
+  hfield->random_field(0.01,.3,false);
+  //hfield->random_field(0.01,.15,false);
   //hfield->random_field(0.01,1.0,false);
   //hfield->random_field(0.01,.01,false);
   //hfield->slope_field(0,6.5);
   //hfield->tan_field(1.5,4);
-  hfield->tanh_field(5);
+  //hfield->tanh_field(5);
   //hfield->tanh_field(6);
+  //hfield->tanh_field(2.8);
   //hfield->gauss_field(4);
+  //hfield->gauss_field(2.5);
   //hfield->ridge_field(0,2);
+  //hfield->ridge_field(0,3);
   //hfield->ridge_field(0,4);
   /* hfield->slope_field(0,4);
      hfield->ripple_field(0.01,.4*f,true); */
@@ -789,6 +797,26 @@ void modelplayer::ignore_reach(){
   model->get_lik()->set_ignore_reach_flag(true);
 }
 
+// Sets camera view scale (use scale < 1 to get closer view).
+void modelplayer::scale_view(double scale){
+  model->get_vis()->get_view()->set_scale(scale);
+}
+
+// Customizes view scale by model.
+void modelplayer::scale_view_by_model(){
+  double scale = 1;
+  string xmlfname = model->get_xmlfname();
+  if(xmlfname == "weaver.xml"){scale = .5;}
+  else if(xmlfname == "weaver1.xml"){scale = .5;}
+  else if(xmlfname == "weaver2.xml"){scale = .5;}
+  scale_view(scale);
+}
+
+// Sets play_rec using pergensetup and redundof
+void modelplayer::set_play_rec(pergensetup* pgs){
+  pgs->set_rec(play_rec,play_t);
+  get_lik()->get_redund()->set_rec_redundof(play_rec);
+}
 
 /*
 //euler angles check, from player:
