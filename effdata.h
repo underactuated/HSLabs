@@ -11,7 +11,7 @@
 
 #include "core.h"
 
-class balltree;
+struct balltree;
 
 class efficientdata{
   int data_size;

@@ -12,7 +12,7 @@ struct heap{
     heapkey_t key;
     Tc* val;
     keyval (heapkey_t key_, Tc* val_){key=key_; val=val_;}
-    bool operator < (const keyval& kv) {
+    bool operator < (const keyval& kv) const {
       return key < kv.key;
     }
   };
