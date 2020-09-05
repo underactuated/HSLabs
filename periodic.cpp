@@ -90,7 +90,7 @@ void periodic::record_trajectory(pergensetup* pgs, int n_t_){
     model->get_jvalues(*p++);
     t += dt;
   }
-  delete rec;
+  delete [] rec;
   dt_traj = dt;
   rcap = model->get_lik()->get_rcap();
 }

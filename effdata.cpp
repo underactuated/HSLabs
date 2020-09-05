@@ -1,7 +1,8 @@
 #include <math.h>
 //#include "core.h"
 #include "effdata.h"
-#include "balltreelib1/balltree.h"
+//#include "balltreelib1/balltree.h"
+#include "btlib/balltree.h"
 
 void efficientdata::prepare_data(const list<vector<double> >& data, int d){
   data_size=0;

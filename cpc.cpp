@@ -470,7 +470,7 @@ void cpccontroller::tpis_effdata(list<int>& tpis, int n){
   double* btil = new double [q_dim];
   VectorXd::Map(btil, q_dim) = btil0;
   effdata->get_tpis(tpis, n, btil, btq0, btdq0, sg, w);
-  delete btil;
+  delete [] btil;
 }
 
 void cpccontroller::apply_mask(double* state){
