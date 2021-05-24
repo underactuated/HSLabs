@@ -87,6 +87,7 @@ public:
   void shift_view(double x, double y, double z);
   void set_fall_test(double hc, double tmin, double tmax);
   void ignore_reach();
+  void record_trajectory(double t_max);
 private:
   void set_jangles_with_lik(const double* rec);
   inline visualizer* get_vis() const {return model->get_vis();}

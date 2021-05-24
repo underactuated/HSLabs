@@ -25,9 +25,14 @@
 24 xml_file spider.xml torso_pos 0 0 0.1 torso_angles 0 0 0 step_duration 1 period 3 step_length .5 step_height .1 curvature -.15 lateral_foot_shift 0.4
 25 xml_file spider.xml torso_pos 0 0 0 torso_angles 0 0 1.571 step_duration 1 period 3 step_length .5 step_height .1 lateral_foot_shift 0.4
 26 xml_file spider.xml torso_pos 0 0 0.05 torso_angles 0 0 0 step_duration 1 period 3 step_length .5 step_height .1 curvature -.05 radial_foot_shift 0.4
-27 xml_file hexapod.xml torso_pos 0 0 -.1 torso_angles 0 0 0 step_duration 1 period 3 step_length .5 step_height .1 curvature -.03
+27 xml_file hexapod.xml torso_pos 0 0 -.1 torso_angles 0 0 0 step_duration 1 period 3 step_length .5 step_height .1 curvature -.02
 28 xml_file weaver.xml torso_pos 0 0 -.3 torso_angles 0 0 0 step_duration 1 period 3 step_length .2 step_height .05
 29 xml_file weaver1.xml torso_pos 0 0 -.2 torso_angles 0 0 0 step_duration 1 period 10 step_length .2 step_height .05 lateral_foot_shift 0.0
 30 xml_file weaver2.xml torso_pos 0 0 -.1 torso_angles 0 0 0 step_duration 1 period 10 step_length .2 step_height .05 lateral_foot_shift 0.1 curvature 100000
 31 xml_file weaver2.xml torso_pos 0 0 -.2 torso_angles 0 0 0 step_duration 1 period 10 step_length .2 step_height .05 lateral_foot_shift 0.2 curvature 0
 32 xml_file weaver2.xml torso_pos 0 0 -.17 torso_angles 0 0 0 step_duration 1 period 10 step_length .2 step_height .05 lateral_foot_shift 0.2 radial_foot_shift 0.15 curvature 0
+33 xml_file myant.xml torso_pos 0 0 -.07 torso_angles 0 0 0 step_duration 1 period 5 step_length .5 step_height .1 lateral_foot_shift 0.15
+34 xml_file myant.xml torso_pos 0 0 -.07 torso_angles 0 0 0 step_duration 1 period 4.5 step_length .5 step_height .1 lateral_foot_shift 0.05
+35 xml_file myant.xml torso_pos 0 0 -.07 torso_angles 0 0 1.571 step_duration 1 period 5 step_length .5 step_height .1 lateral_foot_shift 0.05
+#36 xml_file myant.xml torso_pos 0 0 -.07 torso_angles 0 0 0 step_duration 1 period 4.5 step_length .2 step_height .1 lateral_foot_shift 0.05
+36 xml_file myant.xml torso_pos 0 0 -.07 torso_angles 0 0 0 step_duration 1 period 4.3 step_length .8 step_height .1 lateral_foot_shift 0.05

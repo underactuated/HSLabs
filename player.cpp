@@ -436,12 +436,22 @@ void modelplayer::save_last_motor_torques(const double* torques){
   ao.assign(last_motor_torques,torques);
 }
 
+/*
+void modelplayer::save_last_motor_torques(const double* torques){
+  arrayops ao (nmj);
+  double n = 5;
+  ao.times(last_motor_torques,n);
+  ao.add(last_motor_torques,torques);
+  ao.times(last_motor_torques,1./(n+1));
+}
+//*/
+
 // Configuration path control (CPC) test.
 void modelplayer::cpc_test(pergensetup* pgs, double t0){
   set_flag("dynamics_from_simulation",true);
   set_flag("cpc_control",true);
   setup_per_controller(pgs,t0);
-  setup_cpc_controller();
+  setup_cpc_controller(); play_cpc->print(1);
   model->draw();
   unset_per_controller();
   set_flag("cpc_control",false);
@@ -451,8 +461,8 @@ void modelplayer::cpc_test(pergensetup* pgs, double t0){
 void modelplayer::setup_cpc_controller(){
   play_cpc = new cpccontroller (model);
   play_cpc->set_w_sg_nd_k0_kc_tauc(10,1,10,100*2,10,20); //(10*10,1,10,100*2,10,20)
-  play_cpc->set_target_points_by_per(play_per);
-  //play_cpc->load_tpset("traj.txt");
+  //play_cpc->set_target_points_by_per(play_per);
+  play_cpc->load_tpset("traj.txt");
   play_cpc->setup_effdata();
   //play_cpc->set_flag("poscontrol",true); // experimental
   play_cpc->set_flag("goal_t0s",true); // experimental
@@ -463,7 +473,7 @@ void modelplayer::setup_cpc_controller(){
 // computing torques with CPC algorithm,
 // setting motor torques. 
 void modelplayer::set_cpc_torques(){
-  //if(play_t>20){exit(1);}//cout<<play_t<<endl;
+  //if(play_t>150){exit(1);}//cout<<play_t<<endl;
   //if(play_t<10){set_position_control_torques();return;}
   if(play_t<2*play_dt){set_position_control_torques();return;}
 
@@ -686,13 +696,14 @@ void modelplayer::uneven_ground_test(){
   double l = 1*f;
   int n = 10/f;
   hfield = new heightfield (n,5*1/f+2,l);
-  //hfield->random_field(0.01,.3+.4,false);
+  hfield->random_field(0.01,.3+.4,false);
   //hfield->random_field(0.01,.3,false);
   //hfield->random_field(0.01,1.0,false);
   //hfield->random_field(0.01,.01,false);
   //hfield->slope_field(0,6.5);
+  //hfield->slope_field(0,8.5);
   //hfield->tan_field(1.5,4);
-  hfield->tanh_field(5);
+  //hfield->tanh_field(5);
   //hfield->tanh_field(6);
   //hfield->gauss_field(4);
   //hfield->ridge_field(0,2);
@@ -788,6 +799,16 @@ void modelplayer::set_fall_test(double hc, double tmin, double tmax){
 void modelplayer::ignore_reach(){
   model->get_lik()->set_ignore_reach_flag(true);
 }
+
+// Records simulated trajectory upto t_max.
+// todo: dynamics computation is not needed,
+// only the derivative tracker, which is part of it.
+void modelplayer::record_trajectory(double t_max){
+  traj_t_limit = t_max;
+  set_flag("dynamics_from_simulation",true);
+  set_flag("record_traj",true);
+}
+
 
 
 /*

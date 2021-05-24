@@ -66,4 +66,21 @@ void print_array (const T* a, int n, const char* prefix){
   print_array <T> (a,n);
 }
 
+template <typename T>
+void print_vector (const vector<T>& v) {
+  typename vector<T>::const_iterator it = v.begin();
+  for(;it!=v.end();it++){
+    if(it != v.begin()){cout << " ";}
+    cout << *it;
+  }
+  cout << endl;
+}
+
+template <typename T>
+void print_vector (const vector<T>& v, const char* prefix) {
+  cout << prefix;
+  print_vector <T> (v);
+}
+
+
 #endif

@@ -94,8 +94,8 @@ public:
   void get_config_params(pgsconfigparams* pcp) const;
   void set_rec_rotation(const extvec& rec_eas);
   void copy_rec_transform(const pergensetup* pgs);
-  void print(){print(0);}
-  void print(int detail_level);
+  void print() const {print(0);}
+  void print(int detail_level) const;
   void set_curvature(double curvature);
 private:
   void set_likpergen_map(int n);
@@ -119,6 +119,7 @@ class pgssweeper{
   int shift_type;
   extvec lat_shift; // lateral shift value (also direction)
   double rad_shift; // radial shift value
+  int n; // number of limbs
 public:
   pgssweeper(const pergensetup* pgs, const kinematicmodel* model);
   ~pgssweeper();

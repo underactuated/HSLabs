@@ -16,6 +16,8 @@
 
 using namespace Eigen;
 
+// Structure cand contains information about a target point candidate
+// (tp = target point, t0 and s are CPC tp parameters)
 struct cand{
   int tpi;
   double t0, s, loss;
@@ -29,18 +31,20 @@ class efficientdata;
 class cpccontroller{
   int q_dim, chi_dim, psi_dim; // q_dim = config_dim, chi_dim = nmj = actuated dim, psi_dim = q_dim - chi_dim = unactuated dim
   MatrixXd B, Bt, B_chi, b, bbt, btil0; // Bt = B transposed
-  double** target_points;
+  double** target_points; // target points (= target point set)
   int tps_size; // tps = target point set
-  double* current_state;
+  double* current_state; // (projected) robot state
   double w, sg, k0, kc, tauc;
   int n_cand;
-  ColPivHouseholderQR<MatrixXd> B_chi_dec;
+  ColPivHouseholderQR<MatrixXd> B_chi_dec; // QR decomposition of B_chi ?
   cand last_cand;
   bool poscontrol_flag, goal_t0s_flag, tpdist_switch_flag;
-  int poscontrol_tpi;
+  int poscontrol_tpi; // position control tp index
   efficientdata* effdata;
-  vector<int> mask;
+  vector<int> mask; // mask for zeroing out state components
   bool low_tpdist;
+  string tpset_fname;
+  VectorXd last_tau;
 public:
   cpccontroller(const kinematicmodel* model);
   ~cpccontroller();

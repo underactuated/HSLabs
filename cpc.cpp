@@ -34,12 +34,14 @@ cpccontroller::cpccontroller(const kinematicmodel* model){
   current_state = new double [2*q_dim];
   last_cand.tpi = 0;
   effdata = NULL;
-  set_flag("poscontrol",false);
+  set_flag("poscontrol",false); // position-control-like selection of target point
   set_flag("goal_t0s",false);
   set_flag("tpdist_switch",false); // swithes between cpc s and s=sg
   int maska[] = {0,1,5};
   mask.insert(mask.end(), maska, maska+3);
   low_tpdist = true;
+  tpset_fname = "";
+  last_tau = VectorXd::Zero(chi_dim,1);
 }
 
 cpccontroller::~cpccontroller(){
@@ -57,6 +59,7 @@ void cpccontroller::set_target_points_by_per(periodic* per){
   for(int i=0;i<nt;i++){
     per->get_complete_traj_rec(i,target_points[i]);
     apply_mask(target_points[i]);
+    //for(int j=0;j<chi_dim;j++){target_points[i][2*q_dim+j]=0;}// test
   }
   tps_size = nt;
   //print_target_points();exit(1);
@@ -83,6 +86,12 @@ void cpccontroller::print(int detail_level){
   cout << "tps_size = " << tps_size << endl;
 
   if(detail_level>0){
+    print_vector<int>(mask,"mask: ");
+    cout << "efficient search: " << ((effdata)?"yes":"no") << endl;
+    cout << "target point set file: " << tpset_fname << endl;
+  }
+
+  if(detail_level>1){
     /*cout << "target points:" << endl;
     int rec_len = 2*q_dim+chi_dim;
     for(int i=0;i<tps_size;i++){
@@ -100,10 +109,12 @@ void cpccontroller::print_target_points(){
   }
 }
 
-void cpccontroller::set_current_state(const double* config, const double* dconfig){
+// Sets current_state and applies mask to it.
+void cpccontroller::set_current_state(const double* config, const double* dconfig){//print_array<double>(config,3);
   arrayops ao (q_dim);
   ao.assign(current_state,config);
   ao.assign(current_state+q_dim,dconfig);
+  //double *p = current_state+q_dim; double vx = *p, vy = *(p+1); cout<<sqrt(vx*vx+vy*vy)<<endl;//tmp
   apply_mask(current_state);
 }
 
@@ -148,6 +159,7 @@ void cpccontroller::state_to_chidchi(double* state, VectorXd& chi, VectorXd& dch
   dchi = Map<VectorXd> (state+q_dim+psi_dim,chi_dim);
 }
 
+// Computes proximity loss over the list of target points tpis.
 void cpccontroller::compute_prox_loss_over_tps(const list<int>& tpis, map<double,cand>& loss_cands){
   VectorXd qd, dqd, q0, dq0;
   state_to_qdq(current_state,q0,dq0);
@@ -212,6 +224,12 @@ double smallest_eigenvalue(MatrixXd& m){
   return ev_min;
 }
 
+// Implements CPCLOOP algorithm from the paper.
+// First selects target point candidates, then
+// selects the best candidates (for given k)
+// among the preselected candidates. If neccessary,
+// repeats the last step with reduced k (k /= 2) 
+// untill the torques are within bounds or k < kc.
 void cpccontroller::get_motor_torques(double* torques){
   //cout<<B_chi.eigenvalues().transpose()<<endl;
   //cout<<smallest_eigenvalue(B_chi)<<endl;
@@ -237,18 +255,27 @@ void cpccontroller::get_motor_torques(double* torques){
   } while (k > kc && cand_taus.col(i_best).norm() > tauc);
   //cout<<"k/k0 = "<<2*k/k0<<endl;
   vector<cand> candsv (cands.begin(),cands.end());
+  //int tpi0 = last_cand.tpi;
   last_cand = candsv[i_best];
-  //cout<<last_cand.s<<endl;
+  //int tpi1 = last_cand.tpi; cout<< (tpi1-tpi0+1500)%250 << endl;
+
   //last_cand.print();
+  //low_tpdist=false;
   tp_dist_check();
 
   VectorXd tau = cand_taus.col(i_best);
   clip_norm(tau,tauc);
+  //double alpha = .5; tau = (1-alpha)*last_tau+alpha*tau; last_tau = tau;
+  //VectorXd deltau = tau-last_tau; clip_norm(deltau,1); tau = last_tau+deltau; last_tau = tau;
   VectorXd::Map(torques,chi_dim) = tau;
 
+  //last_cand.print();
+  //cout<<tau.norm()<<endl;
+  //print_array<double>(torques,chi_dim);
   //cout<<cands.size()<<endl;exit(1);
 }
 
+// Selects target point candidates.
 void cpccontroller::candidates(list<cand>& cands){
   list<int> tpis;
   map<double,cand> loss_cands;
@@ -287,6 +314,7 @@ void cpccontroller::controls(VectorXd& tau, double k, const cand& can){
 
   VectorXd Kdelchi = k*(chi0-chid+dchid*t0/s) + 2*sqrt(k)*(dchi0-dchid/s);
   VectorXd del_tau = -B_chi_dec.solve(Kdelchi);
+del_tau = -Kdelchi; // experimental
   get_tau(tpi,tau);
   tau += del_tau;
   //VectorXd::Map(torques,tau.size()) = tau;
@@ -307,6 +335,7 @@ void cpccontroller::controls1(VectorXd& tau, VectorXd& del_tau, double k, const 
   tau += del_tau;
 }
 
+// Gets feed-forward term from a target point.
 void cpccontroller::get_tau(int tpi, VectorXd& tau){
   tau = Map<VectorXd> (target_points[tpi]+2*q_dim,chi_dim);
 }
@@ -379,6 +408,7 @@ int cpccontroller::cost1(double k, const list<cand>& cands, MatrixXd& cand_taus)
   return i_min;
 }
 
+// Loads target point set from a trajectory file.
 void cpccontroller::load_tpset(string fname){
   if(target_points){cout<<"ERROR: target points are present"<<endl;exit(1);}
   ifstream file;
@@ -386,6 +416,7 @@ void cpccontroller::load_tpset(string fname){
   int rec_len = 2*q_dim + chi_dim;
   vector<double*> recs;
   string str;
+  double s=0;
   while(getline(file,str)){
     double* rec = new double [rec_len];
     stringstream ss; ss << str;
@@ -397,6 +428,7 @@ void cpccontroller::load_tpset(string fname){
     }
     recs.push_back(rec);
     apply_mask(rec);
+    for(int j=0;j<chi_dim;j++){double u=rec[2*q_dim+j];s+=u*u;}
   }
   tps_size = recs.size();
   target_points = new_2d_array(tps_size,rec_len);
@@ -406,7 +438,9 @@ void cpccontroller::load_tpset(string fname){
     delete [] recs[i];
   }
   recs.clear();
+  tpset_fname = fname;
   //print_target_points();exit(1);
+  cout<<"mean tau norm = "<<sqrt(s/tps_size)<<endl;
 }
 
 void cpccontroller::get_torques0(double* torques){
@@ -416,6 +450,9 @@ void cpccontroller::get_torques0(double* torques){
   VectorXd::Map(torques,tau.size()) = tau;
 }
 
+// Computes CPC torques by selecting the next target point
+// from target_points array, as indexed by poscontrol_tpi.
+// Used if poscontrol_flag = true.
 void cpccontroller::get_poscontrol_torques(double* torques){
   VectorXd tau;
   double k = k0;
@@ -430,10 +467,15 @@ void cpccontroller::get_poscontrol_torques(double* torques){
   } while (k > kc && tau.norm() > tauc);
   clip_norm(tau,tauc);
 
+  //cout<<tau.norm()<<endl;
+
   VectorXd::Map(torques,tau.size()) = tau;
   poscontrol_tpi %= tps_size;
 }
 
+// Pre-selects a subset of target points,
+// either 100 points by efficient approximate search,
+// or all points if effdata = NULL.
 void cpccontroller::tpis_subset(list<int>& tpis){
   if(effdata){
     tpis_effdata(tpis,n_cand+100);
@@ -489,6 +531,7 @@ void cpccontroller::tp_dist_check(){
   double dist = ao.distance(current_state,target_points[tpi]);
   low_tpdist = (dist < 0.5);
   //low_tpdist = (dist < 0.2);
+  low_tpdist = (dist < 0.0);
   //cout<<"dist="<<dist<<endl;
   //exit(1);
 } 

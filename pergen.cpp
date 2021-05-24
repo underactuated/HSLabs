@@ -341,7 +341,7 @@ void pergensetup::copy_rec_transform(const pergensetup* pgs){
   rec_transform = pgs->rec_transform;
 }
 
-void pergensetup::print(int detail_level){
+void pergensetup::print(int detail_level) const {
   cout << "---  pergen setup ---" << endl;
   cout << "number of limbs = " << n << endl;
   cout << "torso position: ";
@@ -402,6 +402,7 @@ pgssweeper::pgssweeper(const pergensetup* pgs_, const kinematicmodel* model_){
   pgs = NULL;
   model = model_;
   pcp = new pgsconfigparams;
+  n = model->get_lik()->get_number_of_limbs();
 }
 
 pgssweeper::~pgssweeper(){
@@ -437,7 +438,7 @@ bool pgssweeper::next(){
 
   if(pgs){delete pgs; pgs = NULL;}
   pgs0->get_config_params(pcp);
-  int n = pgs0->get_limb_number();
+  //int n = pgs0->get_limb_number();
   if(parami == 0){pcp->step_duration = val;}
   else if (parami > 0 && parami < 4){pcp->TLh[parami-1] = val;}
   pgs = new pergensetup (n);
@@ -455,7 +456,7 @@ void pgssweeper::partial_setup_pergen(pergensetup& pergensu, const extvec* orien
   periodicgenerator* pergen = pergensu.get_pergen();
   pergen->set_step_duration(step_duration_);
   const liksolver* lik = model->get_lik();
-  int n = pergensu.get_limb_number();
+  //int n = pergensu.get_limb_number();
   assert(n == lik->get_number_of_limbs());
   double rcap = lik->get_rcap();
   setup_foot_shift(pergensu);
@@ -490,13 +491,17 @@ void pgssweeper::setup_foot_shift(pergensetup& pergensu){
   }
 }
 
+// Shifts reference foot position pos0;
+// limbi is lik-ordering index, (which, in fact, is not 
+// very convenient, as myant lik ordering is kind of random).
 void pgssweeper::shift_pos0(int limbi, extvec& pos){
   if(shift_type < 0){return;}
   extvec delpos;
   if(shift_type == 0){
-    //delpos.copy(lat_shift);
     delpos = lat_shift;
-    if(limbi % 2){delpos.times(-1);}
+    //pos.print();
+    //if(limbi % 2){delpos.times(-1);}
+    if((limbi+(abs(2*limbi-3)<2)*((n/2+1) % 2)) % 2){delpos.times(-1);}
   } else if (shift_type == 1){
     double x, y, z;
     pos.get_components(x,y,z);
