@@ -44,7 +44,7 @@ struct pgsconfigparams;
 class modelplayer{
   kinematicmodel* model;
   int step_mode; // mode of modelplayer::step function, called from visualizer loop
-  bool manual_viewpoint_flag, contact_force_flag, open_loop_flag, position_control_flag, dynamics_from_simulation_flag, cpc_control_flag, record_traj_flag, torso_kicks_flag, ghost_walking_flag, clip_torque_flag, fall_check_flag;
+  bool manual_viewpoint_flag, contact_force_flag, open_loop_flag, position_control_flag, dynamics_from_simulation_flag, cpc_control_flag, record_traj_flag, torso_kicks_flag, ghost_walking_flag, clip_torque_flag, height_test_flag, fall_check_flag;
   double play_t, play_dt; // playing time and time step size
   int config_dim, nmj; // nmj = number of motor joints
   double *play_rec, *last_motor_torques; // play_rec - for set_jangles_with_lik(rec) 
@@ -57,7 +57,7 @@ class modelplayer{
   double traj_t_limit, torque_limit; // recording limit, torque limit
   heightfield* hfield; // for uneven terrain
   ghostmodel* ghost; // for ghost walking
-  double fall_hc, fall_tmin, fall_tmax; // fall checking parameters
+  double htest_hc, htest_tmin, htest_tmax; // fall checking parameters
 public:
   modelplayer();
   ~modelplayer();
@@ -88,6 +88,7 @@ public:
   void set_fall_test(double hc, double tmin, double tmax);
   void ignore_reach();
   void record_trajectory(double t_max);
+  void mcc_test(string test_name);
 private:
   void set_jangles_with_lik(const double* rec);
   inline visualizer* get_vis() const {return model->get_vis();}
@@ -122,7 +123,6 @@ private:
   void set_default_flags();
   void torso_velocity(); // experimental
   dBodyID get_torso_odebody();
-  void fall_check(double hc);
   void linear_feedback_control(double* torques, double** x0, double** x, double k1, double k2);
   void set_ghost_cpc_state(double** ders);
   void max_motor_torque(); // experimental
@@ -130,6 +130,10 @@ private:
   void clip_torque(double* motor_torques);
   void check_model_loaded();
   void set_torque_limit(double torque);
+  void set_ghost_walking();
+  void set_elevation_test(double hc, double tmin, double tmax);
+  void set_height_test(double hc, double tmin, double tmax);
+  void height_test(double hc);
 };
 
 #endif

@@ -82,5 +82,13 @@ void print_vector (const vector<T>& v, const char* prefix) {
   print_vector <T> (v);
 }
 
+template <typename T>
+void load_array (T* a, int n, string fname){
+  ifstream file;
+  file.open(fname.c_str());
+  for(int i=0;i<n;i++){file >> *a++;}
+  file.close();
+}
+
 
 #endif

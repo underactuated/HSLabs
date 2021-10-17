@@ -141,6 +141,7 @@ void liksolver::set_rcap(const kinematicmodel* model, const vector<int>& limb_in
 
 bool ignore_reach_flag = false;
 
+// Sets a flag to ignore limb reachability check.
 void liksolver::set_ignore_reach_flag(bool value) const {
   ignore_reach_flag = value;
 }

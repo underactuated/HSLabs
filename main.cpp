@@ -15,7 +15,7 @@
 
 int main(int argc, char *argv[]){
 
-  //srand(time(NULL));
+  srand(time(NULL));
   //srand(21); // 21 29 36
   //srand(5);// 3, 4
 
@@ -31,8 +31,9 @@ int main(int argc, char *argv[]){
   player0.set_play_dt(.02);
   //pergensetup* pgs0 = player0.make_pergensu("pgs_config.txt",1);
   //player0.test(4);exit(1);
-  pergensetup* pgs = player0.make_pergensu("pgs_config.txt",33-10*0+1);
-//pergensetup* pgs = player0.make_pergensu("pgs_config.txt",0*17+1*8+0*26+0*27);
+  //pergensetup* pgs = player0.make_pergensu("pgs_config.txt",33-10*0+1);
+  //pergensetup* pgs = player0.make_pergensu("pgs_config.txt",0*17+1*8+0*26+0*27);
+  pergensetup* pgs = player0.make_pergensu("pgs_config.txt",37);
   //pgs->print(2);
   //player0.print_hip_poss();exit(1);
   //extvec rec_eas (0,0,-1.571); pgs->set_rec_rotation(rec_eas);
@@ -49,6 +50,7 @@ int main(int argc, char *argv[]){
   //player0.set_flag("dynamics_from_simulation",true);
   //player0.set_fall_test(.7,.1,100);
   //player0.record_trajectory(4.5*7);
+  //player0.mcc_test("random");//"slope");//"hill");//"random");
   //player0.uneven_ground_test();
   //player0.test_lik_solvers();exit(1);
   //player0.play_pergensu(pgs);exit(1);
@@ -61,7 +63,7 @@ int main(int argc, char *argv[]){
   //player0.record_per_traj_sweep(pgs,"step_length",0,.6,5);exit(1);
   //player0.record_per_traj_sweep(pgs,"period",4,6,7);exit(1);
   //player0.record_pos_control_traj(pgs,0,20);exit(1);
-  player0.cpc_test(pgs,0);exit(1);
+  //player0.cpc_test(pgs,0);exit(1);
   player0.position_control_test(pgs,0);exit(1);
   //player0.open_loop_test(pgs,0);exit(1);
   //player0.simulate_pergensu(pgs,0);exit(1);

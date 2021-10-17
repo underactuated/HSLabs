@@ -26,8 +26,8 @@ modelplayer::modelplayer(){
   B_transp = NULL;
   hfield = NULL;
   ghost = NULL;
-  fall_tmin = 0;
-  fall_tmax = 1e10;
+  htest_tmin = 0;
+  htest_tmax = 1e10;
 }
 
 modelplayer::~modelplayer(){
@@ -107,6 +107,8 @@ void modelplayer::set_flag(string flag_name, bool value){
     ghost_walking_flag = value;
   } else if(flag_name == "clip_torque"){
     clip_torque_flag = value;
+  } else if(flag_name == "height_test"){
+    height_test_flag = value;
   } else if(flag_name == "fall_check"){
     fall_check_flag = value;
   } else {
@@ -334,7 +336,8 @@ void modelplayer::simulate_ode(){
   //torso_velocity(); // experim
   //print_array<double>(last_motor_torques,nmj); // temp
   //if(int(play_t/play_dt)%50==0){fall_check(.4);}
-  if(fall_check_flag){fall_check(fall_hc);}
+  //if(fall_check_flag){fall_check(htest_hc);}
+  if(height_test_flag){height_test(htest_hc);}
   get_vis()->simulate_odeworld(play_dt);
   play_t += play_dt;
 }
@@ -615,7 +618,7 @@ void modelplayer::kick_torso(){
 }
 
 void modelplayer::set_default_flags(){
-  manual_viewpoint_flag = true, contact_force_flag = false, open_loop_flag = false, position_control_flag = false, dynamics_from_simulation_flag = false, cpc_control_flag = false, record_traj_flag = false, torso_kicks_flag = false, ghost_walking_flag = false, clip_torque_flag = false, fall_check_flag = false;
+  manual_viewpoint_flag = true, contact_force_flag = false, open_loop_flag = false, position_control_flag = false, dynamics_from_simulation_flag = false, cpc_control_flag = false, record_traj_flag = false, torso_kicks_flag = false, ghost_walking_flag = false, clip_torque_flag = false, height_test_flag = false;
 }
 
 // Loads and draws model as defined in xml file.
@@ -675,18 +678,24 @@ dBodyID modelplayer::get_torso_odebody(){
   return get_vis()->get_torso_opart()->get_odebody();
 }
 
-// Detects model fall: if torso height gets < hc, program aborts.
-void modelplayer::fall_check(double hc){
-  if(play_t < fall_tmin){return;} else if (play_t > fall_tmax){
-    //cout<<"x="<<pos[0]<<" y="<<pos[1]<<" z="<<pos[2]<<" ";
-    cout << "No fall by t = " << play_t << endl; exit(1);
+// Detects model fall or rise: 
+// if torso height exceeds hc, program aborts.
+void modelplayer::height_test(double hc){
+  if(play_t < htest_tmin){return;} else if (play_t > htest_tmax){
+    cout << "No ";
+    if (fall_check_flag) {cout << "fall";}
+    else {cout << "rise";}
+    cout << " by t = " << play_t << endl; exit(1);
   } 
   const dReal* pos = dBodyGetPosition(get_torso_odebody());
   //print_array<const dReal>(pos,2);
   //cout<<"time = "<<play_t<<endl;
-  if(pos[2] < hc){
+  int s = 1-2*int(fall_check_flag);
+  if((pos[2]-hc)*s > 0){
     cout << "hc = " << hc << " h = " << pos[2] << endl;
-    cout << "Fall at t = " << play_t << endl; exit(1);
+    if (fall_check_flag) {cout << "Fall";}
+    else {cout << "Rise";}    
+    cout << " at t = " << play_t << endl; exit(1);
   }
 }
 
@@ -696,8 +705,8 @@ void modelplayer::uneven_ground_test(){
   double l = 1*f;
   int n = 10/f;
   hfield = new heightfield (n,5*1/f+2,l);
-  hfield->random_field(0.01,.3+.4,false);
-  //hfield->random_field(0.01,.3,false);
+  //hfield->random_field(0.01,.3+.4,false);
+  hfield->random_field(0.01,.3,false);
   //hfield->random_field(0.01,1.0,false);
   //hfield->random_field(0.01,.01,false);
   //hfield->slope_field(0,6.5);
@@ -716,7 +725,13 @@ void modelplayer::uneven_ground_test(){
   visualizer* vis = get_vis();
   vis->push_geom(hfield->make_geom(n*l/2+3-1.5,0,vis->get_trimeshman()));
 
-  //return;
+  //return; // uncomment to turn off MCC
+  set_ghost_walking();
+}
+
+// enables ghost walking
+void modelplayer::set_ghost_walking(){
+  visualizer* vis = get_vis();
   set_flag("ghost_walking", true);
   ghost = new ghostmodel (vis, hfield, play_dt);
   
@@ -786,16 +801,30 @@ void modelplayer::check_model_loaded(){
   if(!model->if_loaded()){cout<<"ERROR: model not loaded"<<endl;exit(1);}
 }
 
-// Sets fall checking paramaters and flag.
-void modelplayer::set_fall_test(double hc, double tmin, double tmax){
+// Sets height checking paramaters and flag.
+void modelplayer::set_height_test(double hc, double tmin, double tmax){
   speedup_draw(1000);
-  fall_hc = hc;
-  fall_tmin = tmin;
-  fall_tmax = tmax;
-  set_flag("fall_check",true);
+  htest_hc = hc;
+  htest_tmin = tmin;
+  htest_tmax = tmax;
+  set_flag("height_test",true);
   ignore_reach();
 }
 
+// Sets fall checking paramaters and flag.
+void modelplayer::set_fall_test(double hc, double tmin, double tmax){
+  set_height_test(hc,tmin,tmax);
+  set_flag("fall_check",true);
+}
+
+// Sets elevation checking paramaters and flag.
+void modelplayer::set_elevation_test(double hc, double tmin, double tmax){
+  set_height_test(hc,tmin,tmax);
+  set_flag("fall_check",false);
+}
+
+// Sets ignoring limb reachability check in lik solver.
+// Useful for extreme terrain testing.
 void modelplayer::ignore_reach(){
   model->get_lik()->set_ignore_reach_flag(true);
 }
@@ -809,10 +838,71 @@ void modelplayer::record_trajectory(double t_max){
   set_flag("record_traj",true);
 }
 
+// temp: tests for mcc paper
+void modelplayer::mcc_test(string test_name){
+  /*float f = 1;// .2;
+  double l = 1*f;
+  int n = 10/f;
+  hfield = new heightfield (n,5*1/f+2,l);*/
+
+  double l = 1;
+  int n = 10;
+  hfield = new heightfield (n,7,l);
+  double delx0 = randf()*.5;
+
+  double h;
+  load_array<double>(&h,1,"run/tmp.txt");
+
+  if (test_name == "random"){
+    hfield->random_field(0.01,h,false);
+    set_fall_test(.7,.1,200);
+  } else if (test_name == "hill"){
+    hfield->tanh_field(h);
+    set_elevation_test(h*.5+.7,.1,200);
+  } else if (test_name == "slope"){
+    hfield->slope_field(0,h);
+    set_elevation_test(h*.5+.7,.1,200);
+  } else {cout<<"ERROR: unknown test '"<<test_name<<"'"<<endl;exit(1);}
+
+  visualizer* vis = get_vis();
+  vis->push_geom(hfield->make_geom(n*l/2+1.5+delx0,0,vis->get_trimeshman()));
+
+  set_ghost_walking();
+
+  /*
+  //hfield->random_field(0.01,.3+.4,false);
+  hfield->random_field(0.01,.3,false);
+  //hfield->random_field(0.01,1.0,false);
+  //hfield->random_field(0.01,.01,false);
+  //hfield->slope_field(0,6.5);
+  //hfield->slope_field(0,8.5);
+  //hfield->tan_field(1.5,4);
+  //hfield->tanh_field(5);
+  //hfield->tanh_field(6);
+  //hfield->gauss_field(4);
+  //hfield->ridge_field(0,2);
+  //hfield->ridge_field(0,4);
+  //hfield->ripple_field(0.01,.2*f,true);
+  //hfield->random_field(0.01,.2,true);
+  //hfield->make_geom(n*l/2+3,0,get_vis());
+  visualizer* vis = get_vis();
+  vis->push_geom(hfield->make_geom(n*l/2+3-1.5,0,vis->get_trimeshman()));
+
+  //return; // uncomment to turn off MCC
+  set_flag("ghost_walking", true);
+  ghost = new ghostmodel (vis, hfield, play_dt);
+  
+  extvec eas (0,0.0,0);
+  ghost->set_surf_rot(eas);
+
+  set_torque_limit(10);
+  */
+}
 
 
 /*
 //euler angles check, from player:
 affine* A = get_vis()->get_torso_opart()->get_mnode()->get_A_ground(); double as[3]; euler_angles_from_affine(*A, as); print_array<double>(as,3); exit(1);
 */
+
 
