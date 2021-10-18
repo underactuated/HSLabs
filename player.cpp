@@ -61,7 +61,7 @@ void modelplayer::step(){//cout<<"t = "<<play_t<<endl;
   case 4: test4(); break; // myant.xml test
   case 5: play_pergensu_step(); break;
   case 6: simulate_ode(); return; break;
-  case 7: break;
+  case 7: play_traj_step(); break;
   default: 
     cout << "ERROR: case " << step_mode << " undefined in step" << endl; exit(1);
     break;
@@ -837,6 +837,35 @@ void modelplayer::record_trajectory(double t_max){
   set_flag("dynamics_from_simulation",true);
   set_flag("record_traj",true);
 }
+
+// Plays recorded and saved trajectory,
+// loading it from traj-file fname.
+void modelplayer::play_saved_traj(string fname){
+  load_traj(fname);
+  play_t = 0;
+  //set_flag("manual_viewpoint",false);
+  step_mode = 7;
+  model->draw();
+}
+
+// one step of playing saved traj
+void modelplayer::play_traj_step(){
+  unsigned int i = play_t/play_dt;
+  if(i==traj_recording.size()){exit(1);}
+  model->set_jvalues(traj_recording[i]);
+  //cout<<play_t<<endl;
+  play_t += play_dt;
+}
+
+// Loads saved trajectory from file.
+void modelplayer::load_traj(string fname){
+  if(traj_recording.size()){cout<<"ERROR: traj recording not empty"<<endl;exit(1);}
+  int rec_len = 2*config_dim+nmj;
+  vector<double*> vec;
+  load_vector_of_records(vec,rec_len,fname);
+  traj_recording.assign(vec.begin(),vec.end());
+}
+
 
 // temp: tests for mcc paper
 void modelplayer::mcc_test(string test_name){

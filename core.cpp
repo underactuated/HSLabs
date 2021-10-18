@@ -63,6 +63,31 @@ void save_2d_array(double** array, int n, int m, string fname, bool append_flag)
 // uniform sampling from [0,1]
 double randf(){return double(rand())/RAND_MAX;}
 
+// record is an array of double
+void save_vector_of_records(vector<double*>& recs, int rec_len, int offset, string fname){
+  int size = recs.size();
+  double** recs_array = new double* [size];
+  std::copy(recs.begin(),recs.end(),recs_array);
+  save_2d_array(recs_array+offset,size-offset,rec_len,fname,false);
+  delete [] recs_array;
+}
+
+void load_vector_of_records(vector<double*>& recs, int rec_len, string fname){
+  ifstream file;
+  file.open(fname.c_str());
+  string str;
+  while(getline(file,str)){
+    double* rec = new double [rec_len];
+    stringstream ss; ss << str;
+    for(int i=0;i<rec_len;i++){
+      if(!(ss >> rec[i])){
+	cout<<"ERROR: str too short in load_vector_of_records"<<endl;exit(1);
+      }
+    }
+    recs.push_back(rec);
+  }
+}
+
 
 arrayops::arrayops(int n_){
   tmp = NULL;

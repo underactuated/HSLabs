@@ -88,6 +88,7 @@ public:
   void set_fall_test(double hc, double tmin, double tmax);
   void ignore_reach();
   void record_trajectory(double t_max);
+  void play_saved_traj(string fname);
   void mcc_test(string test_name);
 private:
   void set_jangles_with_lik(const double* rec);
@@ -134,6 +135,8 @@ private:
   void set_elevation_test(double hc, double tmin, double tmax);
   void set_height_test(double hc, double tmin, double tmax);
   void height_test(double hc);
+  void play_traj_step();
+  void load_traj(string fname);
 };
 
 #endif

@@ -21,6 +21,9 @@ void save_2d_array(double** array, int n, int m, std::string fname, bool append_
 
 double randf();
 
+void save_vector_of_records(std::vector<double*>& recs, int rec_len, int offset, std::string fname);
+void load_vector_of_records(std::vector<double*>& recs, int rec_len, std::string fname);
+
 // Class arrayops ( = array operations) object simplifis certain array 
 // operations on arrays of given length n, such as vector arifmetic.
 // TODO: maybe generalize to any type with templates?

@@ -50,6 +50,7 @@ int main(int argc, char *argv[]){
   //player0.set_flag("dynamics_from_simulation",true);
   //player0.set_fall_test(.7,.1,100);
   //player0.record_trajectory(4.5*7);
+  player0.play_saved_traj("traj.txt");exit(1);
   //player0.mcc_test("random");//"slope");//"hill");//"random");
   //player0.uneven_ground_test();
   //player0.test_lik_solvers();exit(1);
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]){
   //player0.record_per_traj_sweep(pgs,"period",4,6,7);exit(1);
   //player0.record_pos_control_traj(pgs,0,20);exit(1);
   //player0.cpc_test(pgs,0);exit(1);
-  player0.position_control_test(pgs,0);exit(1);
+  //player0.position_control_test(pgs,0);exit(1);
   //player0.open_loop_test(pgs,0);exit(1);
   //player0.simulate_pergensu(pgs,0);exit(1);
   //string str;player0.pergensu_config_string(pgs,str);cout<<str<<endl;exit(1);
